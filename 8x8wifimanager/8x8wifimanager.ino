@@ -9,6 +9,8 @@
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 
+#include <ESP8266httpUpdate.h>
+
 //for LED status
 #include <Ticker.h>
 Ticker ticker;
@@ -17,6 +19,8 @@ Ticker ticker;
 
 #define DEBUG
 #define DEBUG_ESP_PORT Serial
+
+const char* app_version = "0.0.3";
 
 WebSocketsClient webSocket;
 //U8G2_MAX7219_32X8_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ D2, /* data=*/ D4, /* cs=*/ D3, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
@@ -42,7 +46,7 @@ void displayPrice(String value, int position) {
   //u8g2.drawStr(1,position+8,value.c_str());
   u8g2.sendBuffer();
 }
-  
+
 void displayRefresh(int last) {
   USE_SERIAL.printf("[DISPLAY] REFRESHED\n");
   if (displayOn) {
@@ -61,7 +65,7 @@ void displayRefresh(int last) {
        }
     } else {
       USE_SERIAL.printf("[DISPLAY] PRICE DOWN\n");
-      for (int i=lastPrice; i >= last; i--){ 
+      for (int i=lastPrice; i >= last; i--){
         //for (int r=8; r >= 8; r--){
           //USE_SERIAL.printf("[DISPLAY] DISPLAY PRICE DOWN\n");
           displayPrice(String(i), 8);
@@ -126,6 +130,22 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 
 }
 
+void update_firmware() {
+  t_httpUpdate_return ret = ESPhttpUpdate.update("10.0.1.48", 4567, "/esp/update", app_version);
+switch(ret) {
+    case HTTP_UPDATE_FAILED:
+        Serial.println("[update] Update failed.");
+        Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+        break;
+    case HTTP_UPDATE_NO_UPDATES:
+        Serial.println("[update] Update no Update.");
+        break;
+    case HTTP_UPDATE_OK:
+        Serial.println("[update] Update ok."); // may not called we reboot the ESP
+        break;
+  }
+}
+
 //gets called when WiFiManager enters configuration mode
 void configModeCallback (WiFiManager *myWiFiManager) {
   USE_SERIAL.println("Entered config mode");
@@ -153,10 +173,10 @@ void setup() {
   u8g2.setFont(u8g2_font_profont12_mf);
   u8g2.setContrast(contrast);
         u8g2.clearBuffer();
-    //u8g2.drawUTF8(0, 16, "B"); //""₿");    
+    //u8g2.drawUTF8(0, 16, "B"); //""₿");
       u8g2.drawStr(1,1,"bitix");
     u8g2.sendBuffer();
-    
+
   USE_SERIAL.begin(115200);
   USE_SERIAL.setDebugOutput(true);
 
@@ -191,6 +211,9 @@ void setup() {
   //if you get here you have connected to the WiFi
   USE_SERIAL.println("connected...yeey :)");
   ticker.detach();
+
+  update_firmware();
+
   //keep LED off
   digitalWrite(BUILTIN_LED, false);
 
