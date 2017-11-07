@@ -223,6 +223,7 @@ void setup() {
   USE_SERIAL.println("connected...yeey :)");
   ticker.detach();
 
+  displayText("UPDATE");
   update_firmware();
 
   //keep LED off

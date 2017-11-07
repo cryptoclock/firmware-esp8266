@@ -15,14 +15,11 @@ COPY platformio.ini ./
 COPY src/ ./src
 
 # Copy library files to the working directory
-COPY .piolibdeps/ ./lib
+COPY lib/ ./lib
+
+RUN platformio lib install WebSockets
+RUN platformio lib install U8g2
+RUN platformio lib install WifiManager
 
 # Compile the firmware
-RUN platformio run --environment $BOARD && \
-    mv .pioenvs/$BOARD/firmware.bin /assets/
-
-## Start with a minimal runtime container
-FROM alpine
-
-# Copy the compiled firmware into the empty runtime container
-COPY --from=buildstep /assets/ /assets/
+CMD platformio run --environment $BOARD && mv .pioenvs/$BOARD/firmware.bin /assets/
