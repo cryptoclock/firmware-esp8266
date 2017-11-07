@@ -1,19 +1,25 @@
-FROM base/archlinux
+# esp8266 base image, repo here: https://github.com/resin-io-library/dependent-base-images/tree/master/esp8266
+# See more about resin base images here: http://docs.resin.io/runtime/resin-base-images/
+FROM resin/esp8266 AS buildstep
 
-RUN mkdir -p /build /sketch
-RUN pacman -Sy --noconfirm git make wget python python-pip
-RUN git clone --depth=1 https://github.com/esp8266/Arduino /build/esp8266
-WORKDIR /build/esp8266/tools
-RUN python get.py
-RUN pip install esptool
+# Set the working directory
+WORKDIR /usr/src/app
 
-RUN git clone --depth=1 https://github.com/plerup/makeEspArduino/ /build/makeEspArduino
+# Set the board
+ENV BOARD nodemcuv2
 
-COPY ./8x8wifimanager /sketch
+# Copy config files to the working directory
+COPY platformio.ini ./
 
-ENV BUILD_DIR /build
-ENV ESP_ROOT /build/esp8266
-ENV MAKE_ESP /build/makeEspArduino/makeEspArduino.mk
+# Copy source files to the working directory
+#COPY src/ ./src
 
-WORKDIR /sketch
-RUN make
+# Copy library files to the working directory
+#COPY lib/ ./lib
+
+RUN platformio lib install WebSockets
+RUN platformio lib install U8g2
+RUN platformio lib install WifiManager
+
+# Compile the firmware
+CMD platformio run --environment $BOARD && mv .pioenvs/$BOARD/firmware.bin /assets/

@@ -24,7 +24,7 @@ Ticker ticker;
 #define DEBUG
 #define DEBUG_ESP_PORT Serial
 
-const char* app_version = "0.0.3";
+const char* app_version = "0.1.3";
 
 WebSocketsClient webSocket;
 //U8G2_MAX7219_32X8_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ D2, /* data=*/ D4, /* cs=*/ D3, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
@@ -204,6 +204,8 @@ void setup() {
 
   WiFiManagerParameter pair("pair", "Currency pair", "BTCUSD", 10);
   wifiManager.addParameter(&pair);
+  WiFiManagerParameter update_server("update_server", "Update server", "10.0.1.48:4567", 20);
+  wifiManager.addParameter(&update_server);
 
   //set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
   wifiManager.setAPCallback(configModeCallback);
