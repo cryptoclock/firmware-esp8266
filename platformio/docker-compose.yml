@@ -1,0 +1,5 @@
+build:
+  build: .
+  volumes:
+    - ./assets:/assets
+    - ./src:/usr/src/app/src
