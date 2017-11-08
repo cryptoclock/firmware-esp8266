@@ -7,6 +7,7 @@ public:
     Display(U8G2 &display, TM1637Display &display_7seg, HardwareSerial &debug = Serial) :
       m_debug(debug), m_display(display), m_display7segment(display_7seg), m_enabled(true)
       {
+        m_display.begin();
         m_display.setFont(u8g2_font_profont12_mf);
       }
 
