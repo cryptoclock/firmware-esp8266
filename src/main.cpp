@@ -105,7 +105,7 @@ void displayFlash() {
   delay(100);
   u8g2.setContrast(255);
   delay(100);
-  u8g2.setContrast(1007);
+  u8g2.setContrast(100);
   delay(100);
   u8g2.setContrast(contrast);
 }
@@ -221,7 +221,7 @@ void setup() {
   displayText(pair.getValue());
   delay(3000);
 
-  webSocket.begin("139.59.138.189", 8081, strcat("/",pair.getValue()));
+  webSocket.begin("139.59.138.189", 8081, String("/") + pair.getValue());
   //webSocket.begin("10.0.1.48", 7000, "/");
   webSocket.onEvent(webSocketEvent);
 }
