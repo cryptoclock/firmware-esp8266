@@ -17,9 +17,11 @@ COPY platformio.ini ./
 # Copy library files to the working directory
 #COPY lib/ ./lib
 
+RUN apt-get -y update
+RUN apt-get -y install git-core
 RUN platformio lib install WebSockets
 RUN platformio lib install U8g2
-RUN platformio lib install WifiManager
+RUN platformio lib install the-real-orca/WifiManager#WiFiMulti
 RUN platformio lib install TM1637
 
 # Compile the firmware
