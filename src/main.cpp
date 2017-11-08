@@ -29,7 +29,8 @@ WebSocketsClient webSocket;
 
 //U8G2_MAX7219_32X8_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ D2, /* data=*/ D4, /* cs=*/ D3, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
 U8G2_MAX7219_32X8_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ D7, /* data=*/ D5, /* cs=*/ D6, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
-Display display(u8g2, USE_SERIAL);
+TM1637Display tm1637(/* clock=*/ D0, /* data=*/ D1);
+Display display(u8g2, tm1637, USE_SERIAL);
 
 int contrast = 64;
 boolean isButtonPressed = false;
@@ -66,7 +67,6 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
               if (lastPrice!=currentPrice) {
                 display.refreshPrice(lastPrice, currentPrice);
                 lastPrice = currentPrice;
-                //displayFlash();
                 tick();delay(20);tick();
               }
             }

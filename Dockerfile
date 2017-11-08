@@ -20,6 +20,7 @@ COPY platformio.ini ./
 RUN platformio lib install WebSockets
 RUN platformio lib install U8g2
 RUN platformio lib install WifiManager
+RUN platformio lib install TM1637
 
 # Compile the firmware
 CMD platformio run --environment $BOARD && mv .pioenvs/$BOARD/firmware.bin /assets/

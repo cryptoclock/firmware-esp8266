@@ -9,6 +9,7 @@ void Display::displayText(String value, int x, int y) {
 }
 
 void Display::displayPrice(String value) {
+  m_display7segment.showNumberDec(value.toInt(), false, 4, 0);
   displayText(value,4);
 }
 
@@ -52,16 +53,5 @@ void Display::setContrast(uint8_t contrast)
 {
   m_contrast = contrast;
   m_display.setContrast(m_contrast);
-}
-
-
-void Display::flash() {
-  m_debug.printf("[DISPLAY] FLASHING\n");
-  m_display.setContrast(100);
-  delay(100);
-  m_display.setContrast(255);
-  delay(100);
-  m_display.setContrast(100);
-  delay(100);
-  m_display.setContrast(m_contrast);
+  m_display7segment.setBrightness(min(m_contrast,0x7));
 }
