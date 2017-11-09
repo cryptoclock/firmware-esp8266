@@ -11,8 +11,9 @@ public:
         m_display.setFont(u8g2_font_profont12_mf);
       }
 
-
-  void displayText(String value, int x = 0, int y = 8);
+  // for U8G2_R0 y=8
+  // for U8G2_R2 y=16
+  void displayText(String value, int x = 0, int y = 16);
   void refreshPrice(int lastPrice, int currentPrice);
   void setContrast(uint8_t contrast);
   void displayRotate(String text, int pix_length);
