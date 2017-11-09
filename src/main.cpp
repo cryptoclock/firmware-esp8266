@@ -18,6 +18,7 @@
 #include <Ticker.h>
 Ticker ticker;
 
+#define PORTAL_TRIGGER_PIN 0 // Flash button
 #define USE_SERIAL Serial
 
 #define DEBUG
@@ -89,13 +90,14 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   //entered config mode, make led toggle faster
   ticker.attach(0.2, tick);
 
-  display.displayRotate("PLEASE CONNECT TO AP",250);
+  display.displayRotate("PLEASE CONNECT TO AP",200);
   display.displayText("WIFI", 4);
 }
 
 void setup() {
   display.setContrast(contrast);
-  display.displayText("bitix", 1 , 1);
+  display.displayText("bitix");
+  delay(5000);
 
   USE_SERIAL.begin(115200);
   USE_SERIAL.setDebugOutput(true);
@@ -150,8 +152,32 @@ void setup() {
   webSocket.begin("139.59.138.189", 8081, String("/") + pair.getValue());
   //webSocket.begin("10.0.1.48", 7000, "/");
   webSocket.onEvent(webSocketEvent);
+
+  pinMode(PORTAL_TRIGGER_PIN, INPUT);
 }
 
 void loop() {
     webSocket.loop();
+    if ( digitalRead(PORTAL_TRIGGER_PIN) == LOW ) {
+      USE_SERIAL.println("Starting portal");
+      WiFiManager wifiManager;
+      wifiManager.setTimeout(120);
+
+      // FIXME: DRY, values
+      WiFiManagerParameter pair("pair", "Currency pair", "BTCUSD", 10);
+      wifiManager.addParameter(&pair);
+      WiFiManagerParameter update_server("update_server", "Update server", "10.0.1.48:4567", 20);
+      wifiManager.addParameter(&update_server);
+
+      if (!wifiManager.startConfigPortal("OnDemandAP")) {
+        USE_SERIAL.println("failed to connect and hit timeout");
+        delay(3000);
+        //reset and try again, or maybe put it to deep sleep
+        ESP.reset();
+        delay(5000);
+      }
+      //if you get here you have connected to the WiFi
+      USE_SERIAL.println("connected...yeey :)");
+    }
+
 }
