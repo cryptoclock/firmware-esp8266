@@ -1,7 +1,7 @@
-#include "display.h"
+#include "display.hpp"
 
 void Display::displayText(String value, int x, int y) {
-  m_debug.printf("[DISPLAY] PRINTING %s to %i, %i\n", value.c_str(), x, y);
+  DEBUG_SERIAL.printf("[DISPLAY] PRINTING %s to %i, %i\n", value.c_str(), x, y);
   m_display.clearBuffer();
   m_display.drawStr(x,y,value.c_str());
   //m_display.drawStr(1,position+8,value.c_str());
@@ -21,19 +21,19 @@ void Display::displayRotate(String text, int pix_length) {
 }
 
 void Display::refreshPrice(int lastPrice, int currentPrice) {
-  m_debug.printf("[DISPLAY] REFRESHED\n");
+  DEBUG_SERIAL.printf("[DISPLAY] REFRESHED\n");
   if (m_enabled) {
     if (lastPrice == -1) {
-      m_debug.printf("[DISPLAY] INIT PRICE\n");
+      DEBUG_SERIAL.printf("[DISPLAY] INIT PRICE\n");
       displayPrice(String(currentPrice));
     } else if (lastPrice < currentPrice) {
-      m_debug.printf("[DISPLAY] PRICE UP\n");
+      DEBUG_SERIAL.printf("[DISPLAY] PRICE UP\n");
       for (int i=lastPrice; i <= currentPrice; i++) {
         displayPrice(String(i));
         delay(100);
       }
     } else {
-      m_debug.printf("[DISPLAY] PRICE DOWN\n");
+      DEBUG_SERIAL.printf("[DISPLAY] PRICE DOWN\n");
       for (int i=lastPrice; i >= currentPrice; i--) {
         displayPrice(String(i));
         delay(100);
@@ -44,7 +44,7 @@ void Display::refreshPrice(int lastPrice, int currentPrice) {
 }
 
 void Display::clear() {
-  m_debug.printf("[DISPLAY] CLEARED\n");
+  DEBUG_SERIAL.printf("[DISPLAY] CLEARED\n");
   m_display.clearBuffer();
   m_display.sendBuffer();
 }
