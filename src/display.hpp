@@ -12,7 +12,7 @@ public:
       m_display(display), m_display7segment(display_7seg), m_enabled(true)
       {
         m_display.begin();
-        m_display.setFont(u8g2_font_profont12_mf);
+        m_display.setFont(u8g2_font_micro_tr);
       }
 
   // for U8G2_R0 y=8
@@ -21,6 +21,7 @@ public:
   void refreshPrice(int lastPrice, int currentPrice);
   void setContrast(uint8_t contrast);
   void displayRotate(String text, int pix_length);
+  void blinkDot();
 
 private:
   void displayPrice(String value);

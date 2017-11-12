@@ -54,11 +54,12 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         String str = (char*)payload;
         int currentPrice = str.toInt();
         DEBUG_SERIAL.printf("[WSc] get tick: %i\n", currentPrice);
-        boolean up_direction;
-        if (lastPrice!=currentPrice) {
+        if (lastPrice==currentPrice) {
+          display.blinkDot();
+        } else {
           display.refreshPrice(lastPrice, currentPrice);
           lastPrice = currentPrice;
-          tick();delay(20);tick();
+          //tick();delay(20);tick();
         }
       }
       break;
@@ -88,8 +89,9 @@ void setup() {
   DEBUG_SERIAL.setDebugOutput(true);
 
   display.setContrast(contrast);
-  display.displayText("bitix");
-  delay(5000);
+  // display.displayText("bitix");
+  display.displayText(wifi.getCurrencyPair());
+  // delay(5000);
 
   //set led pin as output
   pinMode(BUILTIN_LED, OUTPUT);
@@ -104,7 +106,7 @@ void setup() {
   DEBUG_SERIAL.println("connected...yeey :)");
   ticker.detach();
 
-  display.displayText("UPDATE");
+  display.displayText("UPDATING");
   update_firmware();
 
   //keep LED off

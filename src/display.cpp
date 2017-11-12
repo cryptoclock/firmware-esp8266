@@ -10,7 +10,8 @@ void Display::displayText(String value, int x, int y) {
 
 void Display::displayPrice(String value) {
   m_display7segment.showNumberDec(value.toInt(), false, 4, 0);
-  displayText(value,4);
+  m_display.setFont(u8g2_font_artosserif8_8n);
+  displayText(value);
 }
 
 void Display::displayRotate(String text, int pix_length) {
@@ -18,6 +19,17 @@ void Display::displayRotate(String text, int pix_length) {
     displayText(text, 32-r);
     delay(40);
   }
+}
+
+void Display::blinkDot(){
+  m_display.setDrawColor(1);
+  m_display.drawPixel(31, 15);
+  m_display.sendBuffer();
+  delay(500);
+  m_display.setDrawColor(0);
+  m_display.drawPixel(31, 15);
+  m_display.sendBuffer();
+  m_display.setDrawColor(1);
 }
 
 void Display::refreshPrice(int lastPrice, int currentPrice) {
