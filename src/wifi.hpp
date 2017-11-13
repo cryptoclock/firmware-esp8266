@@ -8,7 +8,7 @@ extern const char* update_server_url;
 class WiFiCore
 {
 public:
-  WiFiCore(Display &display, AP_list &ap_list) : m_display(display), m_ap_list(ap_list), m_wifimanager(WiFiManager()),
+  WiFiCore(Display &display, AP_list *ap_list) : m_display(display), m_ap_list(ap_list), m_wifimanager(WiFiManager()),
     m_currency_pair(new WiFiManagerParameter("pair", "Currency pair", default_currency_pair, 10)),
     m_update_server(new WiFiManagerParameter("update_server", "Update server", update_server_url, 20))
   {
@@ -19,8 +19,8 @@ public:
 
     m_wifimanager.setSaveConfigCallback(&saveCallback);
 
-    m_ap_list.readFromEEPROM();
-    m_ap_list.addAPsToWiFiManager(&m_wifimanager);
+    m_ap_list->readFromEEPROM();
+    m_ap_list->addAPsToWiFiManager(&m_wifimanager);
   }
 
   void setAPCallback(void (*func)(WiFiManager*));
@@ -35,7 +35,7 @@ public:
 private:
   WiFiManager m_wifimanager;
   Display &m_display;
-  AP_list &m_ap_list;
+  AP_list *m_ap_list;
   WiFiManagerParameter *m_currency_pair;
   WiFiManagerParameter *m_update_server;
 };

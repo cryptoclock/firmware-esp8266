@@ -28,9 +28,10 @@ WebSocketsClient webSocket;
 //U8G2_MAX7219_32X8_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ D2, /* data=*/ D4, /* cs=*/ D3, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
 U8G2_MAX7219_32X8_F_4W_SW_SPI u8g2(U8G2_R2, /* clock=*/ D7, /* data=*/ D5, /* cs=*/ D6, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
 TM1637Display tm1637(/* clock=*/ D0, /* data=*/ D1);
+
 Display display(u8g2, tm1637);
-AP_list APs;
-WiFiCore wifi(display, APs);
+AP_list *APs;
+WiFiCore *wifi;
 
 long lastUpdateMillis = 0;
 int lastPrice = -1;
@@ -97,18 +98,15 @@ void setup() {
 
   display.setContrast(contrast);
   // display.displayText("bitix");
-  display.displayText(wifi.getCurrencyPair());
+
+  APs = new AP_list();
+//  APs->storeToEEPROM(); // wipe eeprom
+  wifi = new WiFiCore(display, APs);
+
+  display.displayText(wifi->getCurrencyPair());
   // delay(5000);
 
   uint8_t value;
-
-  for (int i=0;i<64;++i) {
-    value = EEPROM.read(i);
-    DEBUG_SERIAL.print("EEPROM ");
-    DEBUG_SERIAL.print(i);
-    DEBUG_SERIAL.print(": ");
-    DEBUG_SERIAL.println(value, DEC);
-  }
 
   //set led pin as output
   pinMode(BUILTIN_LED, OUTPUT);
@@ -116,8 +114,8 @@ void setup() {
   ticker.attach(0.6, tick);
 
   //set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
-  wifi.setAPCallback(configModeCallback);
-  wifi.connectToWiFiOrFallbackToAP();
+  wifi->setAPCallback(configModeCallback);
+  wifi->connectToWiFiOrFallbackToAP();
 
   //if you get here you have connected to the WiFi
   DEBUG_SERIAL.println("connected...yeey :)");
@@ -133,10 +131,10 @@ void setup() {
   delay(3000);
   display.displayText(ESP.getSketchMD5());
   delay(3000);
-  display.displayText(wifi.getCurrencyPair());
+  display.displayText(wifi->getCurrencyPair());
   delay(3000);
 
-  webSocket.begin(ticker_server_ip, ticker_server_port, String(ticker_server_url) + wifi.getCurrencyPair());
+  webSocket.begin(ticker_server_ip, ticker_server_port, String(ticker_server_url) + wifi->getCurrencyPair());
   webSocket.onEvent(webSocketEvent);
 
   pinMode(PORTAL_TRIGGER_PIN, INPUT);
@@ -152,8 +150,9 @@ void loop() {
     if ((millis() - buttonTimer > longPressTime) && (longPressActive == false)) {
       longPressActive = true;
       DEBUG_SERIAL.println("Reseting settings");
-      wifi.resetSettings();
-      ESP.reset();
+      wifi->resetSettings();
+      delay(500);
+      ESP.restart();
     }
   } else {
     if (buttonActive == true) {
@@ -161,7 +160,7 @@ void loop() {
         longPressActive = false;
       } else {
         DEBUG_SERIAL.println("Starting portal");
-        wifi.startAP("OnDemandAP", 120);
+        wifi->startAP("OnDemandAP", 120);
       }
       buttonActive = false;
     }

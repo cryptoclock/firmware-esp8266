@@ -19,16 +19,16 @@ void AP_list::clear(void)
 void AP_list::addToTop(const String &SSID, const String &password)
 {
   int index = getIndexBySSID(SSID);
-  if (index > 0 && index <5) {
-    DEBUG_SERIAL.printf("[APs] Add: SSID %s already in list",SSID.c_str());
+  if (index >= 0 && index <5) {
+    DEBUG_SERIAL.printf("[APs] Add: SSID %s already in list\n",SSID.c_str());
     return;
   }
   if (index>=5) {
-    DEBUG_SERIAL.printf("[APs] Add: SSID %s already in list, but not in top 5, bumping to top",SSID.c_str());
+    DEBUG_SERIAL.printf("[APs] Add: SSID %s already in list, but not in top 5, bumping to top\n",SSID.c_str());
     moveToTop(index);
     return;
   }
-  DEBUG_SERIAL.printf("[APs] Add: SSID %s not in list, adding",SSID.c_str());
+  DEBUG_SERIAL.printf("[APs] Add: SSID %s not in list, adding\n",SSID.c_str());
 
   // bump down the list
   for (int i=c_max_stored_aps - 1;i>0;--i)
@@ -67,7 +67,7 @@ void AP_list::readFromEEPROM(void)
     return;
   }
 
-  DEBUG_SERIAL.printf("[APs] Reading from EEPROM at offset %i",c_eeprom_offset);
+  DEBUG_SERIAL.printf("[APs] Reading from EEPROM at offset %i\n",c_eeprom_offset);
   EEPROM.get(c_eeprom_offset + 3, m_aps);
   printAPs();
 }
@@ -76,14 +76,14 @@ void AP_list::printAPs(void)
 {
   for (int i=0;i<c_max_stored_aps;++i) {
     if (m_aps[i].ssid[0] == '\0') continue;
-    DEBUG_SERIAL.printf("[APs] AP #%i -> SSID: %s Password: %s",
+    DEBUG_SERIAL.printf("[APs] AP #%i -> SSID: %s Password: %s\n",
             i, m_aps[i].ssid, m_aps[i].password); // TODO: redact password
   }
 }
 
 void AP_list::storeToEEPROM(void)
 {
-  DEBUG_SERIAL.printf("[APs] Storing to EEPROM at offset %i",c_eeprom_offset);
+  DEBUG_SERIAL.printf("[APs] Storing to EEPROM at offset %i\n",c_eeprom_offset);
   printAPs();
   EEPROM.put(c_eeprom_offset, "APs");
   EEPROM.put(c_eeprom_offset + 3, m_aps);
@@ -102,7 +102,7 @@ int AP_list::getIndexBySSID(const String &SSID)
 
 void AP_list::addAPsToWiFiManager(WiFiManager *manager)
 {
-  DEBUG_SERIAL.printf("[APs] Adding APs to WiFiManager");
+  DEBUG_SERIAL.printf("[APs] Adding APs to WiFiManager\n");
   for (int i=0;i<c_max_stored_aps;++i) {
     if (m_aps[i].ssid[0] == '\0') continue;
     manager->addAP(strdup(m_aps[i].ssid), strdup(m_aps[i].password));
