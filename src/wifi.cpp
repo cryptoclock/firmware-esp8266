@@ -31,3 +31,23 @@ void WiFiCore::resetSettings()
 {
   m_wifimanager.resetSettings();
 }
+
+extern AP_list APs;
+extern WiFiCore wifi;
+
+void WiFiCore::saveCallback(void) {
+  DEBUG_SERIAL.println("Save callback called");
+
+  auto manager = wifi.getWiFiManager();
+  for (int i=0;;++i) {
+    auto credentials = manager->getAP(i);
+    if(credentials == NULL)
+      break;
+
+    DEBUG_SERIAL.printf("credentials: %s - %s",
+      credentials->ssid.c_str(), credentials->pass.c_str() );
+
+    APs.addToTop(credentials->ssid, credentials->pass);
+  }
+  APs.storeToEEPROM();
+}

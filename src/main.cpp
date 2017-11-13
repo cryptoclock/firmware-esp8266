@@ -21,13 +21,16 @@
 #include <Ticker.h>
 Ticker ticker;
 
+#include <EEPROM.h>
+
 WebSocketsClient webSocket;
 
 //U8G2_MAX7219_32X8_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ D2, /* data=*/ D4, /* cs=*/ D3, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
 U8G2_MAX7219_32X8_F_4W_SW_SPI u8g2(U8G2_R2, /* clock=*/ D7, /* data=*/ D5, /* cs=*/ D6, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
 TM1637Display tm1637(/* clock=*/ D0, /* data=*/ D1);
 Display display(u8g2, tm1637);
-WiFiCore wifi(display);
+AP_list APs;
+WiFiCore wifi(display, APs);
 
 long lastUpdateMillis = 0;
 int lastPrice = -1;
@@ -96,6 +99,16 @@ void setup() {
   // display.displayText("bitix");
   display.displayText(wifi.getCurrencyPair());
   // delay(5000);
+
+  uint8_t value;
+
+  for (int i=0;i<64;++i) {
+    value = EEPROM.read(i);
+    DEBUG_SERIAL.print("EEPROM ");
+    DEBUG_SERIAL.print(i);
+    DEBUG_SERIAL.print(": ");
+    DEBUG_SERIAL.println(value, DEC);
+  }
 
   //set led pin as output
   pinMode(BUILTIN_LED, OUTPUT);
