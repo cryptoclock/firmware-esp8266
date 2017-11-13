@@ -26,3 +26,8 @@ void WiFiCore::startAP(const char *ssid_name, unsigned long timeout)
   }
   m_wifimanager.setTimeout(0);
 }
+
+void WiFiCore::resetSettings()
+{
+  m_wifimanager.resetSettings();
+}

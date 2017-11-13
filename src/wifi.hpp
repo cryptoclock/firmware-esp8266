@@ -18,6 +18,7 @@ public:
   void setAPCallback(void (*func)(WiFiManager*));
   void startAP(const char *ssid_name, unsigned long timeout = 120);
   void connectToWiFiOrFallbackToAP(void);
+  void resetSettings(void);
 
   const char* getCurrencyPair(void) { return m_currency_pair->getValue(); }
 

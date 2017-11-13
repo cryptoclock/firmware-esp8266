@@ -29,9 +29,13 @@ TM1637Display tm1637(/* clock=*/ D0, /* data=*/ D1);
 Display display(u8g2, tm1637);
 WiFiCore wifi(display);
 
-boolean isButtonPressed = false;
 long lastUpdateMillis = 0;
 int lastPrice = -1;
+
+long buttonTimer = 0;
+long longPressTime = 3000;
+boolean buttonActive = false;
+boolean longPressActive = false;
 
 void tick()
 {
@@ -43,7 +47,7 @@ void tick()
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
-      DEBUG_SERIAL.printf("[WSc] Disconnected!\n");
+      DEBUG_SERIAL.printf("[WSc] Disconnected! %s\n",  payload);
       break;
     case WStype_CONNECTED:
       DEBUG_SERIAL.printf("[WSc] Connected to url: %s\n",  payload);
@@ -126,13 +130,29 @@ void setup() {
 }
 
 void loop() {
-    webSocket.loop();
-    if ( digitalRead(PORTAL_TRIGGER_PIN) == LOW ) {
-      DEBUG_SERIAL.println("Starting portal");
-      wifi.startAP("OnDemandAP", 120);
-//      DEBUG_SERIAL.println("connected...yeey :)");
+  webSocket.loop();
+  if (digitalRead(PORTAL_TRIGGER_PIN) == LOW) {
+    if (buttonActive == false) {
+      buttonActive = true;
+      buttonTimer = millis();
     }
-
-    // TODO: check if not connected and display message
-    // TODO: periodically display status of wifi
+    if ((millis() - buttonTimer > longPressTime) && (longPressActive == false)) {
+      longPressActive = true;
+      DEBUG_SERIAL.println("Reseting settings");
+      wifi.resetSettings();
+      ESP.reset();
+    }
+  } else {
+    if (buttonActive == true) {
+      if (longPressActive == true) {
+        longPressActive = false;
+      } else {
+        DEBUG_SERIAL.println("Starting portal");
+        wifi.startAP("OnDemandAP", 120);
+      }
+      buttonActive = false;
+    }
+  }
+  // TODO: check if not connected and display message
+  // TODO: periodically display status of wifi
 }
