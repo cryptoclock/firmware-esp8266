@@ -159,8 +159,10 @@ void loop() {
       if (longPressActive == true) {
         longPressActive = false;
       } else {
+        webSocket.disconnect();
         DEBUG_SERIAL.println("Starting portal");
         wifi->startAP("OnDemandAP", 120);
+        ESP.restart();
       }
       buttonActive = false;
     }
