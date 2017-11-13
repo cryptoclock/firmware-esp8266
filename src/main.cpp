@@ -121,6 +121,9 @@ void setup() {
   DEBUG_SERIAL.println("connected...yeey :)");
   ticker.detach();
 
+  display.displayText(WiFi.SSID());
+  delay(1000);
+
   display.displayText("UPDATING");
   update_firmware();
 
@@ -161,7 +164,7 @@ void loop() {
       } else {
         webSocket.disconnect();
         DEBUG_SERIAL.println("Starting portal");
-        wifi->startAP("OnDemandAP", 120);
+        wifi->startAP(String("OnDemandAP_"+String(ESP.getChipId())).c_str(), 120);
         ESP.restart();
       }
       buttonActive = false;
