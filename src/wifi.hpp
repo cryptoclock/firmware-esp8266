@@ -11,8 +11,8 @@ class WiFiCore
 public:
   WiFiCore(Display &display, AP_list *ap_list) : m_display(display), m_ap_list(ap_list), m_wifimanager(WiFiManager()),
     m_currency_pair(new WiFiManagerParameter("pair", "Currency pair", default_currency_pair, 10)),
-    m_ticker_server(new WiFiManagerParameter("ticker_server", "Ticker server", ticker_server_ip, 20)),
-    m_update_server(new WiFiManagerParameter("update_server", "Update server", update_server_url, 20))
+    m_ticker_server(new WiFiManagerParameter("ticker_server", "Ticker server", ticker_server_ip, 50)),
+    m_update_server(new WiFiManagerParameter("update_server", "Update server", update_server_url, 50))
   {
     // TODO: read/save custom data on eeprom
 
