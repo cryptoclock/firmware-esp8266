@@ -83,12 +83,13 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   DEBUG_SERIAL.println("Entered config mode");
   DEBUG_SERIAL.println(WiFi.softAPIP());
   //if you used auto generated SSID, print it
-  DEBUG_SERIAL.println(myWiFiManager->getConfigPortalSSID());
+  auto ap_ssid = myWiFiManager->getConfigPortalSSID();
+  DEBUG_SERIAL.println(ap_ssid);
 
   //entered config mode, make led toggle faster
   ticker.attach(0.2, tick);
 
-  display.displayRotate("PLEASE CONNECT TO AP",200);
+  display.displayRotate(String("PLEASE CONNECT TO AP ") + ap_ssid,200);
   display.displayText("WIFI", 4);
 }
 
