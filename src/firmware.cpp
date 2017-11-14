@@ -1,8 +1,9 @@
 #include <ESP8266httpUpdate.h>
 
+extern const char *update_server_url;
+
 void update_firmware() {
-  t_httpUpdate_return ret = ESPhttpUpdate.update("http://update.cryptoclock.zde.cz/esp/update?md5=" + ESP.getSketchMD5());
-  //t_httpUpdate_return ret = ESPhttpUpdate.update("10.0.1.48", 4567, "/esp/update", app_version);
+  t_httpUpdate_return ret = ESPhttpUpdate.update(String("http://") + update_server_url + "/esp/update?md5=" + ESP.getSketchMD5());
   switch(ret) {
     case HTTP_UPDATE_FAILED:
         Serial.println("[update] Update failed.");
