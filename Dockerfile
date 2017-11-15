@@ -23,6 +23,8 @@ RUN platformio lib install WebSockets
 RUN platformio lib install U8g2
 RUN platformio lib install the-real-orca/WifiManager#WiFiMulti
 RUN platformio lib install TM1637
+RUN platformio lib install Time
+RUN platformio lib install NtpClientLib
 
 # Compile the firmware
 CMD platformio run --environment $BOARD && mv .pioenvs/$BOARD/firmware.bin /assets/

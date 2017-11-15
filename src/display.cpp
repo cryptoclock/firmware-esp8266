@@ -14,6 +14,14 @@ void Display::displayPrice(String value) {
   displayText(value);
 }
 
+void Display::displayTime(String value) {
+  //m_display7segment.showNumberDec(value.toInt(), false, 4, 0);
+  m_display.setFont(u8g2_font_5x7_tn);
+  m_display.clearBuffer();
+  m_display.drawStr(4,15,value.substring(0,5).c_str());
+  m_display.sendBuffer();
+}
+
 void Display::displayRotate(String text, int pix_length) {
   for (int r=1; r <= pix_length; r++){
     displayText(text, 32-r);

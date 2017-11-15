@@ -25,6 +25,11 @@ Ticker ticker;
 
 #include <EEPROM.h>
 
+// NTP
+#include <TimeLib.h>
+#include <Time.h>
+#include <NtpClientLib.h>
+
 WebSocketsClient webSocket;
 
 //U8G2_MAX7219_32X8_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ D2, /* data=*/ D4, /* cs=*/ D3, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
@@ -48,6 +53,11 @@ void tick()
   //toggle state
   int state = digitalRead(BUILTIN_LED);  // get the current state of GPIO1 pin
   digitalWrite(BUILTIN_LED, !state);     // set pin to the opposite state
+}
+
+void displayTime()
+{
+  display.displayTime(NTP.getTimeDateString());
 }
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
@@ -156,6 +166,13 @@ void setup() {
   webSocket.onEvent(webSocketEvent);
 
   pinMode(PORTAL_TRIGGER_PIN, INPUT);
+
+  // NTP
+  DEBUG_SERIAL.println("Starting NTP..");
+  NTP.begin("ntp.nic.cz", 1, true);
+  NTP.setInterval(1800);
+
+  ticker.attach(10, displayTime);
 }
 
 void loop() {
