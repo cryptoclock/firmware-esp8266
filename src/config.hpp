@@ -15,5 +15,5 @@ const char* update_server_url = "update.cryptoclock.zde.cz";
 const char* ticker_server_ip = "ticker.cryptoclock.zde.cz";
 //const char* ticker_server_ip = "178.217.242.3";
 //const char* ticker_server_ip = "10.0.1.48";
-const int ticker_server_port = 80;
+const int ticker_server_port = 443;
 const char* ticker_server_url = "/";

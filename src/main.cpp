@@ -137,7 +137,7 @@ void setup() {
   display.displayText(wifi->getCurrencyPair());
   delay(3000);
 
-  webSocket.begin(ticker_server_ip, ticker_server_port, String(ticker_server_url) + wifi->getCurrencyPair());
+  webSocket.beginSSL(ticker_server_ip, ticker_server_port, String(ticker_server_url) + wifi->getCurrencyPair());
   webSocket.onEvent(webSocketEvent);
 
   pinMode(PORTAL_TRIGGER_PIN, INPUT);
