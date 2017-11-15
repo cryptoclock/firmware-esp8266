@@ -1,9 +1,11 @@
 #include <ESP8266httpUpdate.h>
 
-extern const char *update_server_url;
+#include "parameter_store.hpp"
 
-void update_firmware() {
-  t_httpUpdate_return ret = ESPhttpUpdate.update(String("http://") + update_server_url + "/esp/update?md5=" + ESP.getSketchMD5());
+extern ParameterStore g_parameters;
+
+void update_firmware(void) {
+  t_httpUpdate_return ret = ESPhttpUpdate.update("http://" + g_parameters["update_url"] + "/esp/update?md5=" + ESP.getSketchMD5());
   switch(ret) {
     case HTTP_UPDATE_FAILED:
         Serial.println("[update] Update failed.");

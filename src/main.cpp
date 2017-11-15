@@ -100,11 +100,13 @@ void setup() {
   display.setContrast(contrast);
   // display.displayText("bitix");
 
+  EEPROM.begin(4096);
+
+  g_parameters.loadFromEEPROM();
   APs = new AP_list();
-//  APs->storeToEEPROM(); // wipe eeprom
   wifi = new WiFiCore(display, APs);
 
-  display.displayText(wifi->getCurrencyPair());
+  display.displayText(g_parameters["currency_pair"]);
   // delay(5000);
 
   uint8_t value;
@@ -135,10 +137,14 @@ void setup() {
   delay(3000);
   display.displayText(ESP.getSketchMD5());
   delay(3000);
-  display.displayText(wifi->getCurrencyPair());
+  display.displayText(g_parameters["currency_pair"]);
   delay(3000);
 
-  webSocket.begin(ticker_server_ip, ticker_server_port, String(ticker_server_url) + wifi->getCurrencyPair());
+  webSocket.begin(
+    g_parameters["ticker_server_url"],
+    g_parameters["ticker_server_port"].toInt(),
+    g_parameters["ticker_url"] + g_parameters["currency_pair"]
+  );
   webSocket.onEvent(webSocketEvent);
 
   pinMode(PORTAL_TRIGGER_PIN, INPUT);
@@ -163,7 +169,8 @@ void loop() {
       if (longPressActive == true) {
         longPressActive = false;
       } else {
-        webSocket.disconnect();
+        // TODO: clear EEPROM?
+        webSocket.disconnect(); // clears hardware stored SSID/pass
         DEBUG_SERIAL.println("Starting portal");
         wifi->startAP(String("OnDemandAP_"+String(ESP.getChipId())).c_str(), 120);
         ESP.restart();

@@ -10,10 +10,15 @@ const int contrast = 64;
 
 const char* app_version = "0.1.3";
 
-const char* default_currency_pair = "BTCUSD";
-const char* update_server_url = "update.cryptoclock.zde.cz";
-const char* ticker_server_ip = "ticker.cryptoclock.zde.cz";
-//const char* ticker_server_ip = "178.217.242.3";
-//const char* ticker_server_ip = "10.0.1.48";
-const int ticker_server_port = 80;
-const char* ticker_server_url = "/";
+#include "parameter_store.hpp"
+
+ParameterItem _parameters[] = {
+  ParameterItem{"currency_pair","Currency pair","BTCUSD", 10},
+  ParameterItem{"update_url","Update server","update.cryptoclock.zde.cz", 50},
+  ParameterItem{"ticker_server_host","Ticker server hostname","ticker.cryptoclock.zde.cz", 50},
+  ParameterItem{"ticker_server_port","Ticker server port","80", 5},
+  ParameterItem{"ticker_path","Ticker server url","/", 50},
+  ParameterItem{"","","", 0} // EOL
+};
+
+ParameterStore g_parameters(_parameters);

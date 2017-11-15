@@ -6,7 +6,6 @@
 // TODO: onsave -> write to AP_list
 
 AP_list::AP_list() {
-  EEPROM.begin(4096);
   clear();
 }
 
@@ -87,7 +86,7 @@ void AP_list::storeToEEPROM(void)
   printAPs();
   EEPROM.put(c_eeprom_offset, "APs");
   EEPROM.put(c_eeprom_offset + 3, m_aps);
-  EEPROM.commit();
+//  EEPROM.commit();
 }
 
 int AP_list::getIndexBySSID(const String &SSID)
