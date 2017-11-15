@@ -1,3 +1,4 @@
+#include "config_common.hpp"
 #include <Arduino.h>
 
 struct ParameterItem {

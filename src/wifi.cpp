@@ -72,6 +72,8 @@ void WiFiCore::saveCallback(void)
 {
   DEBUG_SERIAL.println("Save callback called");
 
+  EEPROM.begin(2048);
+
   // save APs
   auto manager = wifi->getWiFiManager();
   for (int i=0;;++i) {
@@ -91,4 +93,5 @@ void WiFiCore::saveCallback(void)
   g_parameters.storeToEEPROM();
 
   EEPROM.commit();
+  EEPROM.end();
 }

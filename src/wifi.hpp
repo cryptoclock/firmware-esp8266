@@ -1,3 +1,4 @@
+#include "config_common.hpp"
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 #include "display.hpp"
 #include "aplist.hpp"

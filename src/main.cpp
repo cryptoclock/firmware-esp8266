@@ -1,3 +1,5 @@
+#include "config_common.hpp"
+
 #include <Arduino.h>
 #include <Hash.h>
 #include <Wire.h>
@@ -97,14 +99,19 @@ void setup() {
   DEBUG_SERIAL.begin(115200);
   DEBUG_SERIAL.setDebugOutput(true);
 
+  DEBUG_SERIAL.printf("Free memory: %i\n",ESP.getFreeHeap());
+
   display.setContrast(contrast);
   // display.displayText("bitix");
 
-  EEPROM.begin(4096);
+  EEPROM.begin(2048);
 
   g_parameters.loadFromEEPROM();
   APs = new AP_list();
   wifi = new WiFiCore(display, APs);
+
+  EEPROM.end();
+
 
   display.displayText(g_parameters["currency_pair"]);
   // delay(5000);

@@ -1,3 +1,4 @@
+#include "config_common.hpp"
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 
 const int AP_SSID_MAX_LENGTH = 32+1;

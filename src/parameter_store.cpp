@@ -1,9 +1,5 @@
-#include <Arduino.h>
-#include <EEPROM.h>
-
 #include "parameter_store.hpp"
-
-#define DEBUG_SERIAL Serial // TODO: const extern
+#include <EEPROM.h>
 
 ParameterStore::ParameterStore(ParameterItem *items) : m_size(0), m_items(items)
 {

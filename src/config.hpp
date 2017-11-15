@@ -1,11 +1,3 @@
-
-#define PORTAL_TRIGGER_PIN 0 // Flash button
-
-#define DEBUG
-#define DEBUG_ESP_PORT Serial
-
-#define DEBUG_SERIAL Serial
-
 const int contrast = 64;
 
 const char* app_version = "0.1.3";

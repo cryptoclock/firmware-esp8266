@@ -1,9 +1,9 @@
 #pragma once
+#include "config_common.hpp"
 
 #include <U8g2lib.h>
 #include <TM1637Display.h>
 
-#define DEBUG_SERIAL Serial
 
 class Display
 {

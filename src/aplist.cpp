@@ -1,8 +1,6 @@
 #include "aplist.hpp"
 #include <EEPROM.h>
 
-#define DEBUG_SERIAL Serial
-
 AP_list::AP_list() {
   clear();
 }
