@@ -26,4 +26,6 @@ public:
 private:
   ParameterItem *m_items;
   int m_size;
+
+  static int const c_eeprom_offset = 1024;
 };

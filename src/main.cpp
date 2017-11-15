@@ -141,10 +141,11 @@ void setup() {
   delay(3000);
 
   webSocket.begin(
-    g_parameters["ticker_server_url"],
+    g_parameters["ticker_server_host"],
     g_parameters["ticker_server_port"].toInt(),
-    g_parameters["ticker_url"] + g_parameters["currency_pair"]
+    g_parameters["ticker_path"] + g_parameters["currency_pair"]
   );
+
   webSocket.onEvent(webSocketEvent);
 
   pinMode(PORTAL_TRIGGER_PIN, INPUT);
@@ -158,6 +159,7 @@ void loop() {
       buttonTimer = millis();
     }
     if ((millis() - buttonTimer > longPressTime) && (longPressActive == false)) {
+      // TODO: clear EEPROM?
       longPressActive = true;
       DEBUG_SERIAL.println("Reseting settings");
       wifi->resetSettings();
@@ -169,8 +171,7 @@ void loop() {
       if (longPressActive == true) {
         longPressActive = false;
       } else {
-        // TODO: clear EEPROM?
-        webSocket.disconnect(); // clears hardware stored SSID/pass
+        webSocket.disconnect();
         DEBUG_SERIAL.println("Starting portal");
         wifi->startAP(String("OnDemandAP_"+String(ESP.getChipId())).c_str(), 120);
         ESP.restart();
