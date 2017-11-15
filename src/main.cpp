@@ -140,7 +140,7 @@ void setup() {
   display.displayText(g_parameters["currency_pair"]);
   delay(3000);
 
-  webSocket.begin(
+  webSocket.beginSSL(
     g_parameters["ticker_server_host"],
     g_parameters["ticker_server_port"].toInt(),
     g_parameters["ticker_path"] + g_parameters["currency_pair"]
