@@ -14,7 +14,7 @@ void updateFirmware(void) {
   switch(ret) {
     case HTTP_UPDATE_FAILED:
         DEBUG_SERIAL.println("[update] Update failed.");
-        DEBUG_SERIAL.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+        DEBUG_SERIAL.printf("[update] HTTP_UPDATE_FAILED Error (%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
         break;
     case HTTP_UPDATE_NO_UPDATES:
         DEBUG_SERIAL.println("[update] Update no Update.");

@@ -22,6 +22,10 @@ WiFiCore::WiFiCore(Display *display, AP_list *ap_list) :
 
   m_ap_list->readFromEEPROM();
   m_ap_list->addAPsToWiFiManager(&m_wifimanager);
+
+  m_ev_conn = WiFi.onStationModeConnected(onConnect);
+  m_ev_disconn = WiFi.onStationModeDisconnected(onDisconnect);
+  m_ev_gotip = WiFi.onStationModeGotIP(onGotIP);
 }
 
 void WiFiCore::setAPCallback(void (*func)(WiFiManager*))
@@ -32,7 +36,7 @@ void WiFiCore::setAPCallback(void (*func)(WiFiManager*))
 void WiFiCore::connectToWiFiOrFallbackToAP(void)
 {
   if (!m_wifimanager.autoConnect()) {
-    DEBUG_SERIAL.println("Failed to connect and hit timeout");
+    DEBUG_SERIAL.println("[WiFiCore] Failed to connect and hit timeout");
     //reset and try again, or maybe put it to deep sleep
     ESP.reset();
     delay(1000);
@@ -43,7 +47,7 @@ void WiFiCore::startAP(const char *ssid_name, unsigned long timeout)
 {
   m_wifimanager.setTimeout(timeout);
   if (!m_wifimanager.startConfigPortal(ssid_name)) {
-    DEBUG_SERIAL.println("Failed to start AP and hit timeout");
+    DEBUG_SERIAL.println("[WiFiCore] Failed to start AP and hit timeout");
     delay(3000);
     ESP.reset();
     delay(5000);
@@ -70,7 +74,7 @@ void WiFiCore::updateParametersFromAP(WiFiManager *manager)
 
 void WiFiCore::saveCallback(void)
 {
-  DEBUG_SERIAL.println("Save callback called");
+  DEBUG_SERIAL.println("[WiFiCore] Save callback called");
 
   EEPROM.begin(2048);
 
@@ -81,8 +85,8 @@ void WiFiCore::saveCallback(void)
     if(credentials == NULL)
       break;
 
-    DEBUG_SERIAL.printf("credentials: %s - %s",
-      credentials->ssid.c_str(), credentials->pass.c_str() );
+//    DEBUG_SERIAL.printf("credentials: %s - %s",
+//      credentials->ssid.c_str(), credentials->pass.c_str() );
 
     g_APs->addToTop(credentials->ssid, credentials->pass);
   }
@@ -94,4 +98,23 @@ void WiFiCore::saveCallback(void)
 
   EEPROM.commit();
   EEPROM.end();
+}
+
+void WiFiCore::onConnect(WiFiEventStationModeConnected event_info)
+{
+  DEBUG_SERIAL.printf("[WiFiCore] Connected to SSID: %s channel %i\n",
+    event_info.ssid.c_str(), event_info.channel);
+}
+
+void WiFiCore::onDisconnect(WiFiEventStationModeDisconnected event_info)
+{
+  DEBUG_SERIAL.printf("[WiFiCore] Disconnected from SSID: %s\n", event_info.ssid.c_str());
+  DEBUG_SERIAL.printf("[WiFiCore] Reason: %d\n", event_info.reason);
+}
+
+void WiFiCore::onGotIP(WiFiEventStationModeGotIP ipInfo)
+{
+  DEBUG_SERIAL.printf("[WiFiCore] Got IP: %s Gateway: %s, Mask: %s\n",
+    ipInfo.ip.toString().c_str(), ipInfo.gw.toString().c_str(), ipInfo.mask.toString().c_str()
+  );
 }

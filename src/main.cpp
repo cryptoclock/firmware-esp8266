@@ -20,16 +20,22 @@
 #include "wifi.hpp"
 
 //for LED status
-#include <Ticker.h>
-Ticker g_blink_ticker;
-Ticker g_time_ticker;
+//#include <Ticker.h>
+//Ticker g_blink_ticker;
+//Ticker g_time_ticker;
 
+#include <TickerScheduler.h>
 #include <EEPROM.h>
 
 // NTP
 #include <TimeLib.h>
 #include <Time.h>
 #include <NtpClientLib.h>
+
+TickerScheduler g_ticker(2);
+
+const uint8_t TICKER_TIME = 0;
+const uint8_t TICKER_BLINK = 1;
 
 WebSocketsClient webSocket;
 
@@ -38,23 +44,30 @@ AP_list *g_APs;
 WiFiCore *g_wifi;
 
 long lastUpdateMillis = 0;
-int lastPrice = -1;
 
 long buttonTimer = 0;
 long longPressTime = 3000;
 boolean buttonActive = false;
 boolean longPressActive = false;
 
-void blink_callback()
+void blink_callback(void *arg)
 {
   //toggle state
   int state = digitalRead(BUILTIN_LED);  // get the current state of GPIO1 pin
   digitalWrite(BUILTIN_LED, !state);     // set pin to the opposite state
 }
 
-void time_callback()
+void time_callback(void *arg)
 {
-  g_display->displayTime(NTP.getTimeDateString());
+  static int counter = 0;
+  if (counter % 5 == 0) { // every 5th call display time
+    auto time = NTP.getTimeDateString();
+    DEBUG_SERIAL.printf("[NTP] Displaying time %s\n",  time.c_str());
+    g_display->displayTime(time);
+  } else {
+    g_display->refreshPrice(-1);
+  }
+  counter++;
 }
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
@@ -71,13 +84,8 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         String str = (char*)payload;
         int currentPrice = str.toInt();
         DEBUG_SERIAL.printf("[WSc] get tick: %i\n", currentPrice);
-        if (lastPrice==currentPrice) {
-          g_display->blinkDot();
-        } else {
-          g_display->refreshPrice(lastPrice, currentPrice);
-          lastPrice = currentPrice;
-          //tick();delay(20);tick();
-        }
+        g_display->blinkDot();
+        g_display->refreshPrice(currentPrice);
       }
       break;
     case WStype_BIN:
@@ -96,7 +104,8 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   DEBUG_SERIAL.println(ap_ssid);
 
   //entered config mode, make led toggle faster
-  g_blink_ticker.attach(0.2, blink_callback);
+//  g_ticker.remove(TICKER_BLINK);
+//  g_ticker.add(0, 200, blink_callback, nullptr, false);
 
   g_display->displayRotate(String("PLEASE CONNECT TO AP ") + ap_ssid,200);
   g_display->displayText("WIFI", 4);
@@ -107,18 +116,23 @@ void setupSerial()
 {
   DEBUG_SERIAL.begin(115200);
   DEBUG_SERIAL.setDebugOutput(true);
+  delay(1000);
   DEBUG_SERIAL.printf("Free memory: %i\n",ESP.getFreeHeap());
+  DEBUG_SERIAL.printf("Last reset reason: %s\n",ESP.getResetReason().c_str());
+  DEBUG_SERIAL.printf("Last reset info: %s\n",ESP.getResetInfo().c_str());
 }
 
 void setupDisplay()
 {
-#ifdef X_DISPLAY_U8G2
-  g_display = new DisplayU8G2(g_display_hw);
-#endif
-#ifdef X_DISPLAY_TM1637
-  g_display = new DisplayTM1637(g_display_hw);
+#if defined(X_DISPLAY_U8G2)
+  g_display = new DisplayU8G2(&g_display_hw);
+#elif defined(X_DISPLAY_TM1637)
+  g_display = new DisplayTM1637(&g_display_hw);
+#else
+  #error error
 #endif
   g_display->setContrast(g_contrast);
+  g_display->refreshPrice(-1);
 }
 
 void loadParameters()
@@ -134,8 +148,8 @@ void setupTicker()
 {
   //set led pin as output
   pinMode(BUILTIN_LED, OUTPUT);
-  // start ticker with 0.6 because we start in AP mode and try to connect
-  g_blink_ticker.attach(0.6, blink_callback);
+  // start ticker with 0.6s because we start in AP mode and try to connect
+//  g_ticker.add(0, 600, blink_callback, nullptr, false);
 }
 
 void connectToWiFi()
@@ -146,7 +160,9 @@ void connectToWiFi()
 
   //if you get here you have connected to the WiFi
   DEBUG_SERIAL.println("connected...yeey :)");
-  g_blink_ticker.detach();
+  //g_ticker.remove(TICKER_BLINK);
+
+  //g_blink_ticker.detach();
 }
 
 void connectWebSocket()
@@ -166,7 +182,7 @@ void setupNTP()
   NTP.begin("ntp.nic.cz", 1, true);
   NTP.setInterval(1800);
 
-  g_time_ticker.attach(10, time_callback);
+  g_ticker.add(TICKER_TIME, 4000, time_callback, nullptr, true);
 }
 
 void setup() {
@@ -182,8 +198,10 @@ void setup() {
   g_display->displayText(WiFi.SSID());
   delay(1000);
 
+#ifndef NO_OTA_FIRMWARE_UPDATE
   g_display->displayText("UPDATING");
   updateFirmware();
+#endif
 
   //keep LED off
   digitalWrite(BUILTIN_LED, false);
@@ -204,6 +222,8 @@ void setup() {
 
 void loop() {
   webSocket.loop();
+  g_ticker.update();
+
   if (digitalRead(PORTAL_TRIGGER_PIN) == LOW) {
     if (buttonActive == false) {
       buttonActive = true;
@@ -233,3 +253,9 @@ void loop() {
   // TODO: check if not connected and display message
   // TODO: periodically display status of wifi
 }
+
+// void onSTADisconnected(WiFiEventStationModeDisconnected event_info)
+//{
+// 	DEBUG_SERIAL.printf("Disconnected from SSID: %s\n", event_info.ssid.c_str());
+// 	DEBUG_SERIAL.printf("Reason: %d\n", event_info.reason);
+// }
