@@ -1,4 +1,4 @@
-const int contrast = 64;
+const int g_contrast = 64;
 
 const char* app_version = "0.1.3";
 
@@ -14,3 +14,13 @@ ParameterItem _parameters[] = {
 };
 
 ParameterStore g_parameters(_parameters);
+
+#define X_DISPLAY_TM1637 1
+
+#if defined(X_DISPLAY_U8G2)
+  U8G2_MAX7219_32X8_F_4W_SW_SPI g_display_hw(U8G2_R2, /* clock=*/ D7, /* data=*/ D5, /* cs=*/ D6, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
+#elif defined(X_DISPLAY_TM1637)
+  TM1637Display g_display_hw(/* clock=*/ D0, /* data=*/ D1);
+#else
+  #error Please configure display type in config.hpp.
+#endif
