@@ -203,6 +203,8 @@ void setup() {
   updateFirmware();
 #endif
 
+  setupNTP();
+
   //keep LED off
   digitalWrite(BUILTIN_LED, false);
 
@@ -216,8 +218,6 @@ void setup() {
   connectWebSocket();
 
   pinMode(PORTAL_TRIGGER_PIN, INPUT);
-
-  setupNTP();
 }
 
 void loop() {
