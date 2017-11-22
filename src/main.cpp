@@ -19,12 +19,6 @@
 #include "firmware.hpp"
 #include "wifi.hpp"
 
-//for LED status
-//#include <Ticker.h>
-//Ticker g_blink_ticker;
-//Ticker g_time_ticker;
-
-#include <TickerScheduler.h>
 #include <EEPROM.h>
 
 // NTP
@@ -32,10 +26,12 @@
 #include <Time.h>
 #include <NtpClientLib.h>
 
-TickerScheduler g_ticker(2);
+//TickerScheduler g_ticker(2);
 
-const uint8_t TICKER_TIME = 0;
-const uint8_t TICKER_BLINK = 1;
+//const uint8_t TICKER_TIME = 1;
+//const uint8_t TICKER_BLINK = 0;
+Ticker g_ticker_time;
+Ticker g_ticker_blink;
 
 WebSocketsClient webSocket;
 
@@ -50,14 +46,14 @@ long longPressTime = 3000;
 boolean buttonActive = false;
 boolean longPressActive = false;
 
-void blink_callback(void *arg)
+void blink_callback()
 {
   //toggle state
   int state = digitalRead(BUILTIN_LED);  // get the current state of GPIO1 pin
   digitalWrite(BUILTIN_LED, !state);     // set pin to the opposite state
 }
 
-void time_callback(void *arg)
+void time_callback()
 {
   static int counter = 0;
   if (counter % 5 == 0) { // every 5th call display time
@@ -104,8 +100,8 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   DEBUG_SERIAL.println(ap_ssid);
 
   //entered config mode, make led toggle faster
-//  g_ticker.remove(TICKER_BLINK);
-//  g_ticker.add(0, 200, blink_callback, nullptr, false);
+  g_ticker_blink.detach();
+  g_ticker_blink.attach(0.2, blink_callback);
 
   g_display->displayRotate(String("PLEASE CONNECT TO AP ") + ap_ssid,200);
   g_display->displayText("WIFI", 4);
@@ -149,7 +145,8 @@ void setupTicker()
   //set led pin as output
   pinMode(BUILTIN_LED, OUTPUT);
   // start ticker with 0.6s because we start in AP mode and try to connect
-//  g_ticker.add(0, 600, blink_callback, nullptr, false);
+  DEBUG_SERIAL.println("setupTicker");
+  g_ticker_blink.attach(0.6, blink_callback);
 }
 
 void connectToWiFi()
@@ -160,9 +157,7 @@ void connectToWiFi()
 
   //if you get here you have connected to the WiFi
   DEBUG_SERIAL.println("connected...yeey :)");
-  //g_ticker.remove(TICKER_BLINK);
-
-  //g_blink_ticker.detach();
+  g_ticker_blink.detach();
 }
 
 void connectWebSocket()
@@ -182,17 +177,17 @@ void setupNTP()
   NTP.begin("ntp.nic.cz", 1, true);
   NTP.setInterval(1800);
 
-  g_ticker.add(TICKER_TIME, 4000, time_callback, nullptr, true);
+  g_ticker_time.attach(4.0, time_callback);
 }
 
 void setup() {
   setupSerial();
+  setupTicker();
   setupDisplay();
   loadParameters();
 
   g_display->displayText(g_parameters["currency_pair"]);
 
-  setupTicker();
   connectToWiFi();
 
   g_display->displayText(WiFi.SSID());
@@ -222,7 +217,6 @@ void setup() {
 
 void loop() {
   webSocket.loop();
-  g_ticker.update();
 
   if (digitalRead(PORTAL_TRIGGER_PIN) == LOW) {
     if (buttonActive == false) {
@@ -244,6 +238,8 @@ void loop() {
       } else {
         webSocket.disconnect();
         DEBUG_SERIAL.println("Starting portal");
+        g_ticker_blink.detach();
+        g_ticker_blink.attach(0.2, blink_callback);
         g_wifi->startAP(String("OnDemandAP_"+String(ESP.getChipId())).c_str(), 120);
         ESP.restart();
       }
@@ -253,9 +249,3 @@ void loop() {
   // TODO: check if not connected and display message
   // TODO: periodically display status of wifi
 }
-
-// void onSTADisconnected(WiFiEventStationModeDisconnected event_info)
-//{
-// 	DEBUG_SERIAL.printf("Disconnected from SSID: %s\n", event_info.ssid.c_str());
-// 	DEBUG_SERIAL.printf("Reason: %d\n", event_info.reason);
-// }
