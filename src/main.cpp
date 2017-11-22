@@ -26,10 +26,8 @@
 #include <Time.h>
 #include <NtpClientLib.h>
 
-//TickerScheduler g_ticker(2);
+#include <Ticker.h>
 
-//const uint8_t TICKER_TIME = 1;
-//const uint8_t TICKER_BLINK = 0;
 Ticker g_ticker_time;
 Ticker g_ticker_blink;
 
@@ -145,7 +143,6 @@ void setupTicker()
   //set led pin as output
   pinMode(BUILTIN_LED, OUTPUT);
   // start ticker with 0.6s because we start in AP mode and try to connect
-  DEBUG_SERIAL.println("setupTicker");
   g_ticker_blink.attach(0.6, blink_callback);
 }
 
