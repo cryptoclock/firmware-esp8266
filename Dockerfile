@@ -25,7 +25,7 @@ RUN platformio lib install the-real-orca/WifiManager#WiFiMulti
 RUN platformio lib install TM1637
 RUN platformio lib install Time
 RUN platformio lib install NtpClientLib
-RUN platformio lib install https://github.com/Toshik/TickerScheduler.git
+RUN platformio lib install renat2985/TickerScheduler
 
 # Compile the firmware
 CMD platformio run --environment $BOARD && mv .pioenvs/$BOARD/firmware.bin /assets/
