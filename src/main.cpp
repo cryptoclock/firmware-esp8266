@@ -123,7 +123,7 @@ void setup() {
   EEPROM.end();
 
 
-  display.displayText(g_parameters["currency_pair"]);
+  display.displayText("CRYPTOCLOCK");
   // delay(5000);
 
   uint8_t value;
@@ -150,12 +150,12 @@ void setup() {
   //keep LED off
   digitalWrite(BUILTIN_LED, false);
 
-  display.displayText(app_version);
-  delay(3000);
-  display.displayText(ESP.getSketchMD5());
-  delay(3000);
-  display.displayText(g_parameters["currency_pair"]);
-  delay(3000);
+  //display.displayText(app_version);
+  //delay(3000);
+  //display.displayText(ESP.getSketchMD5());
+  //delay(3000);
+  //display.displayText(g_parameters["currency_pair"]);
+  //delay(3000);
 
   webSocket.beginSSL(
     g_parameters["ticker_server_host"],
