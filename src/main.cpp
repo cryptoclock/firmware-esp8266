@@ -172,7 +172,7 @@ void setup() {
   NTP.begin("ntp.nic.cz", 1, true);
   NTP.setInterval(1800);
 
-  ticker.attach(10, displayTime);
+  //ticker.attach(10, displayTime);
 }
 
 void loop() {
