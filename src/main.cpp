@@ -191,9 +191,9 @@ void setup() {
   setupDisplay();
   loadParameters();
 
-  g_display->queueAction(make_shared<StaticTextAction>(String(g_parameters["currency_pair"]), Coords{0,16}, 1.0, u8g2_font_profont10_tf));
-  g_display->queueAction(make_shared<StaticTextAction>(app_version, Coords{0,16}, 1.0, u8g2_font_profont10_tf));
-  g_display->queueAction(make_shared<RotatingTextAction>(ESP.getSketchMD5(), Coords{16,16}, 22, 2.0, u8g2_font_5x7_mf));
+  g_display->queueAction(make_shared<StaticTextAction>("CRYPTOCLOCK"), Coords{0,16}, 1.0, u8g2_font_profont10_tf));
+//  g_display->queueAction(make_shared<StaticTextAction>(app_version, Coords{0,16}, 1.0, u8g2_font_profont10_tf));
+//  g_display->queueAction(make_shared<RotatingTextAction>(ESP.getSketchMD5(), Coords{16,16}, 22, 2.0, u8g2_font_5x7_mf));
 
   g_price_action = make_shared<PriceAction>(Coords{0,15}, u8g2_font_profont10_tf);
   g_display->queueAction(g_price_action);
