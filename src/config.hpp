@@ -18,8 +18,8 @@ ParameterItem _parameters[] = {
 ParameterStore g_parameters(_parameters);
 
 // display
-#define X_DISPLAY_TM1637 1
-//#define X_DISPLAY_U8G2 1
+//#define X_DISPLAY_TM1637 1
+#define X_DISPLAY_U8G2 1
 
 #if defined(X_DISPLAY_U8G2)
 #include "display_u8g2.hpp"

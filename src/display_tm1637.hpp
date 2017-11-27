@@ -10,13 +10,13 @@ public:
       {}
 
   void displayText(const String& value, int x = 0, int y = 16) {}
-  void displayTime(const String& value);
+//  void displayTime(const String& value);
   void setContrast(uint8_t contrast);
-  void displayRotate(const String& text, int pix_length) {}
-  void blinkDot() {}
+//  void displayRotate(const String& text, int pix_length) {}
+//  void blinkDot() {}
 
 private:
-  void displayPrice(const String& value);
+//  void displayPrice(const String& value);
 
   TM1637Display* m_display;
 };

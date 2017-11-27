@@ -7,11 +7,17 @@
 #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
 
 #include <WebSocketsClient.h>
+#undef NETWORK_W5100 // To fix WebSockets and NTPClientLib #define conflict
+#undef NETWORK_ENC28J60
+#undef NETWORK_ESP8266
+
 //#include <Hash.h>
 //needed for library
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
+
+#include <vector>
 
 #include "display.hpp"
 #include "config.hpp"
@@ -37,6 +43,8 @@ Display *g_display;
 AP_list *g_APs;
 WiFiCore *g_wifi;
 
+//DisplayNG *g_display_ng;
+
 long lastUpdateMillis = 0;
 
 long buttonTimer = 0;
@@ -57,9 +65,9 @@ void time_callback()
   if (counter % 5 == 0) { // every 5th call display time
     auto time = NTP.getTimeDateString();
     DEBUG_SERIAL.printf("[NTP] Displaying time %s\n",  time.c_str());
-    g_display->displayTime(time);
+//    g_display->displayTime(time); // FIXME
   } else {
-    g_display->refreshPrice(-1);
+//    g_display->refreshPrice(-1); // FIXME
   }
   counter++;
 }
@@ -78,8 +86,8 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         String str = (char*)payload;
         int currentPrice = str.toInt();
         DEBUG_SERIAL.printf("[WSc] get tick: %i\n", currentPrice);
-        g_display->blinkDot();
-        g_display->refreshPrice(currentPrice);
+//        g_display->blinkDot(); // FIXME
+//        g_display->refreshPrice(currentPrice); // FIXME
       }
       break;
     case WStype_BIN:
@@ -101,8 +109,8 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   g_ticker_blink.detach();
   g_ticker_blink.attach(0.2, blink_callback);
 
-  g_display->displayRotate(String("PLEASE CONNECT TO AP ") + ap_ssid,200);
-  g_display->displayText("WIFI", 4);
+  // g_display->displayRotate(String("PLEASE CONNECT TO AP ") + ap_ssid,200); // FIXME
+  // g_display->displayText("WIFI", 4); // FIXME
 }
 
 
@@ -126,7 +134,13 @@ void setupDisplay()
   #error error
 #endif
   g_display->setContrast(g_contrast);
-  g_display->refreshPrice(-1);
+//  g_display->refreshPrice(-1); // FIXME
+  g_display->setupTickCallback([&]() { g_display->tick(); }); // can't be moved to class declaration because of lambda capture
+
+  g_display->queueAction(unique_ptr<Action>(new StaticTextAction("Test", {0,16}, 3.0)));
+  g_display->queueAction(unique_ptr<Action>(new StaticTextAction("Abcdef", {0,16}, 3.0)));
+//  g_display_ng->queueAction(new DisplayAction::RotatingText("Test", pair<0,8>, speed, 1.0));
+
 }
 
 void loadParameters()
@@ -183,15 +197,15 @@ void setup() {
   setupDisplay();
   loadParameters();
 
-  g_display->displayText(g_parameters["currency_pair"]);
+//  g_display->displayText(g_parameters["currency_pair"]); // FIXME
 
   connectToWiFi();
 
-  g_display->displayText(WiFi.SSID());
-  delay(1000);
+//  g_display->displayText(WiFi.SSID()); // FIXME
+//  delay(1000);
 
 #ifndef NO_OTA_FIRMWARE_UPDATE
-  g_display->displayText("UPDATING");
+//  g_display->displayText("UPDATING"); // FIXME
   updateFirmware();
 #endif
 
@@ -200,12 +214,12 @@ void setup() {
   //keep LED off
   digitalWrite(BUILTIN_LED, false);
 
-  g_display->displayText(app_version);
-  delay(3000);
-  g_display->displayText(ESP.getSketchMD5());
-  delay(3000);
-  g_display->displayText(g_parameters["currency_pair"]);
-  delay(3000);
+//  g_display->displayText(app_version); // FIXME
+//  delay(3000);
+//  g_display->displayText(ESP.getSketchMD5()); // FIXME
+//  delay(3000);
+//  g_display->displayText(g_parameters["currency_pair"]); // FIXME
+//  delay(3000);
 
   connectWebSocket();
 
@@ -243,6 +257,7 @@ void loop() {
       buttonActive = false;
     }
   }
+  delay(10);
   // TODO: check if not connected and display message
   // TODO: periodically display status of wifi
 }
