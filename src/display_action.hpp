@@ -84,7 +84,7 @@ class ClockAction : public Action
 {
 public:
   ClockAction(Coords coords, double duration, font_t font = nullptr)
-    : Action(duration, coords, font), m_time("??:??")
+    : Action(duration, coords, font), m_time("")
     {}
   void tick(Display *display);
   void draw(Display *display);

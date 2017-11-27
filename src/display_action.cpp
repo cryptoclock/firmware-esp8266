@@ -65,6 +65,9 @@ void PriceAction::updatePrice(const int new_price)
 void ClockAction::tick(Display *display) { ++m_ticks; }
 bool ClockAction::isFinished(void)
 {
+  if (m_time=="")
+    return true;
+
   if (m_duration <= 0.0) return false;
   if (elapsedTimeSecs() > m_duration) {
     m_ticks = 0; // reset
@@ -75,6 +78,8 @@ bool ClockAction::isFinished(void)
 
 void ClockAction::draw(Display *display)
 {
+  if (m_time=="") return;
+
   String text;
   if (m_font) display->setFont(m_font);
   if (int(elapsedTimeSecs()) % 2 == 0)
@@ -87,5 +92,7 @@ void ClockAction::draw(Display *display)
 
 void ClockAction::updateTime(const String& time)
 {
+  if (time=="Time not set")
+    return;
   m_time = time.substring(0,5);
 }
