@@ -26,7 +26,7 @@ void Action::setFinished(bool status)
 void StaticTextAction::tick(Display *display)
 {
   ++m_ticks;
-  if (elapsedTimeSecs() > m_duration)
+  if (m_duration >= 0 && elapsedTimeSecs() > m_duration)
     m_finished = true;
 }
 

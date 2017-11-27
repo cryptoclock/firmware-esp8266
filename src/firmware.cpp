@@ -8,8 +8,8 @@ extern ParameterStore g_parameters;
 void updateFirmware(void) {
   String url = "http://" + g_parameters["update_url"] + "/esp/update?md5=" + ESP.getSketchMD5();
   //t_httpUpdate_return ret = ESPhttpUpdate.update(url,"","AF B9 78 3B E6 1D 70 AE E7 97 0A 50 D8 7B 1C 89 83 90 32 30");
-  t_httpUpdate_return ret = ESPhttpUpdate.update(url);
   DEBUG_SERIAL.printf("Update URL: '%s'\n",url.c_str());
+  t_httpUpdate_return ret = ESPhttpUpdate.update(url);
 
   switch(ret) {
     case HTTP_UPDATE_FAILED:

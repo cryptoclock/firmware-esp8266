@@ -35,11 +35,15 @@ void Display::tick(void)
 void Display::queueAction(shared_ptr<Action> action)
 {
   action->setFinished(false);
+  action->tick(this);
+  action->draw(this, Coords{0,0});
   m_actions.push_back(action);
 }
 
 void Display::prependAction(shared_ptr<Action> action)
 {
   action->setFinished(false);
+  action->tick(this);
+  action->draw(this, Coords{0,0});
   m_actions.insert(m_actions.begin(), action);
 }

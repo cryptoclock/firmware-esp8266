@@ -204,8 +204,9 @@ void setup() {
 //  delay(1000);
 
 #ifndef NO_OTA_FIRMWARE_UPDATE
-  g_display->prependAction(make_shared<RotatingTextAction>("UPDATING...", Coords{0,0}, 32, -1));
+  g_display->prependAction(make_shared<RotatingTextAction>("UPDATING...", Coords{32,0}, 32, -1, u8g2_font_profont10_tf));
   updateFirmware();
+  g_display->prependAction(g_price_action); // TODO: replaceAction
 #endif
 
   setupNTP();
