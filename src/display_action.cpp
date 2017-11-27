@@ -75,8 +75,10 @@ void ClockAction::tick(Display *display)
   ++m_ticks;
 
   if (m_duration <= 0.0) return;
-  if (m_time=="" || elapsedTimeSecs() > m_duration)
+  if (m_time=="" || elapsedTimeSecs() > m_duration) {
     setFinished();
+    m_ticks = 0;
+  }
 }
 
 void ClockAction::draw(Display *display, Coords coords)
