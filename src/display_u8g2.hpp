@@ -10,6 +10,8 @@ public:
       {
         m_display->begin();
         m_display->setFont(u8g2_font_micro_tr);
+//        m_display->setDisplayRotation(U8G2_R2);
+        m_display->setDisplayRotation(U8G2_R0);
       }
 
   // for U8G2_R0 y=8

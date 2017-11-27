@@ -1,11 +1,39 @@
 #pragma once
 #include "config_common.hpp"
+#include <memory>
+
+using std::shared_ptr;
+
 
 // TODO: namespace
 // TODO: transtitions
 
 struct Coords {
   int x,y;
+
+  Coords& operator+=(const Coords& other)
+  {
+    this->x += other.x;
+    this->y += other.y;
+    return *this;
+  }
+  Coords& operator-=(const Coords& other)
+  {
+    this->x -= other.x;
+    this->y -= other.y;
+    return *this;
+  }
+
+  friend Coords operator+(Coords lhs, const Coords& rhs)
+  {
+    lhs += rhs;
+    return lhs;
+  }
+  friend Coords operator-(Coords lhs, const Coords& rhs)
+  {
+    lhs -= rhs;
+    return lhs;
+  }
 };
 
 class Display;
@@ -16,15 +44,18 @@ class Action
 {
 public:
   Action(double duration, Coords coords, font_t font = nullptr)
-    : m_duration(duration), m_ticks(0), m_coords(coords), m_font(font)
+    : m_duration(duration), m_ticks(0), m_coords(coords), m_font(font), m_finished(false)
   {}
 
   virtual void tick(Display *display) = 0;
-  virtual void draw(Display *display) = 0;
-  virtual bool isFinished(void) = 0;
+  virtual void draw(Display *display, Coords coords) = 0;
+  bool isFinished(void);
+  void setFinished(bool status = true);
+
   double elapsedTimeSecs(void);
   int elapsedTimeTicks(void);
   // transition_from, transition_to
+  void setCoords(Coords coords);
   virtual ~Action() = 0;
 protected:
 
@@ -32,6 +63,7 @@ protected:
   unsigned int m_ticks;
   Coords m_coords;
   font_t m_font;
+  bool m_finished;
 };
 
 inline Action::~Action() {}
@@ -44,9 +76,7 @@ public:
   {}
 
   void tick(Display *display);
-  void draw(Display *display);
-  bool isFinished(void);
-
+  void draw(Display *display, Coords coords);
 protected:
   String m_text;
 };
@@ -58,7 +88,7 @@ public:
     : StaticTextAction(text, coords, duration, font), m_speed(speed)
   {}
 
-  void draw(Display *display) override;
+  void draw(Display *display, Coords coords) override;
 
 private:
   int m_speed;
@@ -72,8 +102,7 @@ public:
     {}
 
   void tick(Display *display);
-  void draw(Display *display);
-  bool isFinished(void);
+  void draw(Display *display, Coords coords);
   void updatePrice(const int new_price);
 private:
   int m_price;
@@ -87,9 +116,24 @@ public:
     : Action(duration, coords, font), m_time("")
     {}
   void tick(Display *display);
-  void draw(Display *display);
-  bool isFinished(void);
+  void draw(Display *display, Coords coords);
   void updateTime(const String& time);
 private:
   String m_time;
+};
+
+class SlideUpTransitionAction : public Action
+{
+public:
+  SlideUpTransitionAction(shared_ptr<Action> actionA, shared_ptr<Action> actionB, Coords coords, double duration, double speed)
+    : Action(duration, coords), m_actionA(actionA), m_actionB(actionB), m_speed(speed)
+    {}
+
+  void tick(Display *display);
+  void draw(Display *display, Coords coords);
+private:
+
+  shared_ptr<Action> m_actionA;
+  shared_ptr<Action> m_actionB;
+  int m_speed;
 };

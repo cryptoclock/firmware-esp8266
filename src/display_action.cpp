@@ -12,35 +12,43 @@ int Action::elapsedTimeTicks(void)
   return m_ticks;
 }
 
-/* === StaticTextAction === */
-void StaticTextAction::tick(Display *display) { ++m_ticks; }
-
-void StaticTextAction::draw(Display *display)
+bool Action::isFinished()
 {
-  if (m_font) display->setFont(m_font);
-  display->displayText(m_text, m_coords.x, m_coords.y);
+  return m_finished;
 }
 
-bool StaticTextAction::isFinished(void)
+void Action::setFinished(bool status)
 {
-  if (m_duration <= 0.0) return false;
-  return elapsedTimeSecs() > m_duration;
+  m_finished = status;
+}
+
+/* === StaticTextAction === */
+void StaticTextAction::tick(Display *display)
+{
+  ++m_ticks;
+  if (elapsedTimeSecs() > m_duration)
+    m_finished = true;
+}
+
+void StaticTextAction::draw(Display *display, Coords coords)
+{
+  if (m_font) display->setFont(m_font);
+  display->displayText(m_text, m_coords + coords);
 }
 
 /* === RotatingTextAction === */
-void RotatingTextAction::draw(Display *display)
+void RotatingTextAction::draw(Display *display, Coords coords)
 {
   int width = display->getTextWidth(m_text) + m_coords.x;
   int offset_x = (int)(elapsedTimeSecs() * m_speed) % width;
   if (m_font) display->setFont(m_font);
-  display->displayText(m_text, m_coords.x - offset_x, m_coords.y);
+  display->displayText(m_text, m_coords + coords + Coords{-offset_x, 0});
 }
 
 /* === PriceAction === */
 void PriceAction::tick(Display *display) { ++m_ticks; }
-bool PriceAction::isFinished(void) { return false; }
 
-void PriceAction::draw(Display *display)
+void PriceAction::draw(Display *display, Coords coords)
 {
   if (m_font) display->setFont(m_font);
 
@@ -51,7 +59,7 @@ void PriceAction::draw(Display *display)
   int width = display->getTextWidth(text);
   int offset_x = (display->getDisplayWidth() - width) / 2.0;
 
-  display->displayText(text, m_coords.x + offset_x, m_coords.y);
+  display->displayText(text, m_coords + coords + Coords{offset_x, 0});
 }
 
 void PriceAction::updatePrice(const int new_price)
@@ -62,21 +70,16 @@ void PriceAction::updatePrice(const int new_price)
 //     //m_display->drawUTF8(0, 16, "B"); //""₿");
 
 /* === ClockAction === */
-void ClockAction::tick(Display *display) { ++m_ticks; }
-bool ClockAction::isFinished(void)
+void ClockAction::tick(Display *display)
 {
-  if (m_time=="")
-    return true;
+  ++m_ticks;
 
-  if (m_duration <= 0.0) return false;
-  if (elapsedTimeSecs() > m_duration) {
-    m_ticks = 0; // reset
-    return true;
-  }
-  return false;
+  if (m_duration <= 0.0) return;
+  if (m_time=="" || elapsedTimeSecs() > m_duration)
+    setFinished();
 }
 
-void ClockAction::draw(Display *display)
+void ClockAction::draw(Display *display, Coords coords)
 {
   if (m_time=="") return;
 
@@ -87,7 +90,7 @@ void ClockAction::draw(Display *display)
   else
     text = m_time.substring(0,2) + " " + m_time.substring(3,5);
 
-  display->displayText(text, m_coords.x, m_coords.y);
+  display->displayText(text, m_coords + coords);
 }
 
 void ClockAction::updateTime(const String& time)
@@ -95,4 +98,16 @@ void ClockAction::updateTime(const String& time)
   if (time=="Time not set")
     return;
   m_time = time.substring(0,5);
+}
+
+/* === Transition === */
+
+void SlideUpTransitionAction::tick(Display *display)
+{
+//  int offset_x = (int)(elapsedTimeSecs() * m_speed) % width;
+}
+
+void SlideUpTransitionAction::draw(Display *display, Coords coords)
+{
+
 }

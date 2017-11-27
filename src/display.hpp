@@ -21,6 +21,7 @@ public:
   virtual ~Display() = 0;
 
   virtual void displayText(const String& value, int x = 0, int y = 16) = 0;
+  virtual void displayText(const String& value, Coords coords);
   virtual int getTextWidth(const String& text) = 0;
   virtual void setContrast(uint8_t contrast) = 0;
   virtual void setFont(const uint8_t* font) = 0;
