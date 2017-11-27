@@ -34,12 +34,14 @@
 
 #include <Ticker.h>
 
-Ticker g_ticker_time;
+Ticker g_ticker_clock;
 Ticker g_ticker_blink;
 
 WebSocketsClient webSocket;
 
 Display *g_display;
+shared_ptr<PriceAction> g_price_action;
+shared_ptr<ClockAction> g_clock_action;
 AP_list *g_APs;
 WiFiCore *g_wifi;
 
@@ -59,17 +61,12 @@ void blink_callback()
   digitalWrite(BUILTIN_LED, !state);     // set pin to the opposite state
 }
 
-void time_callback()
+void clock_callback()
 {
-  static int counter = 0;
-  if (counter % 5 == 0) { // every 5th call display time
-    auto time = NTP.getTimeDateString();
-    DEBUG_SERIAL.printf("[NTP] Displaying time %s\n",  time.c_str());
-//    g_display->displayTime(time); // FIXME
-  } else {
-//    g_display->refreshPrice(-1); // FIXME
-  }
-  counter++;
+  auto time = NTP.getTimeDateString();
+  DEBUG_SERIAL.printf("[NTP] Displaying time %s\n",  time.c_str());
+  g_clock_action->updateTime(time);
+  g_display->prependAction(g_clock_action);
 }
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
@@ -85,9 +82,9 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         DEBUG_SERIAL.printf("[WSc] get text: %s\n", payload);
         String str = (char*)payload;
         int currentPrice = str.toInt();
+        g_price_action->updatePrice(currentPrice);
         DEBUG_SERIAL.printf("[WSc] get tick: %i\n", currentPrice);
 //        g_display->blinkDot(); // FIXME
-//        g_display->refreshPrice(currentPrice); // FIXME
       }
       break;
     case WStype_BIN:
@@ -109,8 +106,10 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   g_ticker_blink.detach();
   g_ticker_blink.attach(0.2, blink_callback);
 
-  // g_display->displayRotate(String("PLEASE CONNECT TO AP ") + ap_ssid,200); // FIXME
-  // g_display->displayText("WIFI", 4); // FIXME
+  g_display->prependAction(make_shared<RotatingTextAction>(
+    String("PLEASE CONNECT TO AP ") + ap_ssid,
+    Coords{32,16}, 32, -1)
+  );
 }
 
 
@@ -134,13 +133,7 @@ void setupDisplay()
   #error error
 #endif
   g_display->setContrast(g_contrast);
-//  g_display->refreshPrice(-1); // FIXME
   g_display->setupTickCallback([&]() { g_display->tick(); }); // can't be moved to class declaration because of lambda capture
-
-  g_display->queueAction(unique_ptr<Action>(new StaticTextAction("Test", {0,16}, 3.0)));
-  g_display->queueAction(unique_ptr<Action>(new StaticTextAction("Abcdef", {0,16}, 3.0)));
-//  g_display_ng->queueAction(new DisplayAction::RotatingText("Test", pair<0,8>, speed, 1.0));
-
 }
 
 void loadParameters()
@@ -188,7 +181,8 @@ void setupNTP()
   NTP.begin("ntp.nic.cz", 1, true);
   NTP.setInterval(1800);
 
-  g_ticker_time.attach(4.0, time_callback);
+  g_clock_action = make_shared<ClockAction>(Coords{4,15}, 4.0, u8g2_font_5x7_mf); // display clock for 4 secs
+  g_ticker_clock.attach(15.0, clock_callback);
 }
 
 void setup() {
@@ -197,7 +191,12 @@ void setup() {
   setupDisplay();
   loadParameters();
 
-//  g_display->displayText(g_parameters["currency_pair"]); // FIXME
+  g_display->queueAction(make_shared<StaticTextAction>(String(g_parameters["currency_pair"]), Coords{0,16}, 1.0, u8g2_font_5x8_tr));
+  g_display->queueAction(make_shared<StaticTextAction>(app_version, Coords{0,16}, 1.0, u8g2_font_5x7_tr));
+  g_display->queueAction(make_shared<RotatingTextAction>(ESP.getSketchMD5(), Coords{16,16}, 22, 2.0, u8g2_font_5x7_mf));
+
+  g_price_action = make_shared<PriceAction>(Coords{0,15}, u8g2_font_5x8_tn);
+  g_display->queueAction(g_price_action);
 
   connectToWiFi();
 
@@ -205,7 +204,7 @@ void setup() {
 //  delay(1000);
 
 #ifndef NO_OTA_FIRMWARE_UPDATE
-//  g_display->displayText("UPDATING"); // FIXME
+  g_display->prependAction(make_shared<RotatingTextAction>("UPDATING...", Coords{0,16}, 32, -1));
   updateFirmware();
 #endif
 
@@ -213,13 +212,6 @@ void setup() {
 
   //keep LED off
   digitalWrite(BUILTIN_LED, false);
-
-//  g_display->displayText(app_version); // FIXME
-//  delay(3000);
-//  g_display->displayText(ESP.getSketchMD5()); // FIXME
-//  delay(3000);
-//  g_display->displayText(g_parameters["currency_pair"]); // FIXME
-//  delay(3000);
 
   connectWebSocket();
 

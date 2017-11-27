@@ -15,13 +15,13 @@ public:
   // for U8G2_R0 y=8
   // for U8G2_R2 y=16
   void displayText(const String& value, int x = 0, int y = 16);
-//  void displayTime(const String& value);
+  int getTextWidth(const String& text);
+  int getDisplayWidth();
+  int getDisplayHeight();
+  int getCurrentFontHeight();
   void setContrast(uint8_t contrast);
-//  void displayRotate(const String& text, int pix_length);
-//  void blinkDot();
+  void setFont(const uint8_t* font);
 
 private:
-//  void displayPrice(const String& value);
-
   U8G2* m_display;
 };

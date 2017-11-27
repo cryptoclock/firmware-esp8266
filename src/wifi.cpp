@@ -85,9 +85,6 @@ void WiFiCore::saveCallback(void)
     if(credentials == NULL)
       break;
 
-//    DEBUG_SERIAL.printf("credentials: %s - %s",
-//      credentials->ssid.c_str(), credentials->pass.c_str() );
-
     g_APs->addToTop(credentials->ssid, credentials->pass);
   }
   g_APs->storeToEEPROM();
