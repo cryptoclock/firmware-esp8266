@@ -5,13 +5,12 @@
 class DisplayU8G2 : public Display
 {
 public:
-    DisplayU8G2(U8G2 *display) :
-      Display(true), m_display(display)
+    DisplayU8G2(U8G2 *display, const u8g2_cb_t* rotation) :
+      Display(true), m_display(display), m_rotation(rotation)
       {
         m_display->begin();
         m_display->setFont(u8g2_font_micro_tr);
-//        m_display->setDisplayRotation(U8G2_R2);
-        m_display->setDisplayRotation(U8G2_R0);
+        m_display->setDisplayRotation(m_rotation);
       }
 
   // for U8G2_R0 y=8
@@ -26,4 +25,5 @@ public:
 
 private:
   U8G2* m_display;
+  const u8g2_cb_t* m_rotation;
 };

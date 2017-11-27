@@ -5,8 +5,7 @@ Display::~Display() {}
 
 void Display::displayText(const String& value, Coords coords)
 {
-  // podle rotace
-  displayText(value, coords.x, coords.y + 8);
+  displayText(value, coords.x, coords.y);
 }
 
 

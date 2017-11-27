@@ -126,7 +126,7 @@ void setupSerial()
 void setupDisplay()
 {
 #if defined(X_DISPLAY_U8G2)
-  g_display = new DisplayU8G2(&g_display_hw);
+  g_display = new DisplayU8G2(&g_display_hw, X_DISPLAY_DEFAULT_ROTATION);
 #elif defined(X_DISPLAY_TM1637)
   g_display = new DisplayTM1637(&g_display_hw);
 #else

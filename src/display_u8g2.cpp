@@ -3,6 +3,11 @@
 
 void DisplayU8G2::displayText(const String& value, int x, int y)
 {
+  if (m_rotation==U8G2_R0)
+    y += 8;
+  else if (m_rotation==U8G2_R2)
+    y += 16;
+  
   DEBUG_SERIAL.printf("[DISPLAY] PRINTING %s to %i, %i\n", value.c_str(), x, y);
   m_display->clearBuffer();
   m_display->drawStr(x,y,value.c_str());
