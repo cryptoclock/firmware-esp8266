@@ -191,7 +191,7 @@ void setup() {
   setupDisplay();
   loadParameters();
 
-  g_display->queueAction(make_shared<StaticTextAction>("CRYPTOCLOCK"), Coords{0,16}, 1.0, u8g2_font_profont10_tf));
+  g_display->queueAction(make_shared<StaticTextAction>("CRYPTOCLOCK", Coords{0,16}, 1.0, u8g2_font_profont10_tf));
 //  g_display->queueAction(make_shared<StaticTextAction>(app_version, Coords{0,16}, 1.0, u8g2_font_profont10_tf));
 //  g_display->queueAction(make_shared<RotatingTextAction>(ESP.getSketchMD5(), Coords{16,16}, 22, 2.0, u8g2_font_5x7_mf));
 
@@ -243,6 +243,7 @@ void loop() {
         DEBUG_SERIAL.println("Starting portal");
         g_ticker_blink.detach();
         g_ticker_blink.attach(0.2, blink_callback);
+
         g_wifi->startAP(String("OnDemandAP_"+String(ESP.getChipId())).c_str(), 120);
         ESP.restart();
       }
