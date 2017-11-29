@@ -13,9 +13,9 @@ public:
         m_display->setDisplayRotation(m_rotation);
       }
 
-  // for U8G2_R0 y=8
-  // for U8G2_R2 y=16
-  void displayText(const String& value, int x = 0, int y = 16);
+  void displayText(const String& value, int x = 0, int y = 16, bool immediate=true);
+  void clearBuffer(void);
+  void sendBuffer(void);
   int getTextWidth(const String& text);
   int getDisplayWidth();
   int getDisplayHeight();

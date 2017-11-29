@@ -1,7 +1,6 @@
 const int g_contrast = 64;
 
-const char* app_version = "0.2.0";
-//#define NO_OTA_FIRMWARE_UPDATE 1
+const char* app_version = "0.2.1";
 
 #include "parameter_store.hpp"
 

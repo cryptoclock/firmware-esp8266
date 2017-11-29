@@ -20,8 +20,10 @@ public:
   {}
   virtual ~Display() = 0;
 
-  virtual void displayText(const String& value, int x = 0, int y = 16) = 0;
-  virtual void displayText(const String& value, Coords coords);
+  virtual void displayText(const String& value, int x = 0, int y = 16, bool immediate=true) = 0;
+  virtual void displayText(const String& value, Coords coords, bool immediate=true);
+  virtual void clearBuffer(void) = 0;
+  virtual void sendBuffer(void) = 0;
   virtual int getTextWidth(const String& text) = 0;
   virtual void setContrast(uint8_t contrast) = 0;
   virtual void setFont(const uint8_t* font) = 0;
@@ -33,6 +35,7 @@ public:
   void tick(void);
   void queueAction(shared_ptr<Action> action);
   void prependAction(shared_ptr<Action> action);
+  void replaceAction(shared_ptr<Action> action);
 
 protected:
   bool m_enabled;

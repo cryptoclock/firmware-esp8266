@@ -39,10 +39,14 @@ void StaticTextAction::draw(Display *display, Coords coords)
 /* === RotatingTextAction === */
 void RotatingTextAction::draw(Display *display, Coords coords)
 {
-  int width = display->getTextWidth(m_text) + m_coords.x;
+  int width = display->getTextWidth(m_text);
   int offset_x = (int)(elapsedTimeSecs() * m_speed) % width;
   if (m_font) display->setFont(m_font);
-  display->displayText(m_text, m_coords + coords + Coords{-offset_x, 0});
+//  display->getDisplayWidth();
+  display->clearBuffer();
+  display->displayText(m_text, m_coords + coords + Coords{-offset_x, 0}, false);
+  display->displayText(m_text, m_coords + coords + Coords{-offset_x + width, 0}, false);
+  display->sendBuffer();
 }
 
 /* === PriceAction === */

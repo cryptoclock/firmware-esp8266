@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "display_u8g2.hpp"
 
-void DisplayU8G2::displayText(const String& value, int x, int y)
+void DisplayU8G2::displayText(const String& value, int x, int y, bool immediate)
 {
   if (m_rotation==U8G2_R0)
     y += 8;
@@ -9,8 +9,18 @@ void DisplayU8G2::displayText(const String& value, int x, int y)
     y += 16;
 
 //  DEBUG_SERIAL.printf("[DISPLAY] PRINTING %s to %i, %i\n", value.c_str(), x, y);
-  m_display->clearBuffer();
+  if (immediate) clearBuffer();
   m_display->drawStr(x,y,value.c_str());
+  if (immediate) sendBuffer();
+}
+
+void DisplayU8G2::clearBuffer(void)
+{
+  m_display->clearBuffer();
+}
+
+void DisplayU8G2::sendBuffer(void)
+{
   m_display->sendBuffer();
 }
 
