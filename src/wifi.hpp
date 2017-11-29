@@ -9,7 +9,7 @@ public:
   WiFiCore(Display *display, AP_list *ap_list);
 
   void setAPCallback(void (*func)(WiFiManager*));
-  void startAP(const char *ssid_name, unsigned long timeout = 120);
+  void startAP(const String& ssid_name, unsigned long timeout = 120);
   void connectToWiFiOrFallbackToAP(void);
   void resetSettings(void);
 

@@ -95,11 +95,12 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 }
 
 //gets called when WiFiManager enters configuration mode
-void configModeCallback (WiFiManager *myWiFiManager) {
+void configModeCallback (WiFiManager *myWiFiManager)
+{
   DEBUG_SERIAL.println("Entered config mode");
   DEBUG_SERIAL.println(WiFi.softAPIP());
   //if you used auto generated SSID, print it
-  auto ap_ssid = myWiFiManager->getConfigPortalSSID();
+  String ap_ssid = myWiFiManager->getConfigPortalSSID();
   DEBUG_SERIAL.println(ap_ssid);
 
   //entered config mode, make led toggle faster
@@ -107,8 +108,8 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   g_ticker_blink.attach(0.2, blink_callback);
 
   g_display->prependAction(make_shared<RotatingTextAction>(
-    String("PLEASE CONNECT TO AP ") + ap_ssid,
-    Coords{32,0}, 32, -1)
+    "PLEASE CONNECT TO AP  " + ap_ssid + "  ",
+    Coords{0,0}, 20, -1)
   );
 }
 
@@ -240,7 +241,7 @@ void loop() {
         DEBUG_SERIAL.println("Starting portal");
         g_ticker_blink.detach();
         g_ticker_blink.attach(0.2, blink_callback);
-        g_wifi->startAP(String("OnDemandAP_"+String(ESP.getChipId())).c_str(), 120);
+        g_wifi->startAP("OnDemandAP_"+String(ESP.getChipId()), 120);
         ESP.restart();
       }
       buttonActive = false;

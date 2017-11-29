@@ -43,10 +43,10 @@ void WiFiCore::connectToWiFiOrFallbackToAP(void)
   }
 }
 
-void WiFiCore::startAP(const char *ssid_name, unsigned long timeout)
+void WiFiCore::startAP(const String& ssid_name, unsigned long timeout)
 {
   m_wifimanager.setTimeout(timeout);
-  if (!m_wifimanager.startConfigPortal(ssid_name)) {
+  if (!m_wifimanager.startConfigPortal(ssid_name.c_str())) {
     DEBUG_SERIAL.println("[WiFiCore] Failed to start AP and hit timeout");
     delay(3000);
     ESP.reset();
