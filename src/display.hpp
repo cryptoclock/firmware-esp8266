@@ -21,7 +21,7 @@ public:
   virtual ~Display() = 0;
 
   virtual void displayText(const String& value, int x = 0, int y = 16, bool immediate=true) = 0;
-  virtual void displayText(const String& value, Coords coords, bool immediate=true);
+  void displayText(const String& value, Coords coords, bool immediate=true);
   virtual void clearBuffer(void) = 0;
   virtual void sendBuffer(void) = 0;
   virtual int getTextWidth(const String& text) = 0;
@@ -30,6 +30,7 @@ public:
   virtual int getDisplayWidth() = 0;
   virtual int getDisplayHeight() = 0;
   virtual int getCurrentFontHeight() = 0;
+  Coords centerTextOffset(const String& text);
 
   void setupTickCallback(Ticker::callback_t callback);
   void tick(void);

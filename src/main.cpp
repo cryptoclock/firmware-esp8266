@@ -84,6 +84,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         int currentPrice = str.toInt();
         g_price_action->updatePrice(currentPrice);
         DEBUG_SERIAL.printf("[WSc] get tick: %i\n", currentPrice);
+        DEBUG_SERIAL.printf("Free Heap: %i\n", ESP.getFreeHeap());
 //        g_display->blinkDot(); // FIXME
       }
       break;
@@ -192,7 +193,7 @@ void setup() {
   setupDisplay();
   loadParameters();
 
-  g_price_action = make_shared<PriceAction>(Coords{0,-1}, u8g2_font_profont10_tf);
+  g_price_action = make_shared<PriceAction>(Coords{0,0}, u8g2_font_profont10_tf);
 
   g_display->queueAction(make_shared<StaticTextAction>("CRYPTOCLOCK", Coords{0,0}, 1.0, u8g2_font_profont10_tf));
 //  g_display->queueAction(make_shared<StaticTextAction>(app_version, Coords{0,0}, 1.0, u8g2_font_profont10_tf));

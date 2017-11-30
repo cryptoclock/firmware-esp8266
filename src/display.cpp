@@ -8,6 +8,13 @@ void Display::displayText(const String& value, Coords coords, bool immediate)
   displayText(value, coords.x, coords.y, immediate);
 }
 
+Coords Display::centerTextOffset(const String& text)
+{
+  return Coords {
+    (int) std::max(ceil((getDisplayWidth() - getTextWidth(text)) / 2.0), 0.0),
+    - (int) std::max(ceil((getDisplayHeight() - getCurrentFontHeight()) / 2.0), 0.0)
+  };
+}
 
 void Display::setupTickCallback(Ticker::callback_t callback)
 {

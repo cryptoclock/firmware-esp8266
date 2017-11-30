@@ -40,7 +40,7 @@ void DisplayU8G2::setContrast(uint8_t contrast)
   m_display->setContrast(Display::m_contrast);
 }
 
-int DisplayU8G2::getDisplayWidth() { return 32; }
+int DisplayU8G2::getDisplayWidth() { return 32; } // FIXME: move to member variable
 int DisplayU8G2::getDisplayHeight() { return 8; }
 int DisplayU8G2::getCurrentFontHeight()
 {

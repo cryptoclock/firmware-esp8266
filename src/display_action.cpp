@@ -33,6 +33,7 @@ void StaticTextAction::tick(Display *display)
 void StaticTextAction::draw(Display *display, Coords coords)
 {
   if (m_font) display->setFont(m_font);
+  coords += display->centerTextOffset(m_text);
   display->displayText(m_text, m_coords + coords);
 }
 
@@ -42,10 +43,11 @@ void RotatingTextAction::draw(Display *display, Coords coords)
   if (m_font) display->setFont(m_font);
   int width = display->getTextWidth(m_text);
   int offset_x = (int)(elapsedTimeSecs() * m_speed) % width;
-//  display->getDisplayWidth();
+  Coords offset_center = display->centerTextOffset(m_text);
+
   display->clearBuffer();
-  display->displayText(m_text, m_coords + coords + Coords{-offset_x, 0}, false);
-  display->displayText(m_text, m_coords + coords + Coords{-offset_x + width, 0}, false);
+  display->displayText(m_text, m_coords + coords + Coords{-offset_x, offset_center.y}, false);
+  display->displayText(m_text, m_coords + coords + Coords{-offset_x + width, offset_center.y}, false);
   display->sendBuffer();
 }
 
@@ -60,10 +62,9 @@ void PriceAction::draw(Display *display, Coords coords)
   if (m_price<0)
     text = "-----";
 
-  int width = display->getTextWidth(text);
-  int offset_x = (display->getDisplayWidth() - width) / 2.0;
+  coords += display->centerTextOffset(text);
 
-  display->displayText(text, m_coords + coords + Coords{offset_x, 0});
+  display->displayText(text, m_coords + coords);
 }
 
 void PriceAction::updatePrice(const int new_price)
