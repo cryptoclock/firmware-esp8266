@@ -109,8 +109,8 @@ void configModeCallback (WiFiManager *myWiFiManager)
   g_ticker_blink.attach(0.2, blink_callback);
 
   g_display->prependAction(make_shared<RotatingTextAction>(
-    "PLEASE CONNECT TO AP  " + ap_ssid + "  ",
-    Coords{0,0}, 20, -1)
+    "PLEASE CONNECT TO AP " + ap_ssid + "  ",
+    Coords{0,0}, 32, -1)
   );
 }
 
@@ -248,7 +248,7 @@ void loop() {
       buttonActive = false;
     }
   }
-  delay(10);
+  delay(5);
   // TODO: check if not connected and display message
   // TODO: periodically display status of wifi
 }

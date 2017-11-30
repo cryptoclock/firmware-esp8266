@@ -2,14 +2,9 @@
 #include "display_action.hpp"
 #include "display.hpp"
 
-double Action::elapsedTimeSecs(void)
+double Action::elapsedTime(void)
 {
-  return (m_ticks * MILIS_PER_TICK) / 1000.0;
-}
-
-int Action::elapsedTimeTicks(void)
-{
-  return m_ticks;
+  return m_elapsed_time;
 }
 
 bool Action::isFinished()
@@ -23,10 +18,11 @@ void Action::setFinished(bool status)
 }
 
 /* === StaticTextAction === */
-void StaticTextAction::tick(Display *display)
+void StaticTextAction::tick(Display *display, double elapsed_time)
 {
-  ++m_ticks;
-  if (m_duration >= 0 && elapsedTimeSecs() > m_duration)
+  m_elapsed_time += elapsed_time;
+
+  if (m_duration >= 0 && m_elapsed_time > m_duration)
     m_finished = true;
 }
 
@@ -42,7 +38,7 @@ void RotatingTextAction::draw(Display *display, Coords coords)
 {
   if (m_font) display->setFont(m_font);
   int width = display->getTextWidth(m_text);
-  int offset_x = (int)(elapsedTimeSecs() * m_speed) % width;
+  int offset_x = (int)(m_elapsed_time * m_speed) % width;
   Coords offset_center = display->centerTextOffset(m_text);
 
   display->clearBuffer();
@@ -52,7 +48,10 @@ void RotatingTextAction::draw(Display *display, Coords coords)
 }
 
 /* === PriceAction === */
-void PriceAction::tick(Display *display) { ++m_ticks; }
+void PriceAction::tick(Display *display, double elapsed_time)
+{
+  m_elapsed_time += elapsed_time;
+}
 
 void PriceAction::draw(Display *display, Coords coords)
 {
@@ -75,14 +74,14 @@ void PriceAction::updatePrice(const int new_price)
 //     //m_display->drawUTF8(0, 16, "B"); //""₿");
 
 /* === ClockAction === */
-void ClockAction::tick(Display *display)
+void ClockAction::tick(Display *display, double elapsed_time)
 {
-  ++m_ticks;
+  m_elapsed_time += elapsed_time;
 
   if (m_duration <= 0.0) return;
-  if (m_time=="" || elapsedTimeSecs() > m_duration) {
+  if (m_time=="" || m_elapsed_time > m_duration) {
     setFinished();
-    m_ticks = 0;
+    m_elapsed_time = 0;
   }
 }
 
@@ -92,7 +91,7 @@ void ClockAction::draw(Display *display, Coords coords)
 
   String text;
   if (m_font) display->setFont(m_font);
-  if (int(elapsedTimeSecs()) % 2 == 0)
+  if (int(m_elapsed_time) % 2 == 0)
     text = m_time;
   else
     text = m_time.substring(0,2) + " " + m_time.substring(3,5);
@@ -109,7 +108,7 @@ void ClockAction::updateTime(const String& time)
 
 /* === Transition === */
 
-void SlideUpTransitionAction::tick(Display *display)
+void SlideUpTransitionAction::tick(Display *display, double elapsed_time)
 {
 //  int offset_x = (int)(elapsedTimeSecs() * m_speed) % width;
 }

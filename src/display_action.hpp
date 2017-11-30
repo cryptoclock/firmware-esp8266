@@ -44,26 +44,24 @@ class Action
 {
 public:
   Action(double duration, Coords coords, font_t font = nullptr)
-    : m_duration(duration), m_ticks(0), m_coords(coords), m_font(font), m_finished(false)
+    : m_duration(duration), m_coords(coords), m_font(font), m_finished(false), m_elapsed_time(0.0)
   {}
 
-  virtual void tick(Display *display) = 0;
+  virtual void tick(Display *display, double elapsed_time) = 0;
   virtual void draw(Display *display, Coords coords) = 0;
   bool isFinished(void);
   void setFinished(bool status = true);
 
-  double elapsedTimeSecs(void);
-  int elapsedTimeTicks(void);
+  double elapsedTime(void);
   // transition_from, transition_to
   void setCoords(Coords coords);
   virtual ~Action() = 0;
 protected:
-
   double m_duration;
-  unsigned int m_ticks;
   Coords m_coords;
   font_t m_font;
   bool m_finished;
+  double m_elapsed_time;
 };
 
 inline Action::~Action() {}
@@ -75,7 +73,7 @@ public:
     : Action(duration, coords, font), m_text(text)
   {}
 
-  void tick(Display *display);
+  void tick(Display *display, double elapsed_time);
   void draw(Display *display, Coords coords);
 protected:
   String m_text;
@@ -101,7 +99,7 @@ public:
     : Action(-1, coords, font), m_price(-1), m_last_price(-1)
     {}
 
-  void tick(Display *display);
+  void tick(Display *display, double elapsed_time);
   void draw(Display *display, Coords coords);
   void updatePrice(const int new_price);
 private:
@@ -115,7 +113,7 @@ public:
   ClockAction(Coords coords, double duration, font_t font = nullptr)
     : Action(duration, coords, font), m_time("")
     {}
-  void tick(Display *display);
+  void tick(Display *display, double elapsed_time);
   void draw(Display *display, Coords coords);
   void updateTime(const String& time);
 private:
@@ -129,7 +127,7 @@ public:
     : Action(duration, coords), m_actionA(actionA), m_actionB(actionB), m_speed(speed)
     {}
 
-  void tick(Display *display);
+  void tick(Display *display, double elapsed_time);
   void draw(Display *display, Coords coords);
 private:
 

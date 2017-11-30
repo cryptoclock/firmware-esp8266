@@ -7,7 +7,7 @@
 
 #include "display_action.hpp"
 
-const int MILIS_PER_TICK = 20; // in ms
+const int MILIS_PER_TICK = 15; // in ms
 
 using std::vector;
 using std::shared_ptr;
@@ -17,7 +17,9 @@ class Display
 public:
   Display(bool enabled = true) :
     m_enabled(enabled), m_contrast(0)
-  {}
+  {
+    m_last_tick_at = micros();
+  }
   virtual ~Display() = 0;
 
   virtual void displayText(const String& value, int x = 0, int y = 16, bool immediate=true) = 0;
@@ -39,6 +41,7 @@ public:
   void replaceAction(shared_ptr<Action> action);
 
 protected:
+  unsigned long m_last_tick_at;
   bool m_enabled;
   uint8_t m_contrast;
   vector<shared_ptr<Action>> m_actions;
