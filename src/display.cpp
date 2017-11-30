@@ -28,7 +28,7 @@ void Display::tick(void)
   m_last_tick_at = micros();
 
   while(true) {
-    if (m_actions.size()<1)
+    if (m_actions.empty())
       return;
 
     auto action = m_actions.at(0);
@@ -65,4 +65,15 @@ void Display::replaceAction(shared_ptr<Action> action)
   action->tick(this, 0.0);
   action->draw(this, Coords{0,0});
   m_actions[0] = action;
+}
+
+void Display::removeBottomAction(void)
+{
+  if (!m_actions.empty())
+    m_actions.pop_back();
+}
+
+void Display::cleanQueue(void)
+{
+  m_actions.clear();
 }

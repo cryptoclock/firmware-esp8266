@@ -45,8 +45,6 @@ shared_ptr<ClockAction> g_clock_action;
 AP_list *g_APs;
 WiFiCore *g_wifi;
 
-//DisplayNG *g_display_ng;
-
 long lastUpdateMillis = 0;
 
 long buttonTimer = 0;
@@ -110,8 +108,10 @@ void configModeCallback (WiFiManager *myWiFiManager)
 
   g_display->prependAction(make_shared<RotatingTextAction>(
     "PLEASE CONNECT TO AP " + ap_ssid + "  ",
-    Coords{0,0}, 32, -1)
-  );
+    -1, // duration
+    32, // speed
+    Coords{0,0}
+  ));
 }
 
 
@@ -128,9 +128,15 @@ void setupSerial()
 void setupDisplay()
 {
 #if defined(X_DISPLAY_U8G2)
-  g_display = new DisplayU8G2(&g_display_hw, X_DISPLAY_DEFAULT_ROTATION);
+  g_display = new DisplayU8G2(
+    &g_display_hw,
+    X_DISPLAY_DEFAULT_ROTATION,
+    g_display_width,
+    g_display_height,
+    u8g2_font_profont10_tf
+  );
 #elif defined(X_DISPLAY_TM1637)
-  g_display = new DisplayTM1637(&g_display_hw);
+  g_display = new DisplayTM1637(&g_display_hw, g_display_num_digits);
 #else
   #error error
 #endif
@@ -183,7 +189,7 @@ void setupNTP()
   NTP.begin("ntp.nic.cz", 1, true);
   NTP.setInterval(1800);
 
-  g_clock_action = make_shared<ClockAction>(Coords{4,-1}, 2.0, u8g2_font_profont10_tf); // display clock for 2 secs
+  g_clock_action = make_shared<ClockAction>(2.0, Coords{4,-1}); // display clock for 2 secs
   g_ticker_clock.attach(30.0, clock_callback);
 }
 
@@ -193,17 +199,18 @@ void setup() {
   setupDisplay();
   loadParameters();
 
-  g_price_action = make_shared<PriceAction>(Coords{0,0}, u8g2_font_profont10_tf);
+  g_price_action = make_shared<PriceAction>(Coords{0,0});
 
-  g_display->queueAction(make_shared<StaticTextAction>("CRYPTOCLOCK", Coords{0,0}, 1.0, u8g2_font_profont10_tf));
-//  g_display->queueAction(make_shared<StaticTextAction>(app_version, Coords{0,0}, 1.0, u8g2_font_profont10_tf));
-//  g_display->queueAction(make_shared<RotatingTextAction>(ESP.getSketchMD5(), Coords{16,0}, 22, 2.0, u8g2_font_5x7_mf));
+  g_display->queueAction(make_shared<StaticTextAction>("CRYPTOCLOCK", 1.0));
+//  g_display->queueAction(make_shared<StaticTextAction>(app_version, 1.0);
+//  g_display->queueAction(make_shared<RotatingTextAction>(ESP.getSketchMD5(), 2.0, 32, Coords{0,0}, u8g2_font_5x7_mf));
 
-  g_display->queueAction(make_shared<RotatingTextAction>("--> WiFi ", Coords{0,0}, 32, -1, u8g2_font_profont10_tf));
+  g_display->queueAction(make_shared<RotatingTextAction>("--> WiFi ", -1, 32));
   connectToWiFi();
-  g_display->replaceAction(make_shared<StaticTextAction>(WiFi.SSID(), Coords{0,0}, 1.0, u8g2_font_profont10_tf));
+  g_display->removeBottomAction();
+  g_display->queueAction(make_shared<StaticTextAction>(WiFi.SSID(), 1.0));
 
-  g_display->queueAction(make_shared<RotatingTextAction>("UPDATING... ", Coords{0,0}, 32, -1, u8g2_font_profont10_tf));
+  g_display->queueAction(make_shared<RotatingTextAction>("UPDATING... ", -1, 32));
   updateFirmware();
   g_display->replaceAction(g_price_action);
 

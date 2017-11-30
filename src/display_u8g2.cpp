@@ -31,7 +31,15 @@ int DisplayU8G2::getTextWidth(const String& text)
 
 void DisplayU8G2::setFont(const uint8_t* font)
 {
-  m_display->setFont(font);
+  if (font==nullptr)
+    m_display->setFont(m_default_font);
+  else
+    m_display->setFont(font);
+}
+
+font_t DisplayU8G2::getDefaultFont(void)
+{
+  return m_default_font;
 }
 
 void DisplayU8G2::setContrast(uint8_t contrast)
@@ -40,8 +48,8 @@ void DisplayU8G2::setContrast(uint8_t contrast)
   m_display->setContrast(Display::m_contrast);
 }
 
-int DisplayU8G2::getDisplayWidth() { return 32; } // FIXME: move to member variable
-int DisplayU8G2::getDisplayHeight() { return 8; }
+int DisplayU8G2::getDisplayWidth() { return m_width; }
+int DisplayU8G2::getDisplayHeight() { return m_height; }
 int DisplayU8G2::getCurrentFontHeight()
 {
   return m_display->getAscent();

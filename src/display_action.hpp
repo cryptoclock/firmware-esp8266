@@ -69,7 +69,7 @@ inline Action::~Action() {}
 class StaticTextAction : public Action
 {
 public:
-  StaticTextAction(const String& text, const Coords& coords, const double duration, font_t font = nullptr)
+  StaticTextAction(const String& text, const double duration, const Coords& coords = Coords{0,0}, font_t font = nullptr)
     : Action(duration, coords, font), m_text(text)
   {}
 
@@ -82,8 +82,8 @@ protected:
 class RotatingTextAction : public StaticTextAction
 {
 public:
-  RotatingTextAction(const String& text, const Coords& coords, const int speed, const double duration, font_t font = nullptr)
-    : StaticTextAction(text, coords, duration, font), m_speed(speed)
+  RotatingTextAction(const String& text, const double duration, const int speed, const Coords& coords = Coords{0,0}, font_t font = nullptr)
+    : StaticTextAction(text, duration, coords, font), m_speed(speed)
   {}
 
   void draw(Display *display, Coords coords) override;
@@ -95,7 +95,7 @@ private:
 class PriceAction : public Action
 {
 public:
-  PriceAction(Coords coords, font_t font = nullptr)
+  PriceAction(const Coords& coords=Coords{0,0}, font_t font = nullptr)
     : Action(-1, coords, font), m_price(-1), m_last_price(-1)
     {}
 
@@ -110,7 +110,7 @@ private:
 class ClockAction : public Action
 {
 public:
-  ClockAction(Coords coords, double duration, font_t font = nullptr)
+  ClockAction(double duration, const Coords& coords=Coords{0,0}, font_t font = nullptr)
     : Action(duration, coords, font), m_time("")
     {}
   void tick(Display *display, double elapsed_time);
@@ -123,7 +123,7 @@ private:
 class SlideUpTransitionAction : public Action
 {
 public:
-  SlideUpTransitionAction(shared_ptr<Action> actionA, shared_ptr<Action> actionB, Coords coords, double duration, double speed)
+  SlideUpTransitionAction(shared_ptr<Action> actionA, shared_ptr<Action> actionB, double duration, double speed, const Coords& coords=Coords{0,0})
     : Action(duration, coords), m_actionA(actionA), m_actionB(actionB), m_speed(speed)
     {}
 

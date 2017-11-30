@@ -28,7 +28,7 @@ void StaticTextAction::tick(Display *display, double elapsed_time)
 
 void StaticTextAction::draw(Display *display, Coords coords)
 {
-  if (m_font) display->setFont(m_font);
+  display->setFont(m_font);
   coords += display->centerTextOffset(m_text);
   display->displayText(m_text, m_coords + coords);
 }
@@ -36,7 +36,7 @@ void StaticTextAction::draw(Display *display, Coords coords)
 /* === RotatingTextAction === */
 void RotatingTextAction::draw(Display *display, Coords coords)
 {
-  if (m_font) display->setFont(m_font);
+  display->setFont(m_font);
   int width = display->getTextWidth(m_text);
   int offset_x = (int)(m_elapsed_time * m_speed) % width;
   Coords offset_center = display->centerTextOffset(m_text);
@@ -55,7 +55,7 @@ void PriceAction::tick(Display *display, double elapsed_time)
 
 void PriceAction::draw(Display *display, Coords coords)
 {
-  if (m_font) display->setFont(m_font);
+  display->setFont(m_font);
 
   String text = String(m_price);
   if (m_price<0)
@@ -89,8 +89,8 @@ void ClockAction::draw(Display *display, Coords coords)
 {
   if (m_time=="") return;
 
+  display->setFont(m_font);
   String text;
-  if (m_font) display->setFont(m_font);
   if (int(m_elapsed_time) % 2 == 0)
     text = m_time;
   else

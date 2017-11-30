@@ -32,6 +32,7 @@ public:
   virtual int getDisplayWidth() = 0;
   virtual int getDisplayHeight() = 0;
   virtual int getCurrentFontHeight() = 0;
+  virtual font_t getDefaultFont() = 0;
   Coords centerTextOffset(const String& text);
 
   void setupTickCallback(Ticker::callback_t callback);
@@ -39,6 +40,8 @@ public:
   void queueAction(shared_ptr<Action> action);
   void prependAction(shared_ptr<Action> action);
   void replaceAction(shared_ptr<Action> action);
+  void removeBottomAction(void);
+  void cleanQueue(void);
 
 protected:
   unsigned long m_last_tick_at;
