@@ -37,7 +37,7 @@
 Ticker g_ticker_clock;
 Ticker g_ticker_blink;
 
-WebSocketsClient webSocket;
+WebSocketsClient g_webSocket;
 
 Display *g_display;
 shared_ptr<PriceAction> g_price_action;
@@ -67,7 +67,7 @@ void clock_callback()
   g_display->prependAction(g_clock_action);
 }
 
-void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
+void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
       DEBUG_SERIAL.printf("[WSc] Disconnected! %s\n",  payload);
@@ -79,6 +79,14 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
       {
         DEBUG_SERIAL.printf("[WSc] get text: %s\n", payload);
         String str = (char*)payload;
+        if (str==";UPDATE") {
+          g_webSocket.disconnect();
+          DEBUG_SERIAL.println("Update request received, updating");
+          g_display->queueAction(make_shared<RotatingTextAction>("UPDATING... ", -1, 32));
+          updateFirmware();
+          ESP.restart();
+        }
+
         int currentPrice = str.toInt();
         g_price_action->updatePrice(currentPrice);
         DEBUG_SERIAL.printf("[WSc] get tick: %i\n", currentPrice);
@@ -174,13 +182,13 @@ void connectToWiFi()
 
 void connectWebSocket()
 {
-  webSocket.beginSSL(
+  g_webSocket.beginSSL(
     g_parameters["ticker_server_host"],
     g_parameters["ticker_server_port"].toInt(),
     g_parameters["ticker_path"] + g_parameters["currency_pair"]
   );
 
-  webSocket.onEvent(webSocketEvent);
+  g_webSocket.onEvent(webSocketEvent_callback);
 }
 
 void setupNTP()
@@ -225,7 +233,7 @@ void setup() {
 }
 
 void loop() {
-  webSocket.loop();
+  g_webSocket.loop();
 
   if (digitalRead(PORTAL_TRIGGER_PIN) == LOW) {
     if (buttonActive == false) {
@@ -245,7 +253,7 @@ void loop() {
       if (longPressActive == true) {
         longPressActive = false;
       } else {
-        webSocket.disconnect();
+        g_webSocket.disconnect();
         DEBUG_SERIAL.println("Starting portal");
         g_ticker_blink.detach();
         g_ticker_blink.attach(0.2, blink_callback);
