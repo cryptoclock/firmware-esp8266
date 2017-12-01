@@ -8,10 +8,19 @@ void DisplayU8G2::displayText(const String& value, int x, int y, bool immediate)
   else if (m_rotation==U8G2_R2)
     y += 16;
 
-//  DEBUG_SERIAL.printf("[DISPLAY] PRINTING %s to %i, %i\n", value.c_str(), x, y);
   if (immediate) clearBuffer();
   m_display->drawStr(x,y,value.c_str());
   if (immediate) sendBuffer();
+}
+
+void DisplayU8G2::drawGlyph(uint16_t glyph, Coords coords)
+{
+  if (m_rotation==U8G2_R0)
+    coords.y += 8;
+  else if (m_rotation==U8G2_R2)
+    coords.y += 16;
+
+  m_display->drawGlyph(coords.x, coords.y, glyph);
 }
 
 void DisplayU8G2::clearBuffer(void)

@@ -11,8 +11,6 @@
 #undef NETWORK_ENC28J60
 #undef NETWORK_ESP8266
 
-//#include <Hash.h>
-//needed for library
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
@@ -207,7 +205,7 @@ void setup() {
   setupDisplay();
   loadParameters();
 
-  g_price_action = make_shared<PriceAction>(Coords{0,0});
+  g_price_action = make_shared<PriceAction>(3.5); // animation speed, in digits per second
 
   g_display->queueAction(make_shared<StaticTextAction>("CRYPTOCLOCK", 1.0));
 //  g_display->queueAction(make_shared<StaticTextAction>(app_version, 1.0);

@@ -10,6 +10,7 @@ public:
       {}
 
   void displayText(const String& value, int x = 0, int y = 16, bool immediate=true) {}
+  void drawGlyph(uint16_t glyph, Coords coords) {}
   void clearBuffer() {}
   void sendBuffer() {}
   int getTextWidth(const String& text) { return 0; }

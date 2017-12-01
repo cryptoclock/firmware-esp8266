@@ -14,6 +14,7 @@ public:
       }
 
   void displayText(const String& value, int x = 0, int y = 16, bool immediate=true);
+  void drawGlyph(uint16_t glyph, Coords coords);
   void clearBuffer(void);
   void sendBuffer(void);
   int getTextWidth(const String& text);

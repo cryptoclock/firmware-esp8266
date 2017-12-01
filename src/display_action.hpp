@@ -95,16 +95,17 @@ private:
 class PriceAction : public Action
 {
 public:
-  PriceAction(const Coords& coords=Coords{0,0}, font_t font = nullptr)
-    : Action(-1, coords, font), m_price(-1), m_last_price(-1)
+  PriceAction(const double animation_speed, const Coords& coords=Coords{0,0}, font_t font = nullptr)
+    : Action(-1, coords, font), m_animation_speed(animation_speed), m_price(-1), m_displayed_price(-1.0)
     {}
 
   void tick(Display *display, double elapsed_time);
   void draw(Display *display, Coords coords);
   void updatePrice(const int new_price);
 private:
+  double m_animation_speed;
   int m_price;
-  int m_last_price;
+  double m_displayed_price;
 };
 
 class ClockAction : public Action

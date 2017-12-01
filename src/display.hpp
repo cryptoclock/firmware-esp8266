@@ -24,6 +24,7 @@ public:
 
   virtual void displayText(const String& value, int x = 0, int y = 16, bool immediate=true) = 0;
   void displayText(const String& value, Coords coords, bool immediate=true);
+  virtual void drawGlyph(uint16_t glyph, Coords coords) = 0;
   virtual void clearBuffer(void) = 0;
   virtual void sendBuffer(void) = 0;
   virtual int getTextWidth(const String& text) = 0;

@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "display_action.hpp"
 #include "display.hpp"
+#include <cmath>
 
 double Action::elapsedTime(void)
 {
@@ -51,24 +52,61 @@ void RotatingTextAction::draw(Display *display, Coords coords)
 void PriceAction::tick(Display *display, double elapsed_time)
 {
   m_elapsed_time += elapsed_time;
+  double price_delta = elapsed_time * m_animation_speed;
+
+//  DEBUG_SERIAL.printf("[PRICE] actual: %i, displayed %s\n", m_price, String(m_displayed_price).c_str());
+
+  if (m_price >= m_displayed_price)
+    m_displayed_price = std::min(m_displayed_price + price_delta, (double) m_price);
+  else
+    m_displayed_price = std::max(m_displayed_price - price_delta, (double) m_price);
+
 }
 
 void PriceAction::draw(Display *display, Coords coords)
 {
   display->setFont(m_font);
+  coords += m_coords;
 
-  String text = String(m_price);
-  if (m_price<0)
-    text = "-----";
+  String price_top = String((int)m_displayed_price);
+  String price_bottom = String((int)m_displayed_price + 1);
+  if (m_price<0) {
+    String text = "-----";
+    display->displayText(text, coords + display->centerTextOffset(text));
+    return;
+  }
 
-  coords += display->centerTextOffset(text);
+  // fractional part = vertical position of animated glyph(s)
+  double tmp;
+  double fract = (double) std::modf(m_displayed_price,&tmp);
 
-  display->displayText(text, m_coords + coords);
+  int offset_top = (int) (-fract * display->getDisplayHeight());
+  int offset_bottom = offset_top + display->getDisplayHeight();
+  coords += display->centerTextOffset(price_bottom); // higher price has more spaces
+
+  if (price_bottom.length()>price_top.length())
+    price_top = " " + price_top;
+
+  display->clearBuffer();
+//  DEBUG_SERIAL.printf("[PRICE] offset top: %i, bottom: %i\n", offset_top, offset_bottom);
+  for (int i=0,offset_x=0;i<price_top.length();++i)
+  {
+    if (price_top[i]==price_bottom[i]) {
+      display->drawGlyph(price_top.charAt(i), coords + Coords{offset_x, 0});
+    } else {
+      display->drawGlyph(price_top.charAt(i), coords + Coords{offset_x, offset_top});
+      display->drawGlyph(price_bottom.charAt(i), coords + Coords{offset_x, offset_bottom});
+    }
+    offset_x += display->getTextWidth(String(price_top[i]))+1;
+  }
+  display->sendBuffer();
 }
 
 void PriceAction::updatePrice(const int new_price)
 {
-  m_last_price = m_last_price>=0 ? m_price : new_price;
+  if (m_price==-1)
+    m_displayed_price = new_price;
+
   m_price = new_price;
 }
 //     //m_display->drawUTF8(0, 16, "B"); //""₿");
