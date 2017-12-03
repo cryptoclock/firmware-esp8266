@@ -125,7 +125,6 @@ void setupSerial()
 {
   DEBUG_SERIAL.begin(115200);
   DEBUG_SERIAL.setDebugOutput(true);
-  delay(1000);
   DEBUG_SERIAL.printf("Free memory: %i\n",ESP.getFreeHeap());
   DEBUG_SERIAL.printf("Last reset reason: %s\n",ESP.getResetReason().c_str());
   DEBUG_SERIAL.printf("Last reset info: %s\n",ESP.getResetInfo().c_str());
@@ -205,7 +204,7 @@ void setup() {
   setupDisplay();
   loadParameters();
 
-  g_price_action = make_shared<PriceAction>(4.0); // animation speed, in digits per second
+  g_price_action = make_shared<PriceAction>(10.0); // animation speed, in digits per second
 
   g_display->queueAction(make_shared<StaticTextAction>("CRYPTOCLOCK", 1.0));
 //  g_display->queueAction(make_shared<StaticTextAction>(app_version, 1.0);

@@ -3,24 +3,6 @@
 #include "display.hpp"
 #include <cmath>
 
-template<class T>
-constexpr const T& clamp(const T& v, const T& lo, const T& hi)
-{
-    return (v < lo) ? lo : ((v > hi) ? hi : v);
-}
-
-template<class T>
-constexpr T lerp(const T& v, const T& a, const T& b)
-{
-    return a + v * (b - a);
-}
-
-template<class T>
-constexpr T invLerp(const T& v, const T& a, const T& b)
-{
-    return (v-a) / (b-a);
-}
-
 double Action::elapsedTime(void)
 {
   return m_elapsed_time;
@@ -74,20 +56,24 @@ void PriceAction::tick(Display *display, double elapsed_time)
 
   m_elapsed_time += elapsed_time;
 
-  const double min_animation_speed_multiplier = 0.15;
-  const double max_animation_speed_multiplier = 10.0;
+  // if the price changes mid-animation
+  const bool outside_bounds =
+    m_displayed_price < std::min(m_price, m_last_price) ||
+    m_displayed_price > std::max(m_price, m_last_price);
 
-  // faster animation speed for bigger price differences
-  int animation_range_multiplier = 1 + (abs(m_price - m_last_price) / 20);
+  const double displayed_price_delta = fabs(m_displayed_price - m_price);
+  const double price_delta = fabs(m_price - m_last_price);
+  const double price_delta_from_start = outside_bounds ? 0 : fabs(m_displayed_price - m_last_price);
+  const double price_delta_from_end = outside_bounds ? price_delta : fabs(m_displayed_price - m_price);
 
-  double pos = 2.0 * (invLerp<double>((double)m_displayed_price, (double)m_last_price, (double)m_price)) - 1.0; // position between last and current price, mapped to -1..1
-  double animation_speed = m_animation_speed *
-    clamp(
-      (double) animation_range_multiplier * sqrt(1.0 - (pos*pos)),
-      min_animation_speed_multiplier,
-      max_animation_speed_multiplier
-    );
-  double time_delta = elapsed_time * animation_speed;
+  double animation_multiplier = std::max(std::min(std::min(price_delta_from_start, price_delta_from_end), 3.0) / 3.0, 0.2);
+  if (outside_bounds)
+    animation_multiplier = 1.0;
+
+  animation_multiplier *=  std::max(displayed_price_delta, 40.0) / 40.0; // boost the speed if the price difference is too large
+
+  const double animation_speed = m_animation_speed * animation_multiplier;
+  const double time_delta = elapsed_time * animation_speed;
 
   if (m_price >= m_displayed_price)
     m_displayed_price = std::min(m_displayed_price + time_delta, (double) m_price);
@@ -117,6 +103,9 @@ void PriceAction::draw(Display *display, Coords coords)
   double tmp;
   double fract = (double) std::modf(m_displayed_price,&tmp);
 
+  if (fract<0.01)
+    price_bottom = price_top; // for horizontal shift during rollovers
+
   int offset_top = (int) (-fract * display->getDisplayHeight());
   int offset_bottom = offset_top + display->getDisplayHeight();
   coords += display->centerTextOffset(price_bottom); // higher price has more spaces
@@ -125,7 +114,6 @@ void PriceAction::draw(Display *display, Coords coords)
     price_top = " " + price_top;
 
   display->clearBuffer();
-//  DEBUG_SERIAL.printf("[PRICE] offset top: %i, bottom: %i\n", offset_top, offset_bottom);
   for (int i=0,offset_x=0;i<price_top.length();++i)
   {
     if (price_top[i]==price_bottom[i]) {
@@ -134,7 +122,7 @@ void PriceAction::draw(Display *display, Coords coords)
       display->drawGlyph(price_top.charAt(i), coords + Coords{offset_x, offset_top});
       display->drawGlyph(price_bottom.charAt(i), coords + Coords{offset_x, offset_bottom});
     }
-    offset_x += display->getTextWidth(String(price_top[i]))+1;
+    offset_x += display->getTextWidth(String(price_bottom[i]))+1;
   }
   display->sendBuffer();
 }
