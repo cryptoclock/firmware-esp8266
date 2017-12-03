@@ -3,6 +3,24 @@
 #include "display.hpp"
 #include <cmath>
 
+template<class T>
+constexpr const T& clamp(const T& v, const T& lo, const T& hi)
+{
+    return (v < lo) ? lo : ((v > hi) ? hi : v);
+}
+
+template<class T>
+constexpr T lerp(const T& v, const T& a, const T& b)
+{
+    return a + v * (b - a);
+}
+
+template<class T>
+constexpr T invLerp(const T& v, const T& a, const T& b)
+{
+    return (v-a) / (b-a);
+}
+
 double Action::elapsedTime(void)
 {
   return m_elapsed_time;
@@ -51,16 +69,33 @@ void RotatingTextAction::draw(Display *display, Coords coords)
 /* === PriceAction === */
 void PriceAction::tick(Display *display, double elapsed_time)
 {
-  m_elapsed_time += elapsed_time;
-  double price_delta = elapsed_time * m_animation_speed;
+  if (m_price == m_last_price)
+    return;
 
-//  DEBUG_SERIAL.printf("[PRICE] actual: %i, displayed %s\n", m_price, String(m_displayed_price).c_str());
+  m_elapsed_time += elapsed_time;
+
+  const double min_animation_speed_multiplier = 0.15;
+  const double max_animation_speed_multiplier = 2.0;
+  const double animation_speed_steepness = 2.0; // the bigger, the faster acceleration and decceleration
+
+  double pos = 2.0 * (invLerp<double>((double)m_displayed_price, (double)m_last_price, (double)m_price)) - 1.0; // position between last and current price, mapped to -1..1
+  double animation_speed = m_animation_speed *
+    clamp(
+      animation_speed_steepness * sqrt(1.0 - (pos*pos)),
+      min_animation_speed_multiplier,
+      max_animation_speed_multiplier
+    );
+  double time_delta = elapsed_time * animation_speed;
 
   if (m_price >= m_displayed_price)
-    m_displayed_price = std::min(m_displayed_price + price_delta, (double) m_price);
+    m_displayed_price = std::min(m_displayed_price + time_delta, (double) m_price);
   else
-    m_displayed_price = std::max(m_displayed_price - price_delta, (double) m_price);
+    m_displayed_price = std::max(m_displayed_price - time_delta, (double) m_price);
 
+  if (fabs(m_price - m_displayed_price) < 0.001) {
+    m_displayed_price = m_price;
+    m_last_price = m_price;
+  }
 }
 
 void PriceAction::draw(Display *display, Coords coords)
@@ -104,9 +139,11 @@ void PriceAction::draw(Display *display, Coords coords)
 
 void PriceAction::updatePrice(const int new_price)
 {
-  if (m_price==-1)
+  m_last_price = m_price;
+  if (m_price==-1) {
+    m_last_price = new_price;
     m_displayed_price = new_price;
-
+  }
   m_price = new_price;
 }
 //     //m_display->drawUTF8(0, 16, "B"); //""₿");
