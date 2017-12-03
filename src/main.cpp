@@ -205,7 +205,7 @@ void setup() {
   setupDisplay();
   loadParameters();
 
-  g_price_action = make_shared<PriceAction>(3.5); // animation speed, in digits per second
+  g_price_action = make_shared<PriceAction>(4.0); // animation speed, in digits per second
 
   g_display->queueAction(make_shared<StaticTextAction>("CRYPTOCLOCK", 1.0));
 //  g_display->queueAction(make_shared<StaticTextAction>(app_version, 1.0);

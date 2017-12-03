@@ -75,13 +75,15 @@ void PriceAction::tick(Display *display, double elapsed_time)
   m_elapsed_time += elapsed_time;
 
   const double min_animation_speed_multiplier = 0.15;
-  const double max_animation_speed_multiplier = 2.0;
-  const double animation_speed_steepness = 2.0; // the bigger, the faster acceleration and decceleration
+  const double max_animation_speed_multiplier = 10.0;
+
+  // faster animation speed for bigger price differences
+  int animation_range_multiplier = 1 + (abs(m_price - m_last_price) / 20);
 
   double pos = 2.0 * (invLerp<double>((double)m_displayed_price, (double)m_last_price, (double)m_price)) - 1.0; // position between last and current price, mapped to -1..1
   double animation_speed = m_animation_speed *
     clamp(
-      animation_speed_steepness * sqrt(1.0 - (pos*pos)),
+      (double) animation_range_multiplier * sqrt(1.0 - (pos*pos)),
       min_animation_speed_multiplier,
       max_animation_speed_multiplier
     );
