@@ -74,7 +74,8 @@ void clock_callback()
     make_shared<Display::Action::SlideTransition>(
       g_clock_action,
       g_price_action,
-      0.5
+      0.5,
+      +1
     )
   );
   g_display->prependAction(g_clock_action);
@@ -82,7 +83,8 @@ void clock_callback()
     make_shared<Display::Action::SlideTransition>(
       g_price_action,
       g_clock_action,
-      0.5
+      0.5,
+      -1
     )
   );
 }

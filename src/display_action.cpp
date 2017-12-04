@@ -31,7 +31,7 @@ namespace Display {
 
   void Action::SlideTransition::draw(DisplayT *display, Coords coords)
   {
-    const int height = display->getDisplayHeight();
+    const int height = display->getDisplayHeight() * m_direction;
     const int offset_y_a = (elapsedTime() / m_duration) * height;
     const int offset_y_b = offset_y_a - height;
 
