@@ -29,10 +29,16 @@ namespace Display {
       setFinished();
   }
 
+  double slide_function(double position)
+  {
+    double s = 0.5 + sin((position-0.5)*M_PI)*0.5;
+    return std::max(std::min(s,1.0),0.0);
+  }
+
   void Action::SlideTransition::draw(DisplayT *display, Coords coords)
   {
     const int height = display->getDisplayHeight() * m_direction;
-    const int offset_y_a = (elapsedTime() / m_duration) * height;
+    const int offset_y_a = round(slide_function(elapsedTime() / m_duration) * height);
     const int offset_y_b = offset_y_a - height;
 
     m_actionA->draw(display, coords+Coords{0, offset_y_a});
