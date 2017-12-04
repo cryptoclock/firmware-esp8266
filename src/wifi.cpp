@@ -6,7 +6,7 @@ extern ParameterStore g_parameters;
 extern AP_list *g_APs;
 extern WiFiCore *g_wifi;
 
-WiFiCore::WiFiCore(Display *display, AP_list *ap_list) :
+WiFiCore::WiFiCore(DisplayT *display, AP_list *ap_list) :
   m_display(display), m_ap_list(ap_list), m_wifimanager(WiFiManager())
 {
   m_parameters_size = g_parameters.size();
