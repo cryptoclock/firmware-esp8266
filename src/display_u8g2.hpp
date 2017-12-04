@@ -11,6 +11,7 @@ namespace Display {
         {
           m_display->begin();
           m_display->setFont(u8g2_font_micro_tr);
+          m_display->setFontMode(0);
           m_display->setDisplayRotation(m_rotation);
         }
 
