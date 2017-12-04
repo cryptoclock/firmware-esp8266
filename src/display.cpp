@@ -39,7 +39,9 @@ namespace Display {
         m_actions.erase(m_actions.begin());
         continue;
       }
+      clearBuffer();
       action->draw(this, Coords{0,0});
+      sendBuffer();
       break;
     }
   }
@@ -56,7 +58,9 @@ namespace Display {
   {
     action->setFinished(false);
     action->tick(this, 0.0);
-    action->draw(this, Coords{0,0});
+//    clearBuffer();
+//    action->draw(this, Coords{0,0});
+//    sendBuffer();
     m_actions.insert(m_actions.begin(), action);
   }
 
@@ -64,7 +68,9 @@ namespace Display {
   {
     action->setFinished(false);
     action->tick(this, 0.0);
-    action->draw(this, Coords{0,0});
+//    clearBuffer();
+//    action->draw(this, Coords{0,0});
+//    sendBuffer();
     m_actions[0] = action;
   }
 

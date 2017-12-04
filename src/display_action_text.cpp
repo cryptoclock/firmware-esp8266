@@ -15,7 +15,7 @@ namespace Display {
     {
       display->setFont(m_font);
       coords += display->centerTextOffset(m_text);
-      display->displayText(m_text, m_coords + coords);
+      display->displayText(m_text, m_coords + coords, false);
     }
 
     void RotatingText::draw(DisplayT *display, Coords coords)
@@ -25,10 +25,8 @@ namespace Display {
       int offset_x = (int)(m_elapsed_time * m_speed) % width;
       Coords offset_center = display->centerTextOffset(m_text);
 
-      display->clearBuffer();
       display->displayText(m_text, m_coords + coords + Coords{-offset_x, offset_center.y}, false);
       display->displayText(m_text, m_coords + coords + Coords{-offset_x + width, offset_center.y}, false);
-      display->sendBuffer();
     }
   }
 }

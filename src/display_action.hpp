@@ -39,11 +39,11 @@ namespace Display {
   inline ActionT::~ActionT() {}
 
   namespace Action {
-    class SlideUpTransition : public ActionT
+    class SlideTransition : public ActionT
     {
     public:
-      SlideUpTransition(shared_ptr<ActionT> actionA, shared_ptr<ActionT> actionB, double duration, double speed, const Coords& coords=Coords{0,0})
-        : ActionT(duration, coords), m_actionA(actionA), m_actionB(actionB), m_speed(speed)
+      SlideTransition(shared_ptr<ActionT> actionA, shared_ptr<ActionT> actionB, double duration, const Coords& coords=Coords{0,0})
+        : ActionT(duration, coords), m_actionA(actionA), m_actionB(actionB)
         {}
 
       void tick(DisplayT *display, double elapsed_time);
@@ -52,7 +52,6 @@ namespace Display {
 
       shared_ptr<ActionT> m_actionA;
       shared_ptr<ActionT> m_actionB;
-      int m_speed;
     };
   }
 }

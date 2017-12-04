@@ -56,7 +56,7 @@ namespace Display {
       String price_bottom = String((int)m_displayed_price + 1);
       if (m_price<0) {
         String text = "-----";
-        display->displayText(text, coords + display->centerTextOffset(text));
+        display->displayText(text, coords + display->centerTextOffset(text), false);
         return;
       }
 
@@ -74,7 +74,6 @@ namespace Display {
       if (price_bottom.length()>price_top.length())
         price_top = " " + price_top;
 
-      display->clearBuffer();
       for (int i=0,offset_x=0;i<price_top.length();++i)
       {
         if (price_top[i]==price_bottom[i]) {
@@ -85,7 +84,6 @@ namespace Display {
         }
         offset_x += display->getTextWidth(String(price_bottom[i]))+1;
       }
-      display->sendBuffer();
     }
 
     void Price::updatePrice(const int new_price)

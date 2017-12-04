@@ -69,7 +69,22 @@ void clock_callback()
   auto time = NTP.getTimeDateString();
   DEBUG_SERIAL.printf("[NTP] Displaying time %s\n",  time.c_str());
   g_clock_action->updateTime(time);
+//  g_display->prependAction(g_clock_action);
+  g_display->prependAction(
+    make_shared<Display::Action::SlideTransition>(
+      g_clock_action,
+      g_price_action,
+      0.5
+    )
+  );
   g_display->prependAction(g_clock_action);
+  g_display->prependAction(
+    make_shared<Display::Action::SlideTransition>(
+      g_price_action,
+      g_clock_action,
+      0.5
+    )
+  );
 }
 
 void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
@@ -203,7 +218,7 @@ void setupNTP()
   NTP.begin("ntp.nic.cz", 1, true);
   NTP.setInterval(1800);
 
-  g_clock_action = make_shared<Display::Action::Clock>(2.0, Coords{4,-1}); // display clock for 2 secs
+  g_clock_action = make_shared<Display::Action::Clock>(3.0, Coords{4,-1}); // display clock for 3 secs
   g_ticker_clock.attach(30.0, clock_callback);
 }
 
