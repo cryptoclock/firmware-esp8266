@@ -18,6 +18,7 @@ ParameterStore g_parameters(_parameters);
 
 // display
 //#define X_DISPLAY_TM1637 1
+//#define X_DISPLAY_LIXIE 1
 #define X_DISPLAY_U8G2 1
 #define X_DISPLAY_DEFAULT_ROTATION U8G2_R0
 
@@ -30,6 +31,10 @@ ParameterStore g_parameters(_parameters);
 #include "display_tm1637.hpp"
   const int g_display_num_digits = 4;
   TM1637Display g_display_hw(/* clock=*/ D4, /* data=*/ D5);
+#elif defined(X_DISPLAY_LIXIE)
+#include "display_lixie.hpp"
+  const int g_display_num_digits = 6;
+  Lixie g_display_hw(/* data=*/ D5, g_display_num_digits);
 #else
   #error Please configure display type in config.hpp.
 #endif
