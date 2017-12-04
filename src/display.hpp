@@ -25,6 +25,7 @@ namespace Display {
 
     virtual void displayText(const String& value, int x = 0, int y = 16, bool immediate=true) = 0;
     void displayText(const String& value, Coords coords, bool immediate=true);
+    virtual void displayNumber(int number, int length=0, int position=0, bool zero_fill=false) = 0;
     virtual void drawGlyph(uint16_t glyph, Coords coords) = 0;
     virtual void clearBuffer(void) = 0;
     virtual void sendBuffer(void) = 0;
@@ -35,6 +36,8 @@ namespace Display {
     virtual int getDisplayHeight() = 0;
     virtual int getCurrentFontHeight() = 0;
     virtual font_t getDefaultFont() = 0;
+    virtual bool isNumeric(void) = 0;
+    virtual bool isGraphic(void) = 0;
     Coords centerTextOffset(const String& text);
 
     void setupTickCallback(Ticker::callback_t callback);

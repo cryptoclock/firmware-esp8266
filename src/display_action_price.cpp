@@ -43,6 +43,12 @@ namespace Display {
 
     void Price::draw(DisplayT *display, Coords coords)
     {
+      if (!display->isGraphic()) {
+        if (display->isNumeric())
+          display->displayNumber((int)m_displayed_price);
+        return;
+      }
+
       display->setFont(m_font);
       coords += m_coords;
 

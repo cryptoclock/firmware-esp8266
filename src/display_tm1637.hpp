@@ -11,15 +11,19 @@ namespace Display {
         {}
 
     void displayText(const String& value, int x = 0, int y = 16, bool immediate=true) {}
+    void displayNumber(int number, int length, int position, bool zero_fill);
     void drawGlyph(uint16_t glyph, Coords coords) {}
     void clearBuffer() {}
     void sendBuffer() {}
     int getTextWidth(const String& text) { return 0; }
     void setFont(const uint8_t* font) {};
+    font_t getDefaultFont() { return nullptr; }
     void setContrast(uint8_t contrast);
     int getDisplayWidth() { return m_num_digits; }
     int getDisplayHeight() { return 1; }
     int getCurrentFontHeight() { return 1; }
+    bool isNumeric(void) { return true; }
+    bool isGraphic(void) { return false; }
 
   private:
     TM1637Display* m_display;

@@ -15,6 +15,11 @@ namespace Display {
     if (immediate) sendBuffer();
   }
 
+  void U8G2Matrix::displayNumber(int number, int length=0, int position=0, bool zero_fill=false)
+  {
+    displayText(String(number), 0, 0, true);
+  }
+
   void U8G2Matrix::drawGlyph(uint16_t glyph, Coords coords)
   {
     if (m_rotation==U8G2_R0)

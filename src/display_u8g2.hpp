@@ -15,6 +15,7 @@ namespace Display {
         }
 
     void displayText(const String& value, int x = 0, int y = 16, bool immediate=true);
+    void displayNumber(int number, int length, int position, bool zero_fill);
     void drawGlyph(uint16_t glyph, Coords coords);
     void clearBuffer(void);
     void sendBuffer(void);
@@ -25,6 +26,8 @@ namespace Display {
     void setContrast(uint8_t contrast);
     void setFont(const uint8_t* font);
     font_t getDefaultFont();
+    bool isNumeric(void) { return false; }
+    bool isGraphic(void) { return true; }
 
   private:
     U8G2* m_display;
