@@ -1,18 +1,19 @@
 #include "parameter_store.hpp"
 #include <EEPROM.h>
 
-ParameterStore::ParameterStore(ParameterItem *items) : m_items(items), m_size(0)
+ParameterStore::ParameterStore(ParameterItem *items)
 {
-  // calc size
-  for (int i=0; m_items[i].name!=""; ++i,++m_size)
-    ;
+  for (int i=0;items[i].name!="";++i)
+    m_items.emplace(items[i].name, &items[i]);
 }
 
 void ParameterStore::debug_print(void)
 {
-  for (int i=0; i<m_size; ++i)
-      DEBUG_SERIAL.printf("[Parameters] index: %i, name: '%s', value: '%s', description: '%s', field_length: '%i'\n",
-        i, m_items[i].name.c_str(), m_items[i].value.c_str(), m_items[i].description.c_str(), m_items[i].field_length);
+  for (const auto& item_pair : m_items) {
+    const auto item = item_pair.second;
+    DEBUG_SERIAL.printf("[Parameters] name: '%s', value: '%s', description: '%s', field_length: '%i'\n",
+      item->name.c_str(), item->value.c_str(), item->description.c_str(), item->field_length);
+  }
 }
 
 // TODO: move to utils.cpp/hpp
@@ -70,31 +71,26 @@ void ParameterStore::storeToEEPROM(void)
   debug_print();
   int offset = c_eeprom_offset;
   eeprom_WriteString(offset, "PARAMS");
-  for (int i=0;i<m_size;++i) {
-    auto item = m_items[i];
-    eeprom_WriteString(offset, item.name);
-    eeprom_WriteString(offset, item.value);
+  for (const auto& item_pair : m_items) {
+    const auto item = item_pair.second;
+    eeprom_WriteString(offset, item->name);
+    eeprom_WriteString(offset, item->value);
   }
   eeprom_WriteString(offset, "ENDPARAMS");
 }
 
-ParameterItem* ParameterStore::operator[] (int index) const
+ParameterMap_t& ParameterStore::all_items(void)
 {
-  if (index<0 || index>=m_size) {
-    DEBUG_SERIAL.printf("ParamStore: Invalid index: %i'\n", index);
-    return nullptr;
-  }
-
-  return &m_items[index];
+  return m_items;
 }
 
 ParameterItem* ParameterStore::findByName(const String& name) const
 {
-  for(int i=0;i<m_size;++i)
-    if (m_items[i].name == name)
-      return &m_items[i];
+  auto item = m_items.find(name);
+  if (item==m_items.end()) // not found
+    return nullptr;
 
-  return nullptr;
+  return (*item).second;
 }
 
 

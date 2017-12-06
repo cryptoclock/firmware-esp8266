@@ -1,5 +1,6 @@
 #include "config_common.hpp"
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
+#include <vector>
 #include "display.hpp"
 #include "aplist.hpp"
 
@@ -25,8 +26,7 @@ private:
   WiFiManager m_wifimanager;
   DisplayT *m_display;
   AP_list *m_ap_list;
-  WiFiManagerParameter **m_parameters;
-  int m_parameters_size;
+  std::vector<WiFiManagerParameter*> m_parameters;
 
   WiFiEventHandler m_ev_conn, m_ev_disconn, m_ev_gotip;
 };

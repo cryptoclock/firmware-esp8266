@@ -9,13 +9,12 @@ extern WiFiCore *g_wifi;
 WiFiCore::WiFiCore(DisplayT *display, AP_list *ap_list) :
   m_wifimanager(WiFiManager()), m_display(display), m_ap_list(ap_list)
 {
-  m_parameters_size = g_parameters.size();
-  m_parameters = new WiFiManagerParameter*[m_parameters_size];
-
-  for(int i=0;i<m_parameters_size;++i) {
-    auto *param = g_parameters[i];
-    m_parameters[i] = new WiFiManagerParameter(param->name.c_str(), param->description.c_str(), param->value.c_str(), param->field_length);
-    m_wifimanager.addParameter(m_parameters[i]);
+  m_parameters.reserve(g_parameters.all_items().size());
+  for (const auto& item_pair : g_parameters.all_items()) {
+    const auto param = item_pair.second;
+    auto *wifi_param = new WiFiManagerParameter(param->name.c_str(), param->description.c_str(), param->value.c_str(), param->field_length);
+    m_parameters.push_back(wifi_param);
+    m_wifimanager.addParameter(wifi_param);
   }
 
   m_wifimanager.setSaveConfigCallback(&saveCallback);
@@ -63,9 +62,9 @@ void WiFiCore::resetSettings()
 void WiFiCore::updateParametersFromAP(WiFiManager *manager)
 {
   // save parameters
-  for(int i=0;i<m_parameters_size;++i) {
-    String id = m_parameters[i]->getID();
-    String new_value = m_parameters[i]->getValue();
+  for (auto *wifi_param : m_parameters) {
+    String id = wifi_param->getID();
+    String new_value = wifi_param->getValue();
     auto *param = g_parameters.findByName(id);
     if (param)
       param->value = new_value;
