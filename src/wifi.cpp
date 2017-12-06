@@ -35,7 +35,7 @@ void WiFiCore::setAPCallback(void (*func)(WiFiManager*))
 void WiFiCore::connectToWiFiOrFallbackToAP(void)
 {
   if (!m_wifimanager.autoConnect()) {
-    DEBUG_SERIAL.println("[WiFiCore] Failed to connect and hit timeout");
+    DEBUG_SERIAL.println(F("[WiFiCore] Failed to connect and hit timeout"));
     //reset and try again, or maybe put it to deep sleep
     ESP.reset();
     delay(1000);
@@ -46,7 +46,7 @@ void WiFiCore::startAP(const String& ssid_name, unsigned long timeout)
 {
   m_wifimanager.setTimeout(timeout);
   if (!m_wifimanager.startConfigPortal(ssid_name.c_str())) {
-    DEBUG_SERIAL.println("[WiFiCore] Failed to start AP and hit timeout");
+    DEBUG_SERIAL.println(F("[WiFiCore] Failed to start AP and hit timeout"));
     delay(3000);
     ESP.reset();
     delay(5000);
@@ -73,7 +73,7 @@ void WiFiCore::updateParametersFromAP(WiFiManager *manager)
 
 void WiFiCore::saveCallback(void)
 {
-  DEBUG_SERIAL.println("[WiFiCore] Save callback called");
+  DEBUG_SERIAL.println(F("[WiFiCore] Save callback called"));
 
   EEPROM.begin(2048);
 

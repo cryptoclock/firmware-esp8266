@@ -6,7 +6,7 @@
 void Firmware::update(const String &update_url)
 {
   if (update_url.length() < 3 || update_url=="") {
-    DEBUG_SERIAL.println("[Update] Update url empty, skipping");
+    DEBUG_SERIAL.println(F("[Update] Update url empty, skipping"));
     return;
   }
 
@@ -17,14 +17,14 @@ void Firmware::update(const String &update_url)
 
   switch(ret) {
     case HTTP_UPDATE_FAILED:
-      DEBUG_SERIAL.println("[update] Update failed.");
+      DEBUG_SERIAL.println(F("[update] Update failed."));
       DEBUG_SERIAL.printf("[update] HTTP_UPDATE_FAILED Error (%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
       break;
     case HTTP_UPDATE_NO_UPDATES:
-      DEBUG_SERIAL.println("[update] Update no Update.");
+      DEBUG_SERIAL.println(F("[update] Update no Update."));
       break;
     case HTTP_UPDATE_OK:
-      DEBUG_SERIAL.println("[update] Update ok."); // may not called we reboot the ESP
+      DEBUG_SERIAL.println(F("[update] Update ok.")); // may not called we reboot the ESP
       break;
   }
 }

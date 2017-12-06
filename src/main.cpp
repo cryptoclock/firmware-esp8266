@@ -101,7 +101,7 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
         String str = (char*)payload;
         if (str==";UPDATE") {
           g_webSocket.disconnect();
-          DEBUG_SERIAL.println("Update request received, updating");
+          DEBUG_SERIAL.println(F("Update request received, updating"));
           g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 32));
           Firmware::update(g_parameters["update_url"]);
           ESP.restart();
@@ -131,7 +131,7 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
 //gets called when WiFiManager enters configuration mode
 void configModeCallback (WiFiManager *myWiFiManager)
 {
-  DEBUG_SERIAL.println("Entered config mode");
+  DEBUG_SERIAL.println(F("Entered config mode"));
   DEBUG_SERIAL.println(WiFi.softAPIP());
   //if you used auto generated SSID, print it
   String ap_ssid = myWiFiManager->getConfigPortalSSID();
@@ -204,7 +204,7 @@ void connectToWiFi()
   g_wifi->connectToWiFiOrFallbackToAP();
 
   //if you get here you have connected to the WiFi
-  DEBUG_SERIAL.println("connected...yeey :)");
+  DEBUG_SERIAL.println(F("connected...yeey :)"));
   g_ticker_blink.detach();
 }
 
@@ -221,7 +221,7 @@ void connectWebSocket()
 
 void setupNTP()
 {
-  DEBUG_SERIAL.println("Starting NTP..");
+  DEBUG_SERIAL.println(F("Starting NTP.."));
   NTP.begin("ntp.nic.cz", 1, true);
   NTP.setInterval(1800);
 
@@ -271,7 +271,7 @@ void loop() {
     if ((millis() - buttonTimer > longPressTime) && (longPressActive == false)) {
       // TODO: clear EEPROM?
       longPressActive = true;
-      DEBUG_SERIAL.println("Reseting settings");
+      DEBUG_SERIAL.println(F("Reseting settings"));
       g_wifi->resetSettings();
       delay(500);
       ESP.restart();
@@ -282,7 +282,7 @@ void loop() {
         longPressActive = false;
       } else {
         g_webSocket.disconnect();
-        DEBUG_SERIAL.println("Starting portal");
+        DEBUG_SERIAL.println(F("Starting portal"));
         g_ticker_blink.detach();
         g_ticker_blink.attach(0.2, blink_callback);
         g_wifi->startAP("OnDemandAP_"+String(ESP.getChipId()), 120);

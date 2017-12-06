@@ -38,7 +38,7 @@ String eeprom_ReadString(int& offset)
 
 void ParameterStore::loadFromEEPROM(void)
 {
-  DEBUG_SERIAL.println("[Parameters] Loading from EEPROM");
+  DEBUG_SERIAL.println(F("[Parameters] Loading from EEPROM"));
 
   int offset = c_eeprom_offset;
   String header = eeprom_ReadString(offset);
@@ -67,7 +67,7 @@ void ParameterStore::loadFromEEPROM(void)
 
 void ParameterStore::storeToEEPROM(void)
 {
-  DEBUG_SERIAL.println("[Parameters] Storing to EEPROM");
+  DEBUG_SERIAL.println(F("[Parameters] Storing to EEPROM"));
   debug_print();
   int offset = c_eeprom_offset;
   eeprom_WriteString(offset, "PARAMS");
