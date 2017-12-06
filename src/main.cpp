@@ -17,8 +17,6 @@
 
 #include <vector>
 
-#define FASTLED_ESP8266_NODEMCU_PIN_ORDER
-
 #include "display.hpp"
 #include "display_action_text.hpp"
 #include "display_action_price.hpp"
@@ -50,10 +48,10 @@ shared_ptr<Display::Action::Clock> g_clock_action;
 AP_list *g_APs;
 WiFiCore *g_wifi;
 
-long lastUpdateMillis = 0;
+unsigned long lastUpdateMillis = 0;
 
-long buttonTimer = 0;
-long longPressTime = 3000;
+unsigned long buttonTimer = 0;
+unsigned long longPressTime = 3000;
 boolean buttonActive = false;
 boolean longPressActive = false;
 
@@ -105,7 +103,7 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
           g_webSocket.disconnect();
           DEBUG_SERIAL.println("Update request received, updating");
           g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 32));
-          updateFirmware();
+          Firmware::update(g_parameters["update_url"]);
           ESP.restart();
         }
 
@@ -119,6 +117,13 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
     case WStype_BIN:
       DEBUG_SERIAL.printf("[WSc] get binary length: %u\n", length);
       hexdump(payload, length);
+      break;
+    case WStype_ERROR:
+    case WStype_FRAGMENT:
+    case WStype_FRAGMENT_BIN_START:
+    case WStype_FRAGMENT_TEXT_START:
+    case WStype_FRAGMENT_FIN:
+    default:
       break;
   }
 }
@@ -242,7 +247,7 @@ void setup() {
   g_display->queueAction(make_shared<Display::Action::StaticText>(WiFi.SSID(), 1.0));
 
   g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 32));
-  updateFirmware();
+  Firmware::update(g_parameters["update_url"]);
   g_display->replaceAction(g_price_action);
 
   setupNTP();

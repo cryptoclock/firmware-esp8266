@@ -1,7 +1,7 @@
 #include "parameter_store.hpp"
 #include <EEPROM.h>
 
-ParameterStore::ParameterStore(ParameterItem *items) : m_size(0), m_items(items)
+ParameterStore::ParameterStore(ParameterItem *items) : m_items(items), m_size(0)
 {
   // calc size
   for (int i=0; m_items[i].name!=""; ++i,++m_size)

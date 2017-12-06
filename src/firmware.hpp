@@ -1,3 +1,6 @@
 #include "config_common.hpp"
 
-void updateFirmware(void);
+class Firmware {
+public:
+  static void update(const String &update_url);
+};
