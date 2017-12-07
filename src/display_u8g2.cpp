@@ -19,6 +19,16 @@ void U8G2Matrix::displayNumber(int number, int length=0, int position=0, bool ze
   displayText(String(number), 0, 0, true);
 }
 
+void U8G2Matrix::displayBitmap(const unsigned char *bitmap, const int x, const int y, const int w, const int h)
+{
+  m_display->drawXBM(x,y,w,h, bitmap);
+}
+
+void U8G2Matrix::displayBitmapP(const unsigned char *bitmap, const int x, const int y, const int w, const int h)
+{
+  m_display->drawXBMP(x,y,w,h, bitmap);
+}
+
 void U8G2Matrix::drawGlyph(uint16_t glyph, Coords coords)
 {
   if (m_rotation==U8G2_R0)

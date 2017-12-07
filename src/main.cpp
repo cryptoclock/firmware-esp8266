@@ -19,6 +19,7 @@
 
 #include "display.hpp"
 #include "display_action_text.hpp"
+#include "display_action_bitmap.hpp"
 #include "display_action_price.hpp"
 #include "display_action_clock.hpp"
 using Display::Coords;
@@ -54,6 +55,23 @@ unsigned long buttonTimer = 0;
 unsigned long longPressTime = 3000;
 boolean buttonActive = false;
 boolean longPressActive = false;
+
+static const unsigned char s_crypto2_bits[] = {
+   0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x80, 0x01, 0x53, 0x4b, 0x8f, 0x71,
+   0xc3, 0x48, 0xd3, 0x9b, 0xc3, 0x70, 0x93, 0x99, 0xd3, 0x40, 0x8f, 0x99,
+   0xce, 0x38, 0x03, 0x71, 0x00, 0x00, 0x00, 0x00
+};
+
+// static const unsigned char s_clock_bits[] = {
+//    0x00, 0x00, 0x00, 0x00, 0x38, 0xc3, 0x71, 0x26, 0x4c, 0x63, 0x9a, 0x16,
+//    0x0c, 0x63, 0x1a, 0x0e, 0x0c, 0x63, 0x1a, 0x0e, 0x4c, 0x63, 0x9a, 0x16,
+//    0x38, 0xcf, 0x71, 0x26, 0x00, 0x00, 0x00, 0x00 };
+
+static const unsigned char s_clock_inverted_bits[] = {
+   0xff, 0xff, 0xff, 0xff, 0xc7, 0x3c, 0x8e, 0xd9, 0xb3, 0x9c, 0x65, 0xe9,
+   0xf3, 0x9c, 0xe5, 0xf1, 0xf3, 0x9c, 0xe5, 0xf1, 0xb3, 0x9c, 0x65, 0xe9,
+   0xc7, 0x30, 0x8e, 0xd9, 0xff, 0xff, 0xff, 0xff
+};
 
 void blink_callback()
 {
@@ -237,24 +255,31 @@ void setup() {
 
   g_price_action = make_shared<Display::Action::Price>(10.0); // animation speed, in digits per second
 
-  g_display->queueAction(make_shared<Display::Action::StaticText>("CRYPTOCLOCK", 1.0));
-//  g_display->queueAction(make_shared<StaticTextAction>(app_version, 1.0);
-//  g_display->queueAction(make_shared<RotatingTextAction>(ESP.getSketchMD5(), 2.0, 32, Coords{0,0}, u8g2_font_5x7_mf));
+  /* logo */
+  auto logo_top = make_shared<Display::Action::StaticBitmap>(s_crypto2_bits, 32, 8, 1.5);
+  auto logo_bottom = make_shared<Display::Action::StaticBitmap>(s_clock_inverted_bits, 32, 8, 3.5);
+  g_display->queueAction(logo_top);
+  g_display->queueAction(make_shared<Display::Action::SlideTransition>(logo_top, logo_bottom, 0.5, -1));
+  g_display->queueAction(logo_bottom);
 
+  /* WiFi */
   g_display->queueAction(make_shared<Display::Action::RotatingText>("--> WiFi ", -1, 32));
   connectToWiFi();
   g_display->removeBottomAction();
   g_display->queueAction(make_shared<Display::Action::StaticText>(WiFi.SSID(), 1.0));
 
+  /* Update */
   g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 32));
   Firmware::update(g_parameters["update_url"]);
   g_display->replaceAction(g_price_action);
 
+  /* NTP */
   setupNTP();
 
   //keep LED off
   digitalWrite(BUILTIN_LED, false);
 
+  /* connect to ticker server */
   connectWebSocket();
 
   pinMode(PORTAL_TRIGGER_PIN, INPUT);

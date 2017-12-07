@@ -24,8 +24,14 @@ public:
   virtual ~DisplayT() = 0;
 
   virtual void displayText(const String& value, int x = 0, int y = 16, bool immediate=true) = 0;
-  void displayText(const String& value, Coords coords, bool immediate=true);
   virtual void displayNumber(int number, int length=0, int position=0, bool zero_fill=false) = 0;
+  virtual void displayBitmap(const unsigned char *bitmap, const int x, const int y, const int w, const int h) = 0;
+  virtual void displayBitmapP(const unsigned char *bitmap, const int x, const int y, const int w, const int h) = 0;
+
+  void displayText(const String& value, Coords coords, bool immediate=true);
+  void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h);
+  void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h);
+
   virtual void drawGlyph(uint16_t glyph, Coords coords) = 0;
   virtual void clearBuffer(void) = 0;
   virtual void sendBuffer(void) = 0;

@@ -9,6 +9,16 @@ void DisplayT::displayText(const String& value, Coords coords, bool immediate)
   displayText(value, coords.x, coords.y, immediate);
 }
 
+void DisplayT::displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h)
+{
+  displayBitmap(bitmap, coords.x, coords.y, w, h);
+}
+
+void DisplayT::displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h)
+{
+  displayBitmapP(bitmap, coords.x, coords.y, w, h);
+}
+
 Coords DisplayT::centerTextOffset(const String& text)
 {
   return Coords {
