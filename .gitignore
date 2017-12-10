@@ -4,3 +4,4 @@
 .gcc-flags.json
 .vscode/
 assets/
+firmware.map

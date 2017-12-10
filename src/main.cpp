@@ -190,6 +190,7 @@ void setupDisplay()
 #elif defined(X_DISPLAY_TM1637)
   g_display = new Display::TM1637(&g_display_hw, g_display_num_digits);
 #elif defined(X_DISPLAY_LIXIE)
+  g_display_hw.initialize<LIXIE_PIN, g_display_num_digits>();
   g_display = new Display::LixieNumeric(&g_display_hw, g_display_num_digits);
 #else
   #error error

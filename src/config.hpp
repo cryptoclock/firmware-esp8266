@@ -34,7 +34,8 @@ ParameterStore g_parameters(_parameters);
 #elif defined(X_DISPLAY_LIXIE)
 #include "display_lixie.hpp"
   const int g_display_num_digits = 6;
-  Lixie g_display_hw(/* data=*/ D5, g_display_num_digits);
+  const uint8_t LIXIE_PIN = /* data=*/ D5;
+  Lixie g_display_hw;
 #else
   #error Please configure display type in config.hpp.
 #endif
