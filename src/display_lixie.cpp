@@ -7,8 +7,8 @@ void LixieNumeric::displayNumber(int number, int length, int position, bool zero
   m_display->write(number);
 }
 
-void LixieNumeric::setContrast(uint8_t contrast)
+void LixieNumeric::setBrightness(uint8_t brightness)
 {
-  m_display->brightness(contrast);
+  m_display->brightness(brightness);
 }
 }

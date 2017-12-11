@@ -191,7 +191,6 @@ void setupDisplay()
 #else
   #error error
 #endif
-  g_display->setContrast(g_contrast);
   g_display->setupTickCallback([&]() { g_display->tick(); }); // can't be moved to class declaration because of lambda capture
 }
 
@@ -202,6 +201,8 @@ void loadParameters()
   g_APs = new AP_list();
   g_wifi = new WiFiCore(g_display, g_APs);
   EEPROM.end();
+
+  g_display->setBrightness(g_parameters["brightness"].toInt());
 }
 
 void setupTicker()

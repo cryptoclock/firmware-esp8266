@@ -25,7 +25,7 @@ public:
   int getTextWidth(const String& text) { return 0; }
   void setFont(const uint8_t* font) {};
   font_t getDefaultFont() { return nullptr; }
-  void setContrast(uint8_t contrast);
+  void setBrightness(uint8_t brightness);
   int getDisplayWidth() { return m_num_digits; }
   int getDisplayHeight() { return 1; }
   int getCurrentFontHeight() { return 1; }

@@ -13,9 +13,9 @@ void Neopixel::displayText(const String& value, int x, int y, bool immediate)
   DEBUG_SERIAL.println("SHOWING");
 }
 
-void Neopixel::setContrast(uint8_t contrast)
+void Neopixel::setBrightness(uint8_t brightness)
 {
-  FastLED.setBrightness(contrast);
+  FastLED.setBrightness(brightness * (255.0 / 100.0));
 }
 
 // void LixieNumeric::setContrast(uint8_t contrast)

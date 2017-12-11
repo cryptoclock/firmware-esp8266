@@ -27,7 +27,7 @@ public:
   int getDisplayWidth(void);
   int getDisplayHeight(void);
   int getCurrentFontHeight(void);
-  void setContrast(uint8_t contrast);
+  void setBrightness(uint8_t brightness);
   void setFont(const uint8_t* font);
   font_t getDefaultFont();
   bool isNumeric(void) { return false; }

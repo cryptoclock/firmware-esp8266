@@ -36,7 +36,7 @@ public:
   virtual void clearBuffer(void) = 0;
   virtual void sendBuffer(void) = 0;
   virtual int getTextWidth(const String& text) = 0;
-  virtual void setContrast(uint8_t contrast) = 0;
+  virtual void setBrightness(uint8_t brightness) = 0; // 0..100
   virtual void setFont(const uint8_t* font) = 0;
   virtual int getDisplayWidth() = 0;
   virtual int getDisplayHeight() = 0;

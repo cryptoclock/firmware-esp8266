@@ -67,10 +67,9 @@ font_t U8G2Matrix::getDefaultFont(void)
   return m_default_font;
 }
 
-void U8G2Matrix::setContrast(uint8_t contrast)
+void U8G2Matrix::setBrightness(uint8_t brightness)
 {
-  DisplayT::m_contrast = contrast;
-  m_display->setContrast(DisplayT::m_contrast);
+  m_display->setContrast(brightness * (255.0/100.0));
 }
 
 int U8G2Matrix::getDisplayWidth() { return m_width; }

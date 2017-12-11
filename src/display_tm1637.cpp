@@ -2,10 +2,10 @@
 #include "display_tm1637.hpp"
 
 namespace Display {
-void TM1637::setContrast(uint8_t contrast)
+void TM1637::setBrightness(uint8_t brightness)
 {
-  DisplayT::m_contrast = contrast;
-  m_display->setBrightness(std::min<int>(DisplayT::m_contrast,0x7));
+//  DisplayT::m_contrast = contrast;
+  m_display->setBrightness(brightness * ( 7.0 / 100.0));
 }
 
 void TM1637::displayNumber(int number, int length, int position, bool zero_fill)
