@@ -28,6 +28,7 @@ using Display::Coords;
 
 #include "firmware.hpp"
 #include "wifi.hpp"
+#include "utils.hpp"
 
 #include <EEPROM.h>
 
@@ -285,12 +286,17 @@ void loop() {
       buttonTimer = millis();
     }
     if ((millis() - buttonTimer > longPressTime) && (longPressActive == false)) {
+      g_display->prependAction(make_shared<Display::Action::RotatingText>("RESET... ", -1, 20));
       // TODO: clear EEPROM?
       longPressActive = true;
       DEBUG_SERIAL.println(F("Reseting settings"));
       g_wifi->resetSettings();
-      delay(500);
-      ESP.restart();
+      EEPROM.begin(2048);
+      Utils::eeprom_Erase(0,2048);
+      EEPROM.end();
+
+      delay(1000);
+      ESP.reset();
     }
   } else {
     if (buttonActive == true) {

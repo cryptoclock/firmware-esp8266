@@ -1,5 +1,6 @@
 #include "parameter_store.hpp"
 #include <EEPROM.h>
+#include "utils.hpp"
 
 ParameterStore::ParameterStore(ParameterItem *items)
 {
@@ -16,42 +17,22 @@ void ParameterStore::debug_print(void)
   }
 }
 
-// TODO: move to utils.cpp/hpp
-void eeprom_WriteString(int& offset, const String &s)
-{
-  int length = s.length();
-  const char *c_str = s.c_str();
-  for (int i=0;i<=length;++i,++offset)
-    EEPROM.write(offset, c_str[i]);
-}
-
-String eeprom_ReadString(int& offset)
-{
-  String s="";
-  while(true) {
-    char c = (char) EEPROM.read(offset++);
-    if (c=='\0' || c==255) break; // NULL char or uninitialized memory
-    s += c;
-  }
-  return s;
-}
-
 void ParameterStore::loadFromEEPROM(void)
 {
   DEBUG_SERIAL.println(F("[Parameters] Loading from EEPROM"));
 
   int offset = c_eeprom_offset;
-  String header = eeprom_ReadString(offset);
+  String header = Utils::eeprom_ReadString(offset);
   if (header != "PARAMS") {
     DEBUG_SERIAL.printf("[Parameters] Invalid EEPROM header, using defaults\n");
     return;
   }
 
   while(true) {
-    String name = eeprom_ReadString(offset);
+    String name = Utils::eeprom_ReadString(offset);
     if (name=="" || name=="ENDPARAMS")
       break;
-    String value = eeprom_ReadString(offset);
+    String value = Utils::eeprom_ReadString(offset);
 
     auto item = findByName(name);
     if (item==nullptr) {
@@ -70,13 +51,13 @@ void ParameterStore::storeToEEPROM(void)
   DEBUG_SERIAL.println(F("[Parameters] Storing to EEPROM"));
   debug_print();
   int offset = c_eeprom_offset;
-  eeprom_WriteString(offset, "PARAMS");
+  Utils::eeprom_WriteString(offset, "PARAMS");
   for (const auto& item_pair : m_items) {
     const auto item = item_pair.second;
-    eeprom_WriteString(offset, item->name);
-    eeprom_WriteString(offset, item->value);
+    Utils::eeprom_WriteString(offset, item->name);
+    Utils::eeprom_WriteString(offset, item->value);
   }
-  eeprom_WriteString(offset, "ENDPARAMS");
+  Utils::eeprom_WriteString(offset, "ENDPARAMS");
 }
 
 ParameterMap_t& ParameterStore::all_items(void)
