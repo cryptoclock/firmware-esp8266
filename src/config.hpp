@@ -20,6 +20,8 @@ ParameterStore g_parameters(_parameters);
 //#define X_DISPLAY_TM1637 1
 //#define X_DISPLAY_LIXIE 1
 #define X_DISPLAY_U8G2 1
+//#define X_DISPLAY_NEOPIXEL 1
+
 #define X_DISPLAY_DEFAULT_ROTATION U8G2_R0
 
 #if defined(X_DISPLAY_U8G2)
@@ -36,6 +38,10 @@ ParameterStore g_parameters(_parameters);
   const int g_display_num_digits = 6;
   const uint8_t LIXIE_PIN = /* data=*/ D5;
   Lixie g_display_hw;
+#elif defined(X_DISPLAY_NEOPIXEL)
+#include "display_neopixel.hpp"
+  const int g_display_num_leds = 64;
+  const uint8_t NEOPIXEL_PIN = /* data*/ 5;
 #else
   #error Please configure display type in config.hpp.
 #endif

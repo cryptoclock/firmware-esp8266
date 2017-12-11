@@ -7,7 +7,7 @@
 
 #include "display_action.hpp"
 
-const int MILIS_PER_TICK = 15; // in ms
+const int MILIS_PER_TICK = 33; // in ms
 
 using std::vector;
 using std::shared_ptr;

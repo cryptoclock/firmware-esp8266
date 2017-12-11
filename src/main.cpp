@@ -120,16 +120,19 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
         if (str==";UPDATE") {
           g_webSocket.disconnect();
           DEBUG_SERIAL.println(F("Update request received, updating"));
-          g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 32));
+          g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
           Firmware::update(g_parameters["update_url"]);
           ESP.restart();
+        } else if (str.startsWith(";ATH=")) { // All-Time-High
+          int ATHPrice = str.substring(5).toInt();
+          g_price_action->setATHPrice(ATHPrice);
+        } else {
+          int currentPrice = str.toInt();
+          g_price_action->updatePrice(currentPrice);
+          DEBUG_SERIAL.printf("[WSc] get tick: %i\n", currentPrice);
+          DEBUG_SERIAL.printf("Free Heap: %i\n", ESP.getFreeHeap());
+  //        g_display->blinkDot(); // FIXME
         }
-
-        int currentPrice = str.toInt();
-        g_price_action->updatePrice(currentPrice);
-        DEBUG_SERIAL.printf("[WSc] get tick: %i\n", currentPrice);
-        DEBUG_SERIAL.printf("Free Heap: %i\n", ESP.getFreeHeap());
-//        g_display->blinkDot(); // FIXME
       }
       break;
     case WStype_BIN:
@@ -162,7 +165,7 @@ void configModeCallback (WiFiManager *myWiFiManager)
   g_display->prependAction(make_shared<Display::Action::RotatingText>(
     "PLEASE CONNECT TO AP " + ap_ssid + "  ",
     -1, // duration
-    32, // speed
+    20, // speed
     Coords{0,0}
   ));
 }
@@ -192,6 +195,10 @@ void setupDisplay()
 #elif defined(X_DISPLAY_LIXIE)
   g_display_hw.initialize<LIXIE_PIN, g_display_num_digits>();
   g_display = new Display::LixieNumeric(&g_display_hw, g_display_num_digits);
+#elif defined(X_DISPLAY_NEOPIXEL)
+  auto display = new Display::Neopixel(g_display_num_leds);
+  display->initialize<NEOPIXEL_PIN>();
+  g_display = display;
 #else
   #error error
 #endif
@@ -264,13 +271,13 @@ void setup() {
   g_display->queueAction(logo_bottom);
 
   /* WiFi */
-  g_display->queueAction(make_shared<Display::Action::RotatingText>("--> WiFi ", -1, 32));
+  g_display->queueAction(make_shared<Display::Action::RotatingText>("--> WiFi ", -1, 20));
   connectToWiFi();
   g_display->removeBottomAction();
   g_display->queueAction(make_shared<Display::Action::StaticText>(WiFi.SSID(), 1.0));
 
   /* Update */
-  g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 32));
+  g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
   Firmware::update(g_parameters["update_url"]);
   g_display->replaceAction(g_price_action);
 
@@ -317,7 +324,7 @@ void loop() {
       buttonActive = false;
     }
   }
-  delay(5);
+  delay(10);
   // TODO: check if not connected and display message
   // TODO: periodically display status of wifi
 }

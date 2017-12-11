@@ -49,6 +49,8 @@ void Price::draw(DisplayT *display, Coords coords)
     return;
   }
 
+//  display->setDrawColor();
+
   display->setFont(m_font);
   coords += m_coords;
 
@@ -89,6 +91,9 @@ void Price::draw(DisplayT *display, Coords coords)
 
 void Price::updatePrice(const int new_price)
 {
+  if (new_price>m_ath_price)
+    m_ath_price = new_price;
+
   m_last_price = m_price;
   if (m_price==-1) {
     m_last_price = new_price;
@@ -96,5 +101,11 @@ void Price::updatePrice(const int new_price)
   }
   m_price = new_price;
 }
+
+void Price::setATHPrice(const int ath_price)
+{
+  m_ath_price = ath_price;
+}
+
 }
 }
