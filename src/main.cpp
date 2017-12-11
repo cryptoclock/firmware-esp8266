@@ -39,7 +39,6 @@ using Display::Coords;
 #include <Ticker.h>
 
 Ticker g_ticker_clock;
-Ticker g_ticker_blink;
 
 WebSocketsClient g_webSocket;
 
@@ -72,13 +71,6 @@ static const unsigned char s_clock_inverted_bits[] = {
    0xf3, 0x9c, 0xe5, 0xf1, 0xf3, 0x9c, 0xe5, 0xf1, 0xb3, 0x9c, 0x65, 0xe9,
    0xc7, 0x30, 0x8e, 0xd9, 0xff, 0xff, 0xff, 0xff
 };
-
-void blink_callback()
-{
-  //toggle state
-  int state = digitalRead(BUILTIN_LED);  // get the current state of GPIO1 pin
-  digitalWrite(BUILTIN_LED, !state);     // set pin to the opposite state
-}
 
 void clock_callback()
 {
@@ -158,10 +150,6 @@ void configModeCallback (WiFiManager *myWiFiManager)
   String ap_ssid = myWiFiManager->getConfigPortalSSID();
   DEBUG_SERIAL.println(ap_ssid);
 
-  //entered config mode, make led toggle faster
-  g_ticker_blink.detach();
-  g_ticker_blink.attach(0.2, blink_callback);
-
   g_display->prependAction(make_shared<Display::Action::RotatingText>(
     "PLEASE CONNECT TO AP " + ap_ssid + "  ",
     -1, // duration
@@ -219,8 +207,7 @@ void setupTicker()
 {
   //set led pin as output
   pinMode(BUILTIN_LED, OUTPUT);
-  // start ticker with 0.6s because we start in AP mode and try to connect
-  g_ticker_blink.attach(0.6, blink_callback);
+  digitalWrite(BUILTIN_LED, true); // high = off
 }
 
 void connectToWiFi()
@@ -231,7 +218,6 @@ void connectToWiFi()
 
   //if you get here you have connected to the WiFi
   DEBUG_SERIAL.println(F("connected...yeey :)"));
-  g_ticker_blink.detach();
 }
 
 void connectWebSocket()
@@ -284,9 +270,6 @@ void setup() {
   /* NTP */
   setupNTP();
 
-  //keep LED off
-  digitalWrite(BUILTIN_LED, false);
-
   /* connect to ticker server */
   connectWebSocket();
 
@@ -316,8 +299,6 @@ void loop() {
       } else {
         g_webSocket.disconnect();
         DEBUG_SERIAL.println(F("Starting portal"));
-        g_ticker_blink.detach();
-        g_ticker_blink.attach(0.2, blink_callback);
         g_wifi->startAP("OnDemandAP_"+String(ESP.getChipId()), 120);
         ESP.restart();
       }
