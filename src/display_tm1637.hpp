@@ -19,6 +19,7 @@ public:
   void sendBuffer() {}
   int getTextWidth(const String& text) { return 0; }
   void setFont(const uint8_t* font) {};
+  void setDrawColor(const uint8_t color) {};
   font_t getDefaultFont() { return nullptr; }
   void setBrightness(uint8_t brightness);
   int getDisplayWidth() { return m_num_digits; }

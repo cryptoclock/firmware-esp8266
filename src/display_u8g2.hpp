@@ -20,6 +20,8 @@ public:
   void displayBitmap(const unsigned char *bitmap, const int x, const int y, const int w, const int h);
   void displayBitmapP(const unsigned char *bitmap, const int x, const int y, const int w, const int h);
 
+  void fill();
+
   void drawGlyph(uint16_t glyph, Coords coords);
   void clearBuffer(void);
   void sendBuffer(void);
@@ -29,6 +31,7 @@ public:
   int getCurrentFontHeight(void);
   void setBrightness(uint8_t brightness);
   void setFont(const uint8_t* font);
+  void setDrawColor(const uint8_t color);
   font_t getDefaultFont();
   bool isNumeric(void) { return false; }
   bool isGraphic(void) { return true; }

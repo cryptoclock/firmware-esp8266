@@ -39,6 +39,7 @@ public:
   void setFont(const uint8_t* font) {};
   font_t getDefaultFont() { return nullptr; }
   void setBrightness(uint8_t brightness);
+  void setDrawColor(const uint8_t color) {};
   int getDisplayWidth() { return m_num_leds; }
   int getDisplayHeight() { return 1; }
   int getCurrentFontHeight() { return 1; }

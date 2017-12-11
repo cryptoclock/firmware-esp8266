@@ -32,12 +32,15 @@ public:
   void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h);
   void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h);
 
+  virtual void fill() = 0;
+
   virtual void drawGlyph(uint16_t glyph, Coords coords) = 0;
   virtual void clearBuffer(void) = 0;
   virtual void sendBuffer(void) = 0;
   virtual int getTextWidth(const String& text) = 0;
   virtual void setBrightness(uint8_t brightness) = 0; // 0..100
   virtual void setFont(const uint8_t* font) = 0;
+  virtual void setDrawColor(const uint8_t color) = 0;
   virtual int getDisplayWidth() = 0;
   virtual int getDisplayHeight() = 0;
   virtual int getCurrentFontHeight() = 0;

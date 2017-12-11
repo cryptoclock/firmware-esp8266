@@ -39,6 +39,11 @@ void U8G2Matrix::drawGlyph(uint16_t glyph, Coords coords)
   m_display->drawGlyph(coords.x, coords.y, glyph);
 }
 
+void U8G2Matrix::fill()
+{
+  m_display->drawBox(0, 0, m_width, m_height);
+}
+
 void U8G2Matrix::clearBuffer(void)
 {
   m_display->clearBuffer();
@@ -69,8 +74,14 @@ font_t U8G2Matrix::getDefaultFont(void)
 
 void U8G2Matrix::setBrightness(uint8_t brightness)
 {
-  m_display->setContrast(brightness * (255.0/100.0));
+  m_display->setContrast(brightness * (64.0/100.0));
 }
+
+void U8G2Matrix::setDrawColor(const uint8_t color)
+{
+  m_display->setDrawColor(color);
+}
+
 
 int U8G2Matrix::getDisplayWidth() { return m_width; }
 int U8G2Matrix::getDisplayHeight() { return m_height; }

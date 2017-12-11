@@ -6,10 +6,10 @@ namespace Display {
 namespace Action {
 void Price::tick(DisplayT *display, double elapsed_time)
 {
+  m_elapsed_time += elapsed_time;
+
   if (m_price == m_last_price)
     return;
-
-  m_elapsed_time += elapsed_time;
 
   // if the price changes mid-animation
   const bool outside_bounds =
@@ -49,8 +49,6 @@ void Price::draw(DisplayT *display, Coords coords)
     return;
   }
 
-//  display->setDrawColor();
-
   display->setFont(m_font);
   coords += m_coords;
 
@@ -76,6 +74,17 @@ void Price::draw(DisplayT *display, Coords coords)
   if (price_bottom.length()>price_top.length())
     price_top = " " + price_top;
 
+
+  if (m_displayed_price >= m_ath_price && (int)m_elapsed_time % 2 == 0 ) {
+    display->setDrawColor(1);
+    display->fill();
+    display->setDrawColor(0);
+  } else {
+    display->setDrawColor(0);
+    display->fill();
+    display->setDrawColor(1);
+  }
+
   int offset_x = 0;
   for (unsigned int i=0;i<price_top.length();++i)
   {
@@ -87,6 +96,8 @@ void Price::draw(DisplayT *display, Coords coords)
     }
     offset_x += display->getTextWidth(String(price_bottom[i]))+1;
   }
+
+  display->setDrawColor(1);
 }
 
 void Price::updatePrice(const int new_price)
