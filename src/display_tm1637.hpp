@@ -10,10 +10,13 @@ public:
     DisplayT(true), m_display(display), m_num_digits(num_digits)
     {}
 
-  void displayText(const String& value, const Coords& coords, const bool immediate=true) {}
+  void displayText(const String& value, const Coords& coords) {}
   void displayNumber(const int number, const int length, const int position, const bool zero_fill);
   void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h) {}
   void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h) {}
+
+  void fill(const Coords& coords) {}
+
   void drawGlyph(const uint16_t glyph, const Coords& coords) {}
   void drawLine(const Coords& start, const Coords& end) {}
   void drawPixel(const Coords& coords) {}
