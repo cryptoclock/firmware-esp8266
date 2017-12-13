@@ -16,29 +16,32 @@ public:
     m_display->setContrast(0);
   }
 
-  void displayText(const String& value, int x = 0, int y = 16, bool immediate=true);
   void displayNumber(int number, int length, int position, bool zero_fill);
-  void displayBitmap(const unsigned char *bitmap, const int x, const int y, const int w, const int h);
-  void displayBitmapP(const unsigned char *bitmap, const int x, const int y, const int w, const int h);
+  void displayText(const String& value, const Coords& coords);
+  void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h);
+  void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h);
 
   void fill(const Coords& coords);
   void drawLine(const Coords& start, const Coords& end);
+  void drawGlyph(const uint16_t glyph, const Coords& coords);
+  void drawPixel(const Coords& coords);
 
-  void drawGlyph(uint16_t glyph, Coords coords);
   void clearBuffer(void);
   void sendBuffer(void);
   int getTextWidth(const String& text);
   int getDisplayWidth(void);
   int getDisplayHeight(void);
   int getCurrentFontHeight(void);
-  void setBrightness(uint8_t brightness);
-  void setFont(const uint8_t* font);
+  void setBrightness(const uint8_t brightness);
+  void setFont(font_t font);
   void setDrawColor(const uint8_t color);
   font_t getDefaultFont();
   bool isNumeric(void) { return false; }
   bool isGraphic(void) { return true; }
 
 private:
+  Coords correctOffsetForRotation(const Coords& coords);
+
   U8G2* m_display;
   const u8g2_cb_t* m_rotation;
   const int m_width;

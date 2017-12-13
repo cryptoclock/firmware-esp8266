@@ -23,24 +23,21 @@ public:
   }
   virtual ~DisplayT() = 0;
 
-  virtual void displayText(const String& value, int x = 0, int y = 16, bool immediate=true) = 0;
-  virtual void displayNumber(int number, int length=0, int position=0, bool zero_fill=false) = 0;
-  virtual void displayBitmap(const unsigned char *bitmap, const int x, const int y, const int w, const int h) = 0;
-  virtual void displayBitmapP(const unsigned char *bitmap, const int x, const int y, const int w, const int h) = 0;
-
-  void displayText(const String& value, Coords coords, bool immediate=true);
-  void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h);
-  void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h);
+  virtual void displayNumber(const int number, const int length=0, const int position=0, const bool zero_fill=false) = 0;
+  virtual void displayText(const String& value, const Coords& coords) = 0;
+  virtual void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h) =0;
+  virtual void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h) = 0;
 
   virtual void fill(const Coords& coords) = 0;
 
-  virtual void drawGlyph(uint16_t glyph, Coords coords) = 0;
+  virtual void drawGlyph(const uint16_t glyph, const Coords& coords) = 0;
   virtual void drawLine(const Coords& start, const Coords& end) = 0;
+  virtual void drawPixel(const Coords& coords) = 0;
 
   virtual void clearBuffer(void) = 0;
   virtual void sendBuffer(void) = 0;
   virtual int getTextWidth(const String& text) = 0;
-  virtual void setBrightness(uint8_t brightness) = 0; // 0..100
+  virtual void setBrightness(const uint8_t brightness) = 0; // 0..255
   virtual void setFont(const uint8_t* font) = 0;
   virtual void setDrawColor(const uint8_t color) = 0;
   virtual int getDisplayWidth() = 0;

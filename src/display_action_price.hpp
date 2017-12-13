@@ -24,6 +24,7 @@ private:
   int m_last_price;
   double m_displayed_price;
   int m_ath_price;
+  double m_price_last_updated_at;
 };
 }
 }

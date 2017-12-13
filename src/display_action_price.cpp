@@ -56,7 +56,7 @@ void Price::draw(DisplayT *display, Coords coords)
   String price_bottom = String((int)m_displayed_price + 1);
   if (m_price<0) {
     String text = "-----";
-    display->displayText(text, coords + display->centerTextOffset(text), false);
+    display->displayText(text, coords + display->centerTextOffset(text));
     return;
   }
 
@@ -98,7 +98,10 @@ void Price::draw(DisplayT *display, Coords coords)
     offset_x += display->getTextWidth(String(price_bottom[i]))+1;
   }
 
+  // blink pixel when we received price update
   display->setDrawColor(1);
+  if (m_elapsed_time - m_price_last_updated_at <= 0.05)
+    display->drawPixel({display->getDisplayWidth()-1, display->getDisplayHeight()-1});
 }
 
 void Price::updatePrice(const int new_price)
@@ -112,6 +115,8 @@ void Price::updatePrice(const int new_price)
     m_displayed_price = new_price;
   }
   m_price = new_price;
+
+  m_price_last_updated_at = m_elapsed_time;
 }
 
 void Price::setATHPrice(const int ath_price)

@@ -10,20 +10,22 @@ public:
     DisplayT(true), m_display(display), m_num_digits(num_digits)
     {}
 
-  void displayText(const String& value, int x = 0, int y = 16, bool immediate=true) {}
-  void displayNumber(int number, int length, int position, bool zero_fill);
-  void displayBitmap(const unsigned char *bitmap, const int x, const int y, const int w, const int h) {}
-  void displayBitmapP(const unsigned char *bitmap, const int x, const int y, const int w, const int h) {}
-  void drawGlyph(uint16_t glyph, Coords coords) {}
+  void displayText(const String& value, const Coords& coords, const bool immediate=true) {}
+  void displayNumber(const int number, const int length, const int position, const bool zero_fill);
+  void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h) {}
+  void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h) {}
+  void drawGlyph(const uint16_t glyph, const Coords& coords) {}
   void drawLine(const Coords& start, const Coords& end) {}
+  void drawPixel(const Coords& coords) {}
+
 
   void clearBuffer() {}
   void sendBuffer() {}
   int getTextWidth(const String& text) { return 0; }
-  void setFont(const uint8_t* font) {};
+  void setFont(font_t font) {};
   void setDrawColor(const uint8_t color) {};
   font_t getDefaultFont() { return nullptr; }
-  void setBrightness(uint8_t brightness);
+  void setBrightness(const uint8_t brightness);
   int getDisplayWidth() { return m_num_digits; }
   int getDisplayHeight() { return 1; }
   int getCurrentFontHeight() { return 1; }

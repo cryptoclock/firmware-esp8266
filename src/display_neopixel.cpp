@@ -2,7 +2,7 @@
 #include "display_neopixel.hpp"
 
 namespace Display {
-void Neopixel::displayText(const String& value, int x, int y, bool immediate)
+void Neopixel::displayText(const String& value, const Coords& coords)
 {
   for (int i=0;i<m_num_leds;++i) {
     // m_leds[i].green = i*4;
@@ -13,9 +13,9 @@ void Neopixel::displayText(const String& value, int x, int y, bool immediate)
   DEBUG_SERIAL.println("SHOWING");
 }
 
-void Neopixel::setBrightness(uint8_t brightness)
+void Neopixel::setBrightness(const uint8_t brightness)
 {
-  FastLED.setBrightness(brightness * (255.0 / 100.0));
+  FastLED.setBrightness(brightness);
 }
 
 // void LixieNumeric::setContrast(uint8_t contrast)

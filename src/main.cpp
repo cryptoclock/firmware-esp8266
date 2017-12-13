@@ -204,7 +204,7 @@ void loadParameters()
   g_wifi = new WiFiCore(g_display, g_APs);
   EEPROM.end();
 
-  g_display->setBrightness(g_parameters["brightness"].toInt());
+  g_display->setBrightness(std::min(std::max(g_parameters["brightness"].toInt(),0L),255L));
 }
 
 void setupTicker()
