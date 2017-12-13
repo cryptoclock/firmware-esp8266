@@ -32,9 +32,11 @@ public:
   void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h);
   void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h);
 
-  virtual void fill() = 0;
+  virtual void fill(const Coords& coords) = 0;
 
   virtual void drawGlyph(uint16_t glyph, Coords coords) = 0;
+  virtual void drawLine(const Coords& start, const Coords& end) = 0;
+
   virtual void clearBuffer(void) = 0;
   virtual void sendBuffer(void) = 0;
   virtual int getTextWidth(const String& text) = 0;

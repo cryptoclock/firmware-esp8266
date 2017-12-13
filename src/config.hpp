@@ -15,7 +15,10 @@ ParameterItem _parameters[] = {
 
 ParameterStore g_parameters(_parameters);
 
-// display
+// display test mode
+//#define X_TEST_DISPLAY 1
+
+// -- display setup --
 //#define X_DISPLAY_TM1637 1
 //#define X_DISPLAY_LIXIE 1
 #define X_DISPLAY_U8G2 1

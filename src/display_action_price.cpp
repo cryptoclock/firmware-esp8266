@@ -69,7 +69,6 @@ void Price::draw(DisplayT *display, Coords coords)
 
   int offset_top = (int) (-fract * display->getDisplayHeight());
   int offset_bottom = offset_top + display->getDisplayHeight();
-  coords += display->centerTextOffset(price_bottom); // higher price has more spaces
 
   if (price_bottom.length()>price_top.length())
     price_top = " " + price_top;
@@ -77,13 +76,15 @@ void Price::draw(DisplayT *display, Coords coords)
 
   if (m_displayed_price >= m_ath_price && (int)m_elapsed_time % 2 == 0 ) {
     display->setDrawColor(1);
-    display->fill();
+    display->fill(coords);
     display->setDrawColor(0);
   } else {
     display->setDrawColor(0);
-    display->fill();
+    display->fill(coords);
     display->setDrawColor(1);
   }
+
+  coords += display->centerTextOffset(price_bottom); // higher price has more spaces
 
   int offset_x = 0;
   for (unsigned int i=0;i<price_top.length();++i)

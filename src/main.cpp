@@ -22,6 +22,7 @@
 #include "display_action_bitmap.hpp"
 #include "display_action_price.hpp"
 #include "display_action_clock.hpp"
+#include "display_action_testdisplay.hpp"
 using Display::Coords;
 
 #include "config.hpp"
@@ -29,6 +30,7 @@ using Display::Coords;
 #include "firmware.hpp"
 #include "wifi.hpp"
 #include "utils.hpp"
+#include "button.hpp"
 
 #include <EEPROM.h>
 
@@ -49,12 +51,13 @@ shared_ptr<Display::Action::Clock> g_clock_action;
 AP_list *g_APs;
 WiFiCore *g_wifi;
 
-unsigned long lastUpdateMillis = 0;
+Button g_flash_button(PORTAL_TRIGGER_PIN);
 
-unsigned long buttonTimer = 0;
-unsigned long longPressTime = 3000;
-boolean buttonActive = false;
-boolean longPressActive = false;
+//unsigned long lastUpdateMillis = 0;
+// unsigned long buttonTimer = 0;
+// unsigned long longPressTime = 3000;
+// boolean buttonActive = false;
+// boolean longPressActive = false;
 
 static const unsigned char s_crypto2_bits[] = {
    0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x80, 0x01, 0x53, 0x4b, 0x8f, 0x71,
@@ -78,7 +81,6 @@ void clock_callback()
   auto time = NTP.getTimeDateString();
   DEBUG_SERIAL.printf("[NTP] Displaying time %s\n",  time.c_str());
   g_clock_action->updateTime(time);
-//  g_display->prependAction(g_clock_action);
   g_display->prependAction(
     make_shared<Display::Action::SlideTransition>(
       g_clock_action,
@@ -243,6 +245,56 @@ void setupNTP()
   g_ticker_clock.attach(30.0, clock_callback);
 }
 
+void factoryReset(void)
+{
+  g_display->prependAction(make_shared<Display::Action::RotatingText>("RESET... ", -1, 20));
+  DEBUG_SERIAL.println(F("Reseting settings"));
+  g_wifi->resetSettings();
+
+  EEPROM.begin(2048);
+  Utils::eeprom_Erase(0,2048);
+  EEPROM.end();
+
+  delay(1000);
+  ESP.reset();
+}
+
+
+void startOnDemandAP(void)
+{
+  g_webSocket.disconnect();
+  DEBUG_SERIAL.println(F("Starting portal"));
+  g_wifi->startAP("OnDemandAP_"+String(ESP.getChipId()), 120);
+  ESP.restart();
+}
+
+void setupButton()
+{
+  g_flash_button.onShortPress(startOnDemandAP);
+  g_flash_button.onLongPress(factoryReset);
+}
+
+#ifdef X_TEST_DISPLAY
+shared_ptr<Display::Action::TestDisplay> g_test_display_action;
+
+void setup()
+{
+  setupSerial();
+  setupDisplay();
+  pinMode(PORTAL_TRIGGER_PIN, INPUT);
+  g_test_display_action = make_shared<Display::Action::TestDisplay>();
+  g_display->queueAction(g_test_display_action);
+  g_flash_button.onShortPress([&](){g_test_display_action->nextMode();});
+  g_flash_button.onLongPress([](){});
+}
+
+void loop()
+{
+  g_flash_button.tick();
+  delay(5);
+}
+
+#else
 void setup() {
   setupSerial();
   setupTicker();
@@ -269,50 +321,15 @@ void setup() {
   Firmware::update(g_parameters["update_url"]);
   g_display->replaceAction(g_price_action);
 
-  /* NTP */
+  setupButton();
   setupNTP();
-
-  /* connect to ticker server */
   connectWebSocket();
-
-  pinMode(PORTAL_TRIGGER_PIN, INPUT);
 }
 
 void loop() {
   g_webSocket.loop();
-
-  if (digitalRead(PORTAL_TRIGGER_PIN) == LOW) {
-    if (buttonActive == false) {
-      buttonActive = true;
-      buttonTimer = millis();
-    }
-    if ((millis() - buttonTimer > longPressTime) && (longPressActive == false)) {
-      g_display->prependAction(make_shared<Display::Action::RotatingText>("RESET... ", -1, 20));
-      // TODO: clear EEPROM?
-      longPressActive = true;
-      DEBUG_SERIAL.println(F("Reseting settings"));
-      g_wifi->resetSettings();
-      EEPROM.begin(2048);
-      Utils::eeprom_Erase(0,2048);
-      EEPROM.end();
-
-      delay(1000);
-      ESP.reset();
-    }
-  } else {
-    if (buttonActive == true) {
-      if (longPressActive == true) {
-        longPressActive = false;
-      } else {
-        g_webSocket.disconnect();
-        DEBUG_SERIAL.println(F("Starting portal"));
-        g_wifi->startAP("OnDemandAP_"+String(ESP.getChipId()), 120);
-        ESP.restart();
-      }
-      buttonActive = false;
-    }
-  }
+  g_flash_button.tick();
   delay(10);
-  // TODO: check if not connected and display message
-  // TODO: periodically display status of wifi
 }
+
+#endif

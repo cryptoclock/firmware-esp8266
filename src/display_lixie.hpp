@@ -20,6 +20,8 @@ public:
   void displayBitmap(const unsigned char *bitmap, const int x, const int y, const int w, const int h) {}
   void displayBitmapP(const unsigned char *bitmap, const int x, const int y, const int w, const int h) {}
   void drawGlyph(uint16_t glyph, Coords coords) {}
+  void drawLine(const Coords& start, const Coords& end) {}
+
   void clearBuffer() {}
   void sendBuffer() {}
   int getTextWidth(const String& text) { return 0; }

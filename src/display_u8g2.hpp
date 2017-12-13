@@ -13,6 +13,7 @@ public:
     m_display->setFont(u8g2_font_micro_tr);
     m_display->setFontMode(0);
     m_display->setDisplayRotation(m_rotation);
+    m_display->setContrast(0);
   }
 
   void displayText(const String& value, int x = 0, int y = 16, bool immediate=true);
@@ -20,7 +21,8 @@ public:
   void displayBitmap(const unsigned char *bitmap, const int x, const int y, const int w, const int h);
   void displayBitmapP(const unsigned char *bitmap, const int x, const int y, const int w, const int h);
 
-  void fill();
+  void fill(const Coords& coords);
+  void drawLine(const Coords& start, const Coords& end);
 
   void drawGlyph(uint16_t glyph, Coords coords);
   void clearBuffer(void);
