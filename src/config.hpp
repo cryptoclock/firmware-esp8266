@@ -9,7 +9,7 @@ ParameterItem _parameters[] = {
   ParameterItem{"ticker_server_host","Ticker server hostname","ticker.cryptoclock.net", 50},
   ParameterItem{"ticker_server_port","Ticker server port","443", 5},
   ParameterItem{"ticker_path","Ticker server url","/", 50},
-  ParameterItem{"brightness","Brightness","50", 5},
+  ParameterItem{"brightness","Brightness","127", 5},
   ParameterItem{"","","", 0} // EOL
 };
 
