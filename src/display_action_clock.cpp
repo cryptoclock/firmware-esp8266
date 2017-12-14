@@ -31,8 +31,10 @@ void Clock::draw(DisplayT *display, Coords coords)
 void Clock::updateTime(const String& time)
 {
   if (time=="Time not set")
-    return;
-  m_time = time.substring(0,5);
+    m_time = "--:--";
+  else
+    m_time = time.substring(0,5);
+    
 }
 }
 }

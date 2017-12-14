@@ -14,16 +14,10 @@ void AP_list::clear(void)
 void AP_list::addToTop(const String &SSID, const String &password)
 {
   int index = getIndexBySSID(SSID);
-//  if (index >= 0 && index <5) {
   if (index >= 0) {
     DEBUG_SERIAL.printf("[APs] Add: SSID %s already in list\n",SSID.c_str());
     return;
   }
-  // if (index>=5) {
-  //   DEBUG_SERIAL.printf("[APs] Add: SSID %s already in list, but not in top 5, bumping to top\n",SSID.c_str());
-  //   moveToTop(index);
-  //   return;
-  // }
   DEBUG_SERIAL.printf("[APs] Add: SSID %s not in list, adding\n",SSID.c_str());
 
   // bump down the list
@@ -72,8 +66,8 @@ void AP_list::printAPs(void)
 {
   for (int i=0;i<c_max_stored_aps;++i) {
     if (m_aps[i].ssid[0] == '\0') continue;
-    DEBUG_SERIAL.printf("[APs] AP #%i -> SSID: %s Password: %s\n",
-            i, m_aps[i].ssid, m_aps[i].password); // TODO: redact password
+    DEBUG_SERIAL.printf("[APs] AP #%i -> SSID: %s Password: [REDACTED]\n",
+            i, m_aps[i].ssid);
   }
 }
 

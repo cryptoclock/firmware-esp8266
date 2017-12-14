@@ -1,5 +1,10 @@
 #include "button.hpp"
 
+void Button::setupTickCallback(Ticker::callback_t callback)
+{
+  m_ticker.attach(100.0 / 1000.0,callback);
+}
+
 void Button::onShortPress(button_callback_t func)
 {
   m_short_press_cb = func;
