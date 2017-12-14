@@ -282,7 +282,6 @@ void setup()
 {
   setupSerial();
   setupDisplay();
-  pinMode(PORTAL_TRIGGER_PIN, INPUT);
   g_test_display_action = make_shared<Display::Action::TestDisplay>();
   g_display->queueAction(g_test_display_action);
 
