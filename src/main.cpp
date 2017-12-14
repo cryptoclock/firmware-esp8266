@@ -51,13 +51,10 @@ shared_ptr<Display::Action::Clock> g_clock_action;
 AP_list *g_APs;
 WiFiCore *g_wifi;
 
-Button g_flash_button(PORTAL_TRIGGER_PIN);
+shared_ptr<Button> g_flash_button;
 
-//unsigned long lastUpdateMillis = 0;
-// unsigned long buttonTimer = 0;
-// unsigned long longPressTime = 3000;
-// boolean buttonActive = false;
-// boolean longPressActive = false;
+bool g_start_ondemand_ap = false;
+
 
 static const unsigned char s_crypto2_bits[] = {
    0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x80, 0x01, 0x53, 0x4b, 0x8f, 0x71,
@@ -262,6 +259,7 @@ void factoryReset(void)
 
 void startOnDemandAP(void)
 {
+  DEBUG_SERIAL.println(F("ODA"));
   g_webSocket.disconnect();
   DEBUG_SERIAL.println(F("Starting portal"));
   g_wifi->startAP("OnDemandAP_"+String(ESP.getChipId()), 120);
@@ -270,8 +268,10 @@ void startOnDemandAP(void)
 
 void setupButton()
 {
-  g_flash_button.onShortPress(startOnDemandAP);
-  g_flash_button.onLongPress(factoryReset);
+  g_flash_button = make_shared<Button>(PORTAL_TRIGGER_PIN);
+  g_flash_button->onShortPress([&]() { g_start_ondemand_ap = true; });
+  g_flash_button->onLongPress(factoryReset);
+  g_flash_button->setupTickCallback([&]() { g_flash_button->tick(); });
 }
 
 #ifdef X_TEST_DISPLAY
@@ -284,8 +284,11 @@ void setup()
   pinMode(PORTAL_TRIGGER_PIN, INPUT);
   g_test_display_action = make_shared<Display::Action::TestDisplay>();
   g_display->queueAction(g_test_display_action);
-  g_flash_button.onShortPress([&](){g_test_display_action->nextMode();});
-  g_flash_button.onLongPress([](){});
+
+  g_flash_button = make_shared<Button>(PORTAL_TRIGGER_PIN);
+  g_flash_button->onShortPress([&](){g_test_display_action->nextMode();});
+//  g_flash_button->onLongPress([](){});
+  g_flash_button->setupTickCallback([&]() { g_flash_button->tick(); });
 }
 
 void loop()
@@ -327,8 +330,10 @@ void setup() {
 }
 
 void loop() {
+  if (g_start_ondemand_ap)
+    startOnDemandAP();
+
   g_webSocket.loop();
-  g_flash_button.tick();
   delay(10);
 }
 
