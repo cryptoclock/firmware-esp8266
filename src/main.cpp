@@ -293,7 +293,7 @@ void setup()
 
 void loop()
 {
-  g_flash_button.tick();
+  g_flash_button->tick();
   delay(5);
 }
 
