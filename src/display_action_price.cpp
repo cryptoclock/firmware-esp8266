@@ -54,8 +54,9 @@ void Price::draw(DisplayT *display, Coords coords)
 
   String price_top = String((int)m_displayed_price);
   String price_bottom = String((int)m_displayed_price + 1);
-  if (m_price<0 ||
-    (m_elapsed_time - m_price_last_updated_at > m_price_timeout))
+  // if (m_price<0 ||
+  //   (m_elapsed_time - m_price_last_updated_at > m_price_timeout))
+  if (m_price<0)
   {
     String text = "-----";
     display->displayText(text, coords + display->centerTextOffset(text));
