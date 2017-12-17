@@ -23,6 +23,7 @@
 #include "display_action_price.hpp"
 #include "display_action_clock.hpp"
 #include "display_action_testdisplay.hpp"
+#include "display_action_menu.hpp"
 using Display::Coords;
 
 #include "config.hpp"
@@ -31,6 +32,7 @@ using Display::Coords;
 #include "wifi.hpp"
 #include "utils.hpp"
 #include "button.hpp"
+#include "menu.hpp"
 
 #include <EEPROM.h>
 
@@ -55,17 +57,24 @@ shared_ptr<Button> g_flash_button;
 
 bool g_start_ondemand_ap = false;
 
+enum class MODE { TICKER, MENU };
+MODE g_current_mode(MODE::TICKER);
+
+Menu g_menu(
+  {
+    std::make_shared<MenuItemNumericRange>("font","Font",0,2, 0),
+    std::make_shared<MenuItemNumericRange>("brightness","Bright",0,15, 0),
+    std::make_shared<MenuItemBoolean>("","AP Mode", false),
+    std::make_shared<MenuItemBoolean>("","Wipe", false)
+  }
+);
+
 
 static const unsigned char s_crypto2_bits[] = {
    0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x80, 0x01, 0x53, 0x4b, 0x8f, 0x71,
    0xc3, 0x48, 0xd3, 0x9b, 0xc3, 0x70, 0x93, 0x99, 0xd3, 0x40, 0x8f, 0x99,
    0xce, 0x38, 0x03, 0x71, 0x00, 0x00, 0x00, 0x00
 };
-
-// static const unsigned char s_clock_bits[] = {
-//    0x00, 0x00, 0x00, 0x00, 0x38, 0xc3, 0x71, 0x26, 0x4c, 0x63, 0x9a, 0x16,
-//    0x0c, 0x63, 0x1a, 0x0e, 0x0c, 0x63, 0x1a, 0x0e, 0x4c, 0x63, 0x9a, 0x16,
-//    0x38, 0xcf, 0x71, 0x26, 0x00, 0x00, 0x00, 0x00 };
 
 static const unsigned char s_clock_inverted_bits[] = {
    0xff, 0xff, 0xff, 0xff, 0xc7, 0x3c, 0x8e, 0xd9, 0xb3, 0x9c, 0x65, 0xe9,
@@ -75,6 +84,10 @@ static const unsigned char s_clock_inverted_bits[] = {
 
 void clock_callback()
 {
+  // don't display clock when menu is active
+  if (g_current_mode == MODE::MENU)
+    return;
+
   auto time = NTP.getTimeDateString();
   DEBUG_SERIAL.printf("[NTP] Displaying time %s\n",  time.c_str());
   g_clock_action->updateTime(time);
@@ -157,7 +170,6 @@ void configModeCallback (WiFiManager *myWiFiManager)
     Coords{0,0}
   ));
 }
-
 
 void setupSerial()
 {
@@ -267,11 +279,28 @@ void startOnDemandAP(void)
   ESP.restart();
 }
 
+void changeMode(void)
+{
+  if (g_current_mode != MODE::MENU) {
+    g_current_mode = MODE::MENU;
+    g_menu.start(g_display, [&](){ // set callback on menu end
+      g_current_mode = MODE::TICKER;
+      g_flash_button->onShortPress(nullptr);
+      g_flash_button->onLongPress(changeMode);
+    });
+
+    g_flash_button->onLongPress([&](){ g_menu.onLongPress(); });
+    g_flash_button->onShortPress([&](){ g_menu.onShortPress(); });
+  }
+}
+
 void setupButton()
 {
   g_flash_button = make_shared<Button>(PORTAL_TRIGGER_PIN);
-  g_flash_button->onShortPress([&]() { g_start_ondemand_ap = true; });
-  g_flash_button->onLongPress(factoryReset);
+  g_flash_button->onLongPress(changeMode);
+
+  // g_flash_button->onShortPress([&]() { g_start_ondemand_ap = true; });
+  // g_flash_button->onLongPress(factoryReset);
   g_flash_button->setupTickCallback([&]() { g_flash_button->tick(); });
 }
 

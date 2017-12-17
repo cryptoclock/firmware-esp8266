@@ -67,6 +67,12 @@ void DisplayT::removeBottomAction(void)
     m_actions.pop_back();
 }
 
+void DisplayT::removeTopAction(void)
+{
+  if (!m_actions.empty())
+    m_actions.erase(m_actions.begin());
+}
+
 void DisplayT::cleanQueue(void)
 {
   m_actions.clear();

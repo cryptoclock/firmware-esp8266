@@ -53,6 +53,7 @@ public:
   void queueAction(shared_ptr<ActionT> action);
   void prependAction(shared_ptr<ActionT> action);
   void replaceAction(shared_ptr<ActionT> action);
+  void removeTopAction(void);
   void removeBottomAction(void);
   void cleanQueue(void);
 
