@@ -11,6 +11,7 @@ ParameterItem _parameters[] = {
   ParameterItem{"ticker_path","Ticker server url","/", 50},
   ParameterItem{"brightness","Brightness (0-15)","15", 5},
   ParameterItem{"font","Font (0-2)","0", 5},
+  ParameterItem{"rotate_display","Rotate Display (0,1)","0", 5},
   ParameterItem{"","","", 0} // EOL
 };
 

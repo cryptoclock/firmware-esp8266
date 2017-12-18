@@ -2,6 +2,7 @@
 
 #include "menu.hpp"
 #include "display_action_menu.hpp"
+#include <EEPROM.h>
 
 
 using std::shared_ptr;
@@ -12,14 +13,26 @@ void Menu::start(DisplayT *display, button_callback_t changeMode)
   display->prependAction(std::make_shared<Display::Action::MenuWrapper>(this));
   m_end_of_menu_callback = changeMode;
 
-//    m_button->onLongPress ...
-//  m_button->onShortPress(nullptr);
-//  m_button->onLongPress(nullptr);
+  // load item values from parameters
+  for (auto item: m_items) {
+    auto parameter = m_parameters->findByName(item->getName());
+    if (parameter)
+      item->setValue(parameter->value);
+  }
 }
 
 void Menu::onLongPress()
 {
-  // activate menu item
+  auto item = (*m_current);
+  if (item->isActive()) {
+    item->onLongPress();
+    // update parameter store
+    auto parameter = m_parameters->findByName(item->getName());
+    if (parameter)
+      parameter->value = item->getValue();
+  } else {
+    item->activate();
+  }
 }
 
 void Menu::end()
@@ -32,9 +45,21 @@ void Menu::end()
 
 void Menu::onShortPress()
 {
-  m_current++;
-  if (m_current==m_items.end())
-    end();
+  if ((*m_current)->isActive()) {
+    (*m_current)->onShortPress();
+  } else {
+    m_current++;
+    if (m_current==m_items.end())
+      end();
+
+      // FIXME: rewrite
+    EEPROM.begin(2048);
+    m_parameters->storeToEEPROM();
+
+    EEPROM.commit();
+    EEPROM.end();
+
+  }
 }
 
 void Menu::draw(DisplayT *display, const Coords& coords)
@@ -42,13 +67,74 @@ void Menu::draw(DisplayT *display, const Coords& coords)
   (*m_current)->draw(display, coords);
 }
 
+shared_ptr<MenuItem> Menu::getMenuItem(const String& name)
+{
+  for (auto item : m_items)
+    if (item->getName() == name)
+      return item;
+
+  return nullptr;
+}
+
 
 void MenuItemNumericRange::draw(DisplayT *display, const Coords& coords)
 {
-  display->displayText(m_display_name, coords);
+  if (isActive()) {
+    String text = m_display_name_short + " " + String(m_current);
+    display->displayText(text, coords);
+  } else {
+    display->displayText(m_display_name, coords);
+  }
+}
+
+const String MenuItemNumericRange::getValue() const
+{
+  String s = String(m_current);
+  return s;
+}
+
+void MenuItemNumericRange::setValue(const String& value)
+{
+  m_current = value.toInt();
+}
+
+void MenuItemNumericRange::onShortPress()
+{
+  if (++m_current>m_end)
+    m_current = m_start;
+
+  if (m_onchange_cb)
+    m_onchange_cb(getValue());
+}
+
+void MenuItemNumericRange::onLongPress()
+{
+  deactivate();
 }
 
 void MenuItemBoolean::draw(DisplayT *display, const Coords& coords)
 {
   display->displayText(m_display_name, coords);
+}
+
+void MenuItemBoolean::onShortPress()
+{
+  m_current = !m_current;
+}
+
+void MenuItemBoolean::onLongPress()
+{
+  DEBUG_SERIAL.println("Confirmed!");
+  deactivate();
+}
+
+const String MenuItemBoolean::getValue() const
+{
+  String s = m_current ? "1" : "0";
+  return s;
+}
+
+void MenuItemBoolean::setValue(const String& value)
+{
+  m_current = (value == "1");
 }

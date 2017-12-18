@@ -61,11 +61,13 @@ enum class MODE { TICKER, MENU };
 MODE g_current_mode(MODE::TICKER);
 
 Menu g_menu(
+  &g_parameters,
   {
-    std::make_shared<MenuItemNumericRange>("font","Font",0,2, 0),
-    std::make_shared<MenuItemNumericRange>("brightness","Bright",0,15, 0),
-    std::make_shared<MenuItemBoolean>("","AP Mode", false),
-    std::make_shared<MenuItemBoolean>("","Wipe", false)
+    std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0),
+    std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0),
+    std::make_shared<MenuItemBoolean>("","Rotate", "Rot", false),
+//    std::make_shared<MenuItemFunction>("","AP Mode", false),
+//    std::make_shared<MenuItemFunction>("","Wipe", false)
   }
 );
 
@@ -213,8 +215,13 @@ void loadParameters()
   g_wifi = new WiFiCore(g_display, g_APs);
   EEPROM.end();
 
-  const int brightness = std::min(std::max(g_parameters["brightness"].toInt(),0L),15L);
-  g_display->setBrightness(brightness * 16);
+  // sanitize parameters
+  auto brightness = String(std::min(std::max(g_parameters["brightness"].toInt(),0L),15L));
+  g_parameters.setValue("brightness", brightness);
+  // rotate
+
+  //
+  g_display->setBrightness(g_parameters["brightness"].toInt() * 16);
 }
 
 void setupTicker()
@@ -304,6 +311,14 @@ void setupButton()
   g_flash_button->setupTickCallback([&]() { g_flash_button->tick(); });
 }
 
+void setupMenu()
+{
+  auto br_item = g_menu.getMenuItem("brightness");
+  br_item->setOnChange([](const String& value){ g_display->setBrightness(value.toInt() * 16); });
+
+}
+
+
 #ifdef X_TEST_DISPLAY
 shared_ptr<Display::Action::TestDisplay> g_test_display_action;
 
@@ -332,6 +347,7 @@ void setup() {
   setupTicker();
   setupDisplay();
   loadParameters();
+  setupMenu();
 
   g_price_action = make_shared<Display::Action::Price>(10.0); // animation speed, in digits per second
 

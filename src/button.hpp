@@ -29,5 +29,5 @@ private:
   bool m_long_press_dispatched;
   Ticker m_ticker;
 
-  static const unsigned int m_long_press_delay = 2000;
+  static const unsigned int m_long_press_delay = 1000;
 };

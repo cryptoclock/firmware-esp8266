@@ -75,6 +75,16 @@ ParameterItem* ParameterStore::findByName(const String& name) const
 }
 
 
+bool ParameterStore::setValue(const String& name, const String& value)
+{
+  auto parameter = findByName(name);
+  if (parameter == nullptr)
+    return false;
+
+  parameter->value = value;
+  return true;
+}
+
 String& ParameterStore::operator[] (const char *name) const
 {
   static String notfound("");
