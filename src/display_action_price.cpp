@@ -109,6 +109,9 @@ void Price::draw(DisplayT *display, Coords coords)
 
 void Price::updatePrice(const int new_price)
 {
+  if (m_price == new_price)
+    return;
+
   if (new_price>m_ath_price)
     m_ath_price = new_price;
 
