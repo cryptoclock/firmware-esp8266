@@ -102,7 +102,7 @@ void clock_callback()
 
 void websocketSendHello()
 {
-  String text = ";HELLO " + String(X_MODEL_NUMBER) + " " + g_parameters["__device_uuid"] + "\n";
+  String text = ";HELLO " + String(X_MODEL_NUMBER) + " " + g_parameters["__device_uuid"];
   DEBUG_SERIAL.printf("[WSc] Sending: '%s'\n", text.c_str());
   g_webSocket.sendTXT(text);
 }
@@ -190,18 +190,18 @@ void setupDisplay()
   g_display = new Display::U8G2Matrix(
     &g_display_hw,
     X_DISPLAY_DEFAULT_ROTATION,
-    g_display_width,
-    g_display_height,
+    X_DISPLAY_WIDTH,
+    X_DISPLAY_HEIGHT,
     u8g2_font_profont10_tf
   );
 #elif defined(X_DISPLAY_TM1637)
-  g_display = new Display::TM1637(&g_display_hw, g_display_num_digits);
+  g_display = new Display::TM1637(&g_display_hw, X_DISPLAY_WIDTH);
 #elif defined(X_DISPLAY_LIXIE)
-  g_display_hw.initialize<LIXIE_PIN, g_display_num_digits>();
-  g_display = new Display::LixieNumeric(&g_display_hw, g_display_num_digits);
+  g_display_hw.initialize<X_DISPLAY_DATA_PIN, X_DISPLAY_WIDTH>();
+  g_display = new Display::LixieNumeric(&g_display_hw, X_DISPLAY_WIDTH);
 #elif defined(X_DISPLAY_NEOPIXEL)
-  auto display = new Display::Neopixel(g_display_num_leds);
-  display->initialize<NEOPIXEL_PIN>();
+  auto display = new Display::Neopixel(X_DISPLAY_WIDTH, X_DISPLAY_HEIGHT);
+  display->initialize<X_DISPLAY_DATA_PIN>();
   g_display = display;
 #else
   #error error
