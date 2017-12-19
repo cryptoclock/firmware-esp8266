@@ -56,6 +56,7 @@ WiFiCore *g_wifi;
 shared_ptr<Button> g_flash_button;
 
 bool g_start_ondemand_ap = false;
+bool g_hello_sent = true;
 
 
 static const unsigned char s_crypto2_bits[] = {
@@ -102,7 +103,7 @@ void clock_callback()
 void websocketSendHello()
 {
   String text = ";HELLO " + String(X_MODEL_NUMBER) + " " + g_parameters["__device_uuid"] + "\n";
-  DEBUG_SERIAL.printf("[WSc] Sending: %s", text.c_str());
+  DEBUG_SERIAL.printf("[WSc] Sending: '%s'\n", text.c_str());
   g_webSocket.sendTXT(text);
 }
 
@@ -113,11 +114,15 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
       break;
     case WStype_CONNECTED:
       DEBUG_SERIAL.printf("[WSc] Connected to url: %s\n",  payload);
-      websocketSendHello();
+      g_hello_sent = false;
       break;
     case WStype_TEXT:
       {
         DEBUG_SERIAL.printf("[WSc] get text: %s\n", payload);
+        if (!g_hello_sent) {
+          websocketSendHello();
+          g_hello_sent = true;
+        }
         String str = (char*)payload;
         if (str==";UPDATE") {
           g_webSocket.disconnect();
