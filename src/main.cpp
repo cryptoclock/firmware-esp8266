@@ -41,6 +41,8 @@ using Display::Coords;
 
 #include <Ticker.h>
 
+#include <ESP8266TrueRandom.h>
+
 Ticker g_ticker_clock;
 
 WebSocketsClient g_webSocket;
@@ -97,6 +99,13 @@ void clock_callback()
   );
 }
 
+void websocketSendHello()
+{
+  String text = ";HELLO " + String(X_MODEL_NUMBER) + " " + g_parameters["__device_uuid"] + "\n";
+  DEBUG_SERIAL.printf("[WSc] Sending: %s", text.c_str());
+  g_webSocket.sendTXT(text);
+}
+
 void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
@@ -104,6 +113,7 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
       break;
     case WStype_CONNECTED:
       DEBUG_SERIAL.printf("[WSc] Connected to url: %s\n",  payload);
+      websocketSendHello();
       break;
     case WStype_TEXT:
       {
@@ -199,10 +209,20 @@ void loadParameters()
   g_parameters.loadFromEEPROM();
   g_APs = new AP_list();
   g_wifi = new WiFiCore(g_display, g_APs);
-  EEPROM.end();
 
   const int brightness = std::min(std::max(g_parameters["brightness"].toInt(),0L),15L);
   g_display->setBrightness(brightness * 16);
+
+  // no uuid set, generate new one
+  if (g_parameters["__device_uuid"] == "") {
+    uint8_t uuid[16];
+    ESP8266TrueRandom.uuid(uuid);
+    const String uuid_str = ESP8266TrueRandom.uuidToString(uuid);
+    g_parameters.setValue("__device_uuid", uuid_str);
+    g_parameters.storeToEEPROM();
+  }
+
+  EEPROM.end();
 }
 
 void setupTicker()

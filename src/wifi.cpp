@@ -12,6 +12,9 @@ WiFiCore::WiFiCore(DisplayT *display, AP_list *ap_list) :
   m_parameters.reserve(g_parameters.all_items().size());
   for (const auto& item_pair : g_parameters.all_items()) {
     const auto param = item_pair.second;
+    if (param->name.startsWith("__")) // reserved parameter, don't display
+      continue;
+
     auto *wifi_param = new WiFiManagerParameter(param->name.c_str(), param->description.c_str(), param->value.c_str(), param->field_length);
     m_parameters.push_back(wifi_param);
     m_wifimanager.addParameter(wifi_param);

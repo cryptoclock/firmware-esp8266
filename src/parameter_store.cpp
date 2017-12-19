@@ -84,3 +84,13 @@ String& ParameterStore::operator[] (const char *name) const
 
   return notfound;
 }
+
+bool ParameterStore::setValue(const String& name, const String& value)
+{
+  auto item = findByName(name);
+  if (item==nullptr)
+    return false;
+
+  item->value = value;
+  return true;
+}

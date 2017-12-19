@@ -1,10 +1,9 @@
-const char* app_version = "0.2.2";
-
 #include "parameter_store.hpp"
 
 // stored parameters
 ParameterItem _parameters[] = {
-  ParameterItem{"currency_pair","Currency pair","BTCUSD", 10},
+  ParameterItem{"__device_uuid","","", 0}, // new uuid will be generated on every device wipe
+  ParameterItem{"currency_pair","Currency pair","BTCUSD", 50},
   ParameterItem{"update_url","Update server","update.cryptoclock.net", 50},
   ParameterItem{"ticker_server_host","Ticker server hostname","ticker.cryptoclock.net", 50},
   ParameterItem{"ticker_server_port","Ticker server port","443", 5},
@@ -12,8 +11,11 @@ ParameterItem _parameters[] = {
   ParameterItem{"brightness","Brightness (0-15)","15", 5},
   ParameterItem{"","","", 0} // EOL
 };
-
 ParameterStore g_parameters(_parameters);
+
+#if !defined(X_MODEL_NUMBER)
+  #define X_MODEL_NUMBER "3DA0100"
+#endif
 
 // display test mode
 //#define X_TEST_DISPLAY 1
