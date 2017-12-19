@@ -1,5 +1,3 @@
-#define _STRINGIFY(x) #x
-
 /* models */
 #if defined(X_MODEL_3DA0100)
   #define X_DISPLAY_U8G2
