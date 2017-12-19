@@ -133,12 +133,13 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
         } else if (str.startsWith(";ATH=")) { // All-Time-High
           int ATHPrice = str.substring(5).toInt();
           g_price_action->setATHPrice(ATHPrice);
+        } else if (str.startsWith(";")){
+          /* unknown message */
         } else {
           int currentPrice = str.toInt();
           g_price_action->updatePrice(currentPrice);
           DEBUG_SERIAL.printf("[WSc] get tick: %i\n", currentPrice);
           DEBUG_SERIAL.printf("Free Heap: %i\n", ESP.getFreeHeap());
-  //        g_display->blinkDot(); // FIXME
         }
       }
       break;
