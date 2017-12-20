@@ -15,9 +15,9 @@ namespace Display {
 class Neopixel : public DisplayT
 {
 public:
-  Neopixel(const int num_leds) :
-    DisplayT(true), m_num_leds(num_leds),
-    m_leds(new CRGB[num_leds])
+  Neopixel(const int width, const int height) :
+    DisplayT(true), m_width(width), m_height(height),
+    m_leds(new CRGB[width*height])
   {
 //    m_display->begin();
 //    m_display->max_power(5,450); // 5V, 450mA
@@ -25,7 +25,7 @@ public:
   template<uint8_t DataPin>
   void initialize()
   {
-    FastLED.addLeds<NEOPIXEL, DataPin>(m_leds, m_num_leds);
+    FastLED.addLeds<NEOPIXEL, DataPin>(m_leds, m_width*m_height);
   }
 
   void displayText(const String& value, const Coords& coords);
@@ -46,14 +46,15 @@ public:
   font_t getDefaultFont() { return nullptr; }
   void setBrightness(const uint8_t brightness);
   void setDrawColor(const uint8_t color) {};
-  int getDisplayWidth() { return m_num_leds; }
-  int getDisplayHeight() { return 1; }
+  int getDisplayWidth() { return m_width; }
+  int getDisplayHeight() { return m_height; }
   int getCurrentFontHeight() { return 1; }
   bool isNumeric(void) { return false; }
   bool isGraphic(void) { return true; }
 
 private:
-  const int m_num_leds;
+  const int m_width;
+  const int m_height;
   CRGB *m_leds;
 };
 }

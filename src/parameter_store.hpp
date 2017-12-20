@@ -25,6 +25,7 @@ public:
 //  int size(void) { return m_size; }
   ParameterMap_t& all_items(void);
 
+  bool setValue(const String& name, const String& value);
   String& operator[] (const char *name) const;
   ParameterItem* findByName(const String& name) const;
   bool setValue(const String& name, const String& value);

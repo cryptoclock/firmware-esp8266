@@ -43,6 +43,8 @@ using Display::Coords;
 
 #include <Ticker.h>
 
+#include <ESP8266TrueRandom.h>
+
 Ticker g_ticker_clock;
 
 WebSocketsClient g_webSocket;
@@ -56,6 +58,7 @@ WiFiCore *g_wifi;
 shared_ptr<Button> g_flash_button;
 
 bool g_start_ondemand_ap = false;
+bool g_hello_sent = true;
 
 enum class MODE { TICKER, MENU };
 MODE g_current_mode(MODE::TICKER);
@@ -112,6 +115,13 @@ void clock_callback()
   );
 }
 
+void websocketSendHello()
+{
+  String text = ";HELLO " + String(X_MODEL_NUMBER) + " " + g_parameters["__device_uuid"];
+  DEBUG_SERIAL.printf("[WSc] Sending: '%s'\n", text.c_str());
+  g_webSocket.sendTXT(text);
+}
+
 void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
@@ -119,10 +129,15 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
       break;
     case WStype_CONNECTED:
       DEBUG_SERIAL.printf("[WSc] Connected to url: %s\n",  payload);
+      g_hello_sent = false;
       break;
     case WStype_TEXT:
       {
         DEBUG_SERIAL.printf("[WSc] get text: %s\n", payload);
+        if (!g_hello_sent) {
+          websocketSendHello();
+          g_hello_sent = true;
+        }
         String str = (char*)payload;
         if (str==";UPDATE") {
           g_webSocket.disconnect();
@@ -133,12 +148,13 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
         } else if (str.startsWith(";ATH=")) { // All-Time-High
           int ATHPrice = str.substring(5).toInt();
           g_price_action->setATHPrice(ATHPrice);
+        } else if (str.startsWith(";")){
+          /* unknown message */
         } else {
           int currentPrice = str.toInt();
           g_price_action->updatePrice(currentPrice);
           DEBUG_SERIAL.printf("[WSc] get tick: %i\n", currentPrice);
           DEBUG_SERIAL.printf("Free Heap: %i\n", ESP.getFreeHeap());
-  //        g_display->blinkDot(); // FIXME
         }
       }
       break;
@@ -188,18 +204,18 @@ void setupDisplay()
   g_display = new Display::U8G2Matrix(
     &g_display_hw,
     X_DISPLAY_DEFAULT_ROTATION,
-    g_display_width,
-    g_display_height,
+    X_DISPLAY_WIDTH,
+    X_DISPLAY_HEIGHT,
     u8g2_font_profont10_tf
   );
 #elif defined(X_DISPLAY_TM1637)
-  g_display = new Display::TM1637(&g_display_hw, g_display_num_digits);
+  g_display = new Display::TM1637(&g_display_hw, X_DISPLAY_WIDTH);
 #elif defined(X_DISPLAY_LIXIE)
-  g_display_hw.initialize<LIXIE_PIN, g_display_num_digits>();
-  g_display = new Display::LixieNumeric(&g_display_hw, g_display_num_digits);
+  g_display_hw.initialize<X_DISPLAY_DATA_PIN, X_DISPLAY_WIDTH>();
+  g_display = new Display::LixieNumeric(&g_display_hw, X_DISPLAY_WIDTH);
 #elif defined(X_DISPLAY_NEOPIXEL)
-  auto display = new Display::Neopixel(g_display_num_leds);
-  display->initialize<NEOPIXEL_PIN>();
+  auto display = new Display::Neopixel(X_DISPLAY_WIDTH, X_DISPLAY_HEIGHT);
+  display->initialize<X_DISPLAY_DATA_PIN>();
   g_display = display;
 #else
   #error error
@@ -213,7 +229,6 @@ void loadParameters()
   g_parameters.loadFromEEPROM();
   g_APs = new AP_list();
   g_wifi = new WiFiCore(g_display, g_APs);
-  EEPROM.end();
 
   // sanitize parameters
   auto brightness = String(std::min(std::max(g_parameters["brightness"].toInt(),0L),15L));
@@ -222,6 +237,17 @@ void loadParameters()
 
   //
   g_display->setBrightness(g_parameters["brightness"].toInt() * 16);
+
+  // no uuid set, generate new one
+  if (g_parameters["__device_uuid"] == "") {
+    uint8_t uuid[16];
+    ESP8266TrueRandom.uuid(uuid);
+    const String uuid_str = ESP8266TrueRandom.uuidToString(uuid);
+    g_parameters.setValue("__device_uuid", uuid_str);
+    g_parameters.storeToEEPROM();
+  }
+
+  EEPROM.end();
 }
 
 void setupTicker()
