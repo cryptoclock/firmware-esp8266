@@ -13,7 +13,6 @@ void TestDisplay::tick(DisplayT *display, double elapsed_time)
 
 void TestDisplay::draw(DisplayT *display, Coords coords)
 {
-  display->setFont(u8g2_font_u8glib_4_tr);
   display->setDrawColor(1);
 
   int w = display->getDisplayWidth();

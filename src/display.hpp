@@ -17,7 +17,7 @@ class DisplayT
 {
 public:
   DisplayT(bool enabled = true) :
-    m_enabled(enabled), m_contrast(0)
+    m_enabled(enabled), m_contrast(0), m_current_font(0)
   {
     m_last_tick_at = micros();
   }
@@ -38,16 +38,17 @@ public:
   virtual void sendBuffer(void) = 0;
   virtual int getTextWidth(const String& text) = 0;
   virtual void setBrightness(const uint8_t brightness) = 0; // 0..255
-  virtual void setFont(const uint8_t* font) = 0;
   virtual void setDrawColor(const uint8_t color) = 0;
   virtual void setRotation(const bool rotation) = 0;
   virtual int getDisplayWidth() = 0;
   virtual int getDisplayHeight() = 0;
   virtual int getCurrentFontHeight() = 0;
-  virtual font_t getDefaultFont() = 0;
   virtual bool isNumeric(void) = 0;
   virtual bool isGraphic(void) = 0;
   Coords centerTextOffset(const String& text);
+
+  void setFont(const uint8_t font);
+//  uint8_t getNumFonts();
 
   void setupTickCallback(Ticker::callback_t callback);
   void tick(void);
@@ -64,6 +65,8 @@ protected:
   uint8_t m_contrast;
   vector<shared_ptr<ActionT>> m_actions;
   Ticker m_ticker;
+  uint8_t m_current_font;
+//  uint8_t m_num_fonts;
 };
 }
 

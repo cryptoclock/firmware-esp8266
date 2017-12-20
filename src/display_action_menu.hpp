@@ -11,8 +11,8 @@ namespace Action {
 class MenuWrapper : public ActionT
 {
 public:
-  MenuWrapper(Menu* menu, const Coords& coords=Coords{0,0}, font_t font = nullptr)
-    : ActionT(-1, coords, font), m_menu(menu)
+  MenuWrapper(Menu* menu, const Coords& coords=Coords{0,0})
+    : ActionT(-1, coords), m_menu(menu)
     {}
   void tick(DisplayT *display, double elapsed_time);
   void draw(DisplayT *display, Coords coords);

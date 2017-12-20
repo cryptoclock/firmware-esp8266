@@ -6,11 +6,15 @@ namespace Display {
 class U8G2Matrix : public DisplayT
 {
 public:
-  U8G2Matrix(U8G2 *display, const bool rotation, const int width, const int height, font_t default_font) :
-    DisplayT(true), m_display(display), m_rotation(rotation), m_width(width), m_height(height), m_default_font(default_font)
+  U8G2Matrix(U8G2 *display, const bool rotation, const int width, const int height) :
+    DisplayT(true), m_display(display), m_rotation(rotation), m_width(width), m_height(height)
   {
     m_display->begin();
-    m_display->setFont(u8g2_font_micro_tr);
+    m_fonts.push_back(u8g2_font_profont10_tr);
+    m_fonts.push_back(u8g2_font_micro_tr);
+    m_fonts.push_back(u8g2_font_u8glib_4_tr);
+
+    m_display->setFont(m_fonts[0]);
     m_display->setFontMode(0);
     m_display->setContrast(0);
     setRotation(m_rotation);
@@ -33,19 +37,18 @@ public:
   int getDisplayHeight(void);
   int getCurrentFontHeight(void);
   void setBrightness(const uint8_t brightness);
-  void setFont(font_t font);
   void setDrawColor(const uint8_t color);
   void setRotation(const bool rotation);
-  font_t getDefaultFont();
   bool isNumeric(void) { return false; }
   bool isGraphic(void) { return true; }
 private:
+  void useFont();
   Coords correctOffsetForRotation(const Coords& coords);
 
   U8G2* m_display;
   bool m_rotation;
   const int m_width;
   const int m_height;
-  font_t m_default_font;
+  vector<const uint8_t *> m_fonts;
 };
 }

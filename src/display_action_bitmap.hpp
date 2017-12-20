@@ -9,8 +9,8 @@ class StaticBitmap : public ActionT
 {
 public:
   StaticBitmap(const unsigned char *data, const int width, const int height,
-    const double duration, const Coords& coords = Coords{0,0}, font_t font = nullptr)
-    : ActionT(duration, coords, font), m_data(data), m_width(width), m_height(height)
+    const double duration, const Coords& coords = Coords{0,0})
+    : ActionT(duration, coords), m_data(data), m_width(width), m_height(height)
   {}
 
   void tick(DisplayT *display, double elapsed_time);

@@ -18,7 +18,6 @@ void Clock::draw(DisplayT *display, Coords coords)
 {
   if (m_time=="") return;
 
-  display->setFont(m_font);
   String text;
   if (int(m_elapsed_time) % 2 == 0)
     text = m_time;
@@ -34,7 +33,7 @@ void Clock::updateTime(const String& time)
     m_time = "--:--";
   else
     m_time = time.substring(0,5);
-    
+
 }
 }
 }

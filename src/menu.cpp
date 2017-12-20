@@ -11,7 +11,7 @@ using std::shared_ptr;
 void Menu::start(DisplayT *display, button_callback_t changeMode)
 {
   m_finished = false;
-  display->prependAction(std::make_shared<Display::Action::MenuWrapper>(this, Coords{0,0}, u8g2_font_u8glib_4_tr));
+  display->prependAction(std::make_shared<Display::Action::MenuWrapper>(this, Coords{0,0}));
   m_end_of_menu_callback = changeMode;
 
   // load item values from parameters
@@ -20,6 +20,8 @@ void Menu::start(DisplayT *display, button_callback_t changeMode)
     if (parameter)
       item->setValue(parameter->value);
   }
+
+  m_current = m_items.begin();
 }
 
 void Menu::onLongPress()
@@ -71,13 +73,9 @@ void Menu::draw(DisplayT *display, const Coords& coords)
   (*m_current)->draw(display, coords);
 }
 
-shared_ptr<MenuItem> Menu::getMenuItem(const String& name)
+void Menu::addItem(const shared_ptr<MenuItem> &item)
 {
-  for (auto item : m_items)
-    if (item->getName() == name)
-      return item;
-
-  return nullptr;
+  m_items.push_back(item);
 }
 
 

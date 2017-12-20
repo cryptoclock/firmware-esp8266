@@ -10,7 +10,7 @@ class TestDisplay : public ActionT
 {
 public:
   TestDisplay()
-    : ActionT(-1, {0,0}, nullptr), m_current_mode(0)
+    : ActionT(-1, {0,0}), m_current_mode(0)
   {
   }
 

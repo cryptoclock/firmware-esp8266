@@ -12,6 +12,7 @@ Coords U8G2Matrix::correctOffsetForRotation(const Coords& coords)
 
 void U8G2Matrix::displayText(const String& value, const Coords& coords)
 {
+  useFont();
   Coords u_coords = correctOffsetForRotation(coords);
   m_display->drawStr(u_coords.x,u_coords.y + m_height,value.c_str());
 }
@@ -37,6 +38,7 @@ void U8G2Matrix::displayBitmapP(const unsigned char *bitmap, const Coords& coord
 
 void U8G2Matrix::drawGlyph(const uint16_t glyph, const Coords& coords)
 {
+  useFont();
   Coords u_coords = correctOffsetForRotation(coords);
   m_display->drawGlyph(u_coords.x, u_coords.y + m_height, glyph);
 }
@@ -75,19 +77,6 @@ int U8G2Matrix::getTextWidth(const String& text)
   return m_display->getStrWidth(text.c_str());
 }
 
-void U8G2Matrix::setFont(font_t font)
-{
-  if (font==nullptr)
-    m_display->setFont(m_default_font);
-  else
-    m_display->setFont(font);
-}
-
-font_t U8G2Matrix::getDefaultFont(void)
-{
-  return m_default_font;
-}
-
 void U8G2Matrix::setBrightness(const uint8_t brightness)
 {
 //  m_display->setContrast(brightness * (255.0/100.0));
@@ -114,6 +103,16 @@ int U8G2Matrix::getDisplayWidth() { return m_width; }
 int U8G2Matrix::getDisplayHeight() { return m_height; }
 int U8G2Matrix::getCurrentFontHeight()
 {
+  useFont();
   return m_display->getAscent();
 }
+
+void U8G2Matrix::useFont()
+{
+  if (m_current_font>=m_fonts.size())
+    m_current_font = 0;
+
+  m_display->setFont(m_fonts[m_current_font]);
+}
+
 }

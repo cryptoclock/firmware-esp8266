@@ -77,4 +77,10 @@ void DisplayT::cleanQueue(void)
 {
   m_actions.clear();
 }
+
+void DisplayT::setFont(const uint8_t font)
+{
+  m_current_font = font;
+};
+
 }

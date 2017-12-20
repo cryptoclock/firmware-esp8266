@@ -49,7 +49,6 @@ void Price::draw(DisplayT *display, Coords coords)
     return;
   }
 
-  display->setFont(m_font);
   coords += m_coords;
 
   String price_top = String((int)m_displayed_price);

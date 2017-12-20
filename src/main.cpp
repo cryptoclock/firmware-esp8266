@@ -64,15 +64,16 @@ bool g_force_wipe = false;
 enum class MODE { TICKER, MENU };
 MODE g_current_mode(MODE::TICKER);
 
-Menu g_menu(
-  &g_parameters,
-  {
-    std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0),
-    std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0),
-    std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false),
-//    std::make_shared<MenuItemFunction>("","AP Mode", false),
-  }
-);
+shared_ptr<Menu> g_menu = nullptr;
+// Menu g_menu(
+//   &g_parameters,
+//   {
+//     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0),
+//     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0),
+//     std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false),
+// //    std::make_shared<MenuItemFunction>("","AP Mode", false),
+//   }
+// );
 
 
 static const unsigned char s_crypto2_bits[] = {
@@ -209,8 +210,7 @@ void setupDisplay()
     &g_display_hw,
     false,
     X_DISPLAY_WIDTH,
-    X_DISPLAY_HEIGHT,
-    u8g2_font_profont10_tf
+    X_DISPLAY_HEIGHT
   );
 #elif defined(X_DISPLAY_TM1637)
   g_display = new Display::TM1637(&g_display_hw, X_DISPLAY_WIDTH);
@@ -235,11 +235,12 @@ void loadParameters()
   g_wifi = new WiFiCore(g_display, g_APs);
 
   // sanitize parameters
-  auto brightness = String(std::min(std::max(g_parameters["brightness"].toInt(),0L),15L));
-  g_parameters.setValue("brightness", brightness);
+  g_parameters.setValue("brightness", String(std::min(std::max(g_parameters["brightness"].toInt(),0L),15L)) );
+  g_parameters.setValue("font", String(std::min(std::max(g_parameters["font"].toInt(),0L),2L)) );
 
   g_display->setBrightness(g_parameters["brightness"].toInt() * 16);
   g_display->setRotation(g_parameters["rotate_display"]=="1");
+  g_display->setFont(g_parameters["font"].toInt());
 
   // no uuid set, generate new one
   if (g_parameters["__device_uuid"] == "") {
@@ -330,13 +331,13 @@ void switchMenu(void)
 {
   if (g_current_mode != MODE::MENU) {
     g_current_mode = MODE::MENU;
-    g_menu.start(g_display, [](){ // set callback when menu is finished
+    g_menu->start(g_display, [](){ // set callback when menu is finished
       g_current_mode = MODE::TICKER;
       setupDefaultButtons();
     });
 
-    g_flash_button->onLongPress([](){ g_menu.onLongPress(); });
-    g_flash_button->onShortPress([](){ g_menu.onShortPress(); });
+    g_flash_button->onLongPress([](){ g_menu->onLongPress(); });
+    g_flash_button->onShortPress([](){ g_menu->onShortPress(); });
   }
 }
 
@@ -348,12 +349,17 @@ void setupButton()
 
 void setupMenu()
 {
-  g_menu.getMenuItem("brightness")->setOnChange([](const String& value){
+  g_menu = std::make_shared<Menu>(&g_parameters);
+
+  g_menu->addItem(std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, [](const String& value){
+    g_display->setFont(value.toInt());
+  }));
+  g_menu->addItem(std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, [](const String& value){
     g_display->setBrightness(value.toInt() * 16);
-  });
-  g_menu.getMenuItem("rotate_display")->setOnChange([](const String& value){
+  }));
+  g_menu->addItem(std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, [](const String& value){
     g_display->setRotation(value=="1");
-  });
+  }));
 }
 
 
