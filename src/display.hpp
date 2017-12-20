@@ -40,6 +40,7 @@ public:
   virtual void setBrightness(const uint8_t brightness) = 0; // 0..255
   virtual void setFont(const uint8_t* font) = 0;
   virtual void setDrawColor(const uint8_t color) = 0;
+  virtual void setRotation(const bool rotation) = 0;
   virtual int getDisplayWidth() = 0;
   virtual int getDisplayHeight() = 0;
   virtual int getCurrentFontHeight() = 0;

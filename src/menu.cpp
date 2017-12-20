@@ -4,13 +4,14 @@
 #include "display_action_menu.hpp"
 #include <EEPROM.h>
 
+#include "display_u8g2.hpp"
 
 using std::shared_ptr;
 
 void Menu::start(DisplayT *display, button_callback_t changeMode)
 {
   m_finished = false;
-  display->prependAction(std::make_shared<Display::Action::MenuWrapper>(this));
+  display->prependAction(std::make_shared<Display::Action::MenuWrapper>(this, Coords{0,0}, u8g2_font_u8glib_4_tr));
   m_end_of_menu_callback = changeMode;
 
   // load item values from parameters
@@ -26,10 +27,12 @@ void Menu::onLongPress()
   auto item = (*m_current);
   if (item->isActive()) {
     item->onLongPress();
-    // update parameter store
+
     auto parameter = m_parameters->findByName(item->getName());
     if (parameter)
       parameter->value = item->getValue();
+
+    saveParameters();
   } else {
     item->activate();
   }
@@ -51,15 +54,16 @@ void Menu::onShortPress()
     m_current++;
     if (m_current==m_items.end())
       end();
-
-      // FIXME: rewrite
-    EEPROM.begin(2048);
-    m_parameters->storeToEEPROM();
-
-    EEPROM.commit();
-    EEPROM.end();
-
   }
+}
+
+void Menu::saveParameters()
+{
+  // FIXME: prepsat
+  EEPROM.begin(2048);
+  m_parameters->storeToEEPROM();
+  EEPROM.commit();
+  EEPROM.end();
 }
 
 void Menu::draw(DisplayT *display, const Coords& coords)
@@ -112,19 +116,27 @@ void MenuItemNumericRange::onLongPress()
   deactivate();
 }
 
+
 void MenuItemBoolean::draw(DisplayT *display, const Coords& coords)
 {
-  display->displayText(m_display_name, coords);
+  if (isActive()) {
+    String text = m_display_name_short + (m_current ? " On" : " Off");
+    display->displayText(text, coords);
+  } else {
+    display->displayText(m_display_name, coords);
+  }
 }
 
 void MenuItemBoolean::onShortPress()
 {
   m_current = !m_current;
+
+  if (m_onchange_cb)
+    m_onchange_cb(getValue());
 }
 
 void MenuItemBoolean::onLongPress()
 {
-  DEBUG_SERIAL.println("Confirmed!");
   deactivate();
 }
 

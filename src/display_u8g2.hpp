@@ -35,10 +35,10 @@ public:
   void setBrightness(const uint8_t brightness);
   void setFont(font_t font);
   void setDrawColor(const uint8_t color);
+  void setRotation(const bool rotation);
   font_t getDefaultFont();
   bool isNumeric(void) { return false; }
   bool isGraphic(void) { return true; }
-
 private:
   Coords correctOffsetForRotation(const Coords& coords);
 

@@ -68,7 +68,7 @@ Menu g_menu(
   {
     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0),
     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0),
-    std::make_shared<MenuItemBoolean>("","Rotate", "Rot", false),
+    std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false),
 //    std::make_shared<MenuItemFunction>("","AP Mode", false),
 //    std::make_shared<MenuItemFunction>("","Wipe", false)
   }
@@ -151,10 +151,14 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
         } else if (str.startsWith(";")){
           /* unknown message */
         } else {
-          int currentPrice = str.toInt();
-          g_price_action->updatePrice(currentPrice);
-          DEBUG_SERIAL.printf("[WSc] get tick: %i\n", currentPrice);
-          DEBUG_SERIAL.printf("Free Heap: %i\n", ESP.getFreeHeap());
+          if (isdigit(str.charAt(0)) ||
+            (str.charAt(0)=='-' && isdigit(str.charAt(1)))
+          ) {
+            long currentPrice = str.toInt();
+            g_price_action->updatePrice(currentPrice);
+            DEBUG_SERIAL.printf("[WSc] get tick: %li\n", currentPrice);
+            DEBUG_SERIAL.printf("Free Heap: %i\n", ESP.getFreeHeap());
+          }
         }
       }
       break;
@@ -233,10 +237,9 @@ void loadParameters()
   // sanitize parameters
   auto brightness = String(std::min(std::max(g_parameters["brightness"].toInt(),0L),15L));
   g_parameters.setValue("brightness", brightness);
-  // rotate
 
-  //
   g_display->setBrightness(g_parameters["brightness"].toInt() * 16);
+  g_display->setRotation(g_parameters["rotate_display"]=="1");
 
   // no uuid set, generate new one
   if (g_parameters["__device_uuid"] == "") {
@@ -339,9 +342,12 @@ void setupButton()
 
 void setupMenu()
 {
-  auto br_item = g_menu.getMenuItem("brightness");
-  br_item->setOnChange([](const String& value){ g_display->setBrightness(value.toInt() * 16); });
-
+  g_menu.getMenuItem("brightness")->setOnChange([](const String& value){
+    g_display->setBrightness(value.toInt() * 16);
+  });
+  g_menu.getMenuItem("rotate_display")->setOnChange([](const String& value){
+    g_display->setRotation(value=="1");
+  });
 }
 
 

@@ -33,6 +33,7 @@ public:
   font_t getDefaultFont() { return nullptr; }
   void setBrightness(const uint8_t brightness);
   void setDrawColor(const uint8_t color) {};
+  void setRotation(const bool rotation) {};
   int getDisplayWidth() { return m_num_digits; }
   int getDisplayHeight() { return 1; }
   int getCurrentFontHeight() { return 1; }

@@ -99,8 +99,10 @@ public:
   bool isFinished() { return m_finished; }
 
   shared_ptr<MenuItem> getMenuItem(const String& name);
+
 private:
-  void end(void);
+  void saveParameters();
+  void end();
 
   ParameterStore *m_parameters;
 
