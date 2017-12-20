@@ -24,7 +24,7 @@ void Clock::draw(DisplayT *display, Coords coords)
   else
     text = m_time.substring(0,2) + " " + m_time.substring(3,5);
 
-  display->displayText(text, m_coords + coords);
+  display->displayText(text, m_coords + coords + display->centerTextOffset(text));
 }
 
 void Clock::updateTime(const String& time)

@@ -8,7 +8,7 @@ Coords DisplayT::centerTextOffset(const String& text)
 {
   return Coords {
     (int) std::max(ceil((getDisplayWidth() - getTextWidth(text)) / 2.0), 0.0),
-    - (int) std::max(ceil((getDisplayHeight() - getCurrentFontHeight()) / 2.0), 0.0)
+    - (int) std::max(floor((getDisplayHeight() - getCurrentFontHeight()) / 2.0), 0.0)
   };
 }
 

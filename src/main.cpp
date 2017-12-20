@@ -288,7 +288,7 @@ void setupNTP()
   NTP.begin("ntp.nic.cz", 1, true);
   NTP.setInterval(1800);
 
-  g_clock_action = make_shared<Display::Action::Clock>(3.0, Coords{4,-1}); // display clock for 3 secs
+  g_clock_action = make_shared<Display::Action::Clock>(3.0, Coords{0,0}); // display clock for 3 secs
   g_ticker_clock.attach(30.0, clock_callback);
 }
 
