@@ -28,7 +28,6 @@ public:
   bool setValue(const String& name, const String& value);
   String& operator[] (const char *name) const;
   ParameterItem* findByName(const String& name) const;
-  bool setValue(const String& name, const String& value);
 
 private:
   ParameterMap_t m_items;
