@@ -20,7 +20,8 @@ public:
   void onShortPress(button_callback_t func);
   void onLongPress(button_callback_t func);
   void onSuperLongPress(button_callback_t func);
-  void tick(void);
+  void tick();
+  bool pressed() { return m_currently_pressed; }
 private:
   button_callback_t m_short_press_cb;
   button_callback_t m_long_press_cb;
@@ -33,5 +34,5 @@ private:
   Ticker m_ticker;
 
   static const unsigned int m_long_press_delay = 1000;
-  static const unsigned int m_super_long_press_delay = 5000;
+  static const unsigned int m_super_long_press_delay = 10000;
 };

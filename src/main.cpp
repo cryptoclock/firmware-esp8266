@@ -320,8 +320,8 @@ void switchMenu(void);
 void setupDefaultButtons()
 {
 //  g_flash_button->onShortPress([]() { g_start_ondemand_ap = true; });
-  g_flash_button->onShortPress(nullptr);
-  g_flash_button->onLongPress(switchMenu);
+  g_flash_button->onShortPress(switchMenu);
+  g_flash_button->onLongPress([]() { g_start_ondemand_ap = true; });
   g_flash_button->onSuperLongPress([]() { g_force_wipe = true;} );
   g_flash_button->setupTickCallback([]() { g_flash_button->tick(); });
 }
@@ -413,7 +413,7 @@ void setup() {
 }
 
 void loop() {
-  if (g_start_ondemand_ap)
+  if (g_start_ondemand_ap && !g_flash_button->pressed())
     startOnDemandAP();
 
   if (g_force_wipe==true)
