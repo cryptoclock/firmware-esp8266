@@ -74,7 +74,6 @@ ParameterItem* ParameterStore::findByName(const String& name) const
   return (*item).second;
 }
 
-
 String& ParameterStore::operator[] (const char *name) const
 {
   static String notfound("");
@@ -87,10 +86,10 @@ String& ParameterStore::operator[] (const char *name) const
 
 bool ParameterStore::setValue(const String& name, const String& value)
 {
-  auto item = findByName(name);
-  if (item==nullptr)
+  auto parameter = findByName(name);
+  if (parameter == nullptr)
     return false;
 
-  item->value = value;
+  parameter->value = value;
   return true;
 }

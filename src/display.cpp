@@ -8,7 +8,7 @@ Coords DisplayT::centerTextOffset(const String& text)
 {
   return Coords {
     (int) std::max(ceil((getDisplayWidth() - getTextWidth(text)) / 2.0), 0.0),
-    - (int) std::max(ceil((getDisplayHeight() - getCurrentFontHeight()) / 2.0), 0.0)
+    - (int) std::max(floor((getDisplayHeight() - getCurrentFontHeight()) / 2.0), 0.0)
   };
 }
 
@@ -67,8 +67,20 @@ void DisplayT::removeBottomAction(void)
     m_actions.pop_back();
 }
 
+void DisplayT::removeTopAction(void)
+{
+  if (!m_actions.empty())
+    m_actions.erase(m_actions.begin());
+}
+
 void DisplayT::cleanQueue(void)
 {
   m_actions.clear();
 }
+
+void DisplayT::setFont(const uint8_t font)
+{
+  m_current_font = font;
+};
+
 }

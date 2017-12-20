@@ -1,21 +1,23 @@
+#pragma once
 #include "config_common.hpp"
 #include <Arduino.h>
 #include "display_action.hpp"
 #include "display.hpp"
+#include "menu.hpp"
+
 
 namespace Display {
 namespace Action {
-class Clock : public ActionT
+class MenuWrapper : public ActionT
 {
 public:
-  Clock(double duration, const Coords& coords=Coords{0,0})
-    : ActionT(duration, coords), m_time("")
+  MenuWrapper(Menu* menu, const Coords& coords=Coords{0,0})
+    : ActionT(-1, coords), m_menu(menu)
     {}
   void tick(DisplayT *display, double elapsed_time);
   void draw(DisplayT *display, Coords coords);
-  void updateTime(const String& time);
 private:
-  String m_time;
+  Menu* m_menu;
 };
 }
 }

@@ -8,13 +8,11 @@ using std::shared_ptr;
 namespace Display {
 class DisplayT;
 
-typedef const uint8_t* font_t;
-
 class ActionT
 {
 public:
-  ActionT(double duration, Coords coords, font_t font = nullptr)
-    : m_duration(duration), m_coords(coords), m_font(font), m_finished(false), m_elapsed_time(0.0)
+  ActionT(double duration, Coords coords)
+    : m_duration(duration), m_coords(coords), m_finished(false), m_elapsed_time(0.0)
   {}
 
   virtual void tick(DisplayT *display, double elapsed_time) = 0;
@@ -29,7 +27,6 @@ public:
 protected:
   double m_duration;
   Coords m_coords;
-  font_t m_font;
   bool m_finished;
   double m_elapsed_time;
 };

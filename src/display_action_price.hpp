@@ -9,8 +9,8 @@ namespace Action {
 class Price : public ActionT
 {
 public:
-  Price(const double animation_speed, const Coords& coords=Coords{0,0}, font_t font = nullptr)
-    : ActionT(-1, coords, font), m_animation_speed(animation_speed), m_price(-1), m_last_price(-1),
+  Price(const double animation_speed, const Coords& coords=Coords{0,0})
+    : ActionT(-1, coords), m_animation_speed(animation_speed), m_price(-1), m_last_price(-1),
       m_displayed_price(-1.0), m_ath_price(std::numeric_limits<int>::max())
     {}
 

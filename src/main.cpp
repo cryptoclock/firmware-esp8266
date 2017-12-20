@@ -23,6 +23,7 @@
 #include "display_action_price.hpp"
 #include "display_action_clock.hpp"
 #include "display_action_testdisplay.hpp"
+#include "display_action_menu.hpp"
 using Display::Coords;
 
 #include "config.hpp"
@@ -31,6 +32,7 @@ using Display::Coords;
 #include "wifi.hpp"
 #include "utils.hpp"
 #include "button.hpp"
+#include "menu.hpp"
 
 #include <EEPROM.h>
 
@@ -57,6 +59,21 @@ shared_ptr<Button> g_flash_button;
 
 bool g_start_ondemand_ap = false;
 bool g_hello_sent = true;
+bool g_force_wipe = false;
+
+enum class MODE { TICKER, MENU };
+MODE g_current_mode(MODE::TICKER);
+
+shared_ptr<Menu> g_menu = nullptr;
+// Menu g_menu(
+//   &g_parameters,
+//   {
+//     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0),
+//     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0),
+//     std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false),
+// //    std::make_shared<MenuItemFunction>("","AP Mode", false),
+//   }
+// );
 
 
 static const unsigned char s_crypto2_bits[] = {
@@ -64,11 +81,6 @@ static const unsigned char s_crypto2_bits[] = {
    0xc3, 0x48, 0xd3, 0x9b, 0xc3, 0x70, 0x93, 0x99, 0xd3, 0x40, 0x8f, 0x99,
    0xce, 0x38, 0x03, 0x71, 0x00, 0x00, 0x00, 0x00
 };
-
-// static const unsigned char s_clock_bits[] = {
-//    0x00, 0x00, 0x00, 0x00, 0x38, 0xc3, 0x71, 0x26, 0x4c, 0x63, 0x9a, 0x16,
-//    0x0c, 0x63, 0x1a, 0x0e, 0x0c, 0x63, 0x1a, 0x0e, 0x4c, 0x63, 0x9a, 0x16,
-//    0x38, 0xcf, 0x71, 0x26, 0x00, 0x00, 0x00, 0x00 };
 
 static const unsigned char s_clock_inverted_bits[] = {
    0xff, 0xff, 0xff, 0xff, 0xc7, 0x3c, 0x8e, 0xd9, 0xb3, 0x9c, 0x65, 0xe9,
@@ -78,6 +90,10 @@ static const unsigned char s_clock_inverted_bits[] = {
 
 void clock_callback()
 {
+  // don't display clock when menu is active
+  if (g_current_mode == MODE::MENU)
+    return;
+
   auto time = NTP.getTimeDateString();
   DEBUG_SERIAL.printf("[NTP] Displaying time %s\n",  time.c_str());
   g_clock_action->updateTime(time);
@@ -136,10 +152,14 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
         } else if (str.startsWith(";")){
           /* unknown message */
         } else {
-          int currentPrice = str.toInt();
-          g_price_action->updatePrice(currentPrice);
-          DEBUG_SERIAL.printf("[WSc] get tick: %i\n", currentPrice);
-          DEBUG_SERIAL.printf("Free Heap: %i\n", ESP.getFreeHeap());
+          if (isdigit(str.charAt(0)) ||
+            (str.charAt(0)=='-' && isdigit(str.charAt(1)))
+          ) {
+            long currentPrice = str.toInt();
+            g_price_action->updatePrice(currentPrice);
+            DEBUG_SERIAL.printf("[WSc] get tick: %li\n", currentPrice);
+            DEBUG_SERIAL.printf("Free Heap: %i\n", ESP.getFreeHeap());
+          }
         }
       }
       break;
@@ -174,7 +194,6 @@ void configModeCallback (WiFiManager *myWiFiManager)
   ));
 }
 
-
 void setupSerial()
 {
   DEBUG_SERIAL.begin(115200);
@@ -189,10 +208,9 @@ void setupDisplay()
 #if defined(X_DISPLAY_U8G2)
   g_display = new Display::U8G2Matrix(
     &g_display_hw,
-    X_DISPLAY_DEFAULT_ROTATION,
+    false,
     X_DISPLAY_WIDTH,
-    X_DISPLAY_HEIGHT,
-    u8g2_font_profont10_tf
+    X_DISPLAY_HEIGHT
   );
 #elif defined(X_DISPLAY_TM1637)
   g_display = new Display::TM1637(&g_display_hw, X_DISPLAY_WIDTH);
@@ -216,8 +234,13 @@ void loadParameters()
   g_APs = new AP_list();
   g_wifi = new WiFiCore(g_display, g_APs);
 
-  const int brightness = std::min(std::max(g_parameters["brightness"].toInt(),0L),15L);
-  g_display->setBrightness(brightness * 16);
+  // sanitize parameters
+  g_parameters.setValue("brightness", String(std::min(std::max(g_parameters["brightness"].toInt(),0L),15L)) );
+  g_parameters.setValue("font", String(std::min(std::max(g_parameters["font"].toInt(),0L),2L)) );
+
+  g_display->setBrightness(g_parameters["brightness"].toInt() * 16);
+  g_display->setRotation(g_parameters["rotate_display"]=="1");
+  g_display->setFont(g_parameters["font"].toInt());
 
   // no uuid set, generate new one
   if (g_parameters["__device_uuid"] == "") {
@@ -265,7 +288,7 @@ void setupNTP()
   NTP.begin("ntp.nic.cz", 1, true);
   NTP.setInterval(1800);
 
-  g_clock_action = make_shared<Display::Action::Clock>(3.0, Coords{4,-1}); // display clock for 3 secs
+  g_clock_action = make_shared<Display::Action::Clock>(3.0, Coords{0,0}); // display clock for 3 secs
   g_ticker_clock.attach(30.0, clock_callback);
 }
 
@@ -280,6 +303,7 @@ void factoryReset(void)
   EEPROM.end();
 
   delay(1000);
+  g_wifi->resetSettings();
   ESP.reset();
 }
 
@@ -293,12 +317,46 @@ void startOnDemandAP(void)
   ESP.restart();
 }
 
+void switchMenu(void);
+void setupDefaultButtons()
+{
+//  g_flash_button->onShortPress([]() { g_start_ondemand_ap = true; });
+  g_flash_button->onShortPress(switchMenu);
+  g_flash_button->onLongPress([]() { g_start_ondemand_ap = true; });
+  g_flash_button->onSuperLongPress([]() { g_force_wipe = true;} );
+  g_flash_button->setupTickCallback([]() { g_flash_button->tick(); });
+}
+
+void switchMenu(void)
+{
+  if (g_current_mode != MODE::MENU) {
+    g_current_mode = MODE::MENU;
+    g_menu->start(g_display, [](){ // set callback when menu is finished
+      g_current_mode = MODE::TICKER;
+      setupDefaultButtons();
+    });
+
+    g_flash_button->onLongPress([](){ g_menu->onLongPress(); });
+    g_flash_button->onShortPress([](){ g_menu->onShortPress(); });
+  }
+}
+
 void setupButton()
 {
   g_flash_button = make_shared<Button>(PORTAL_TRIGGER_PIN);
-  g_flash_button->onShortPress([&]() { g_start_ondemand_ap = true; });
-  g_flash_button->onLongPress(factoryReset);
-  g_flash_button->setupTickCallback([&]() { g_flash_button->tick(); });
+  setupDefaultButtons();
+}
+
+
+
+void setupMenu()
+{
+  const menu_items_t items({
+    std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, [](const String& value){ g_display->setFont(value.toInt()); } ),
+    std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, [](const String& value){ g_display->setBrightness(value.toInt() * 16); } ),
+    std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, [](const String& value){ g_display->setRotation(value=="1"); } )
+  });
+  g_menu = std::make_shared<Menu>(&g_parameters, items);
 }
 
 #ifdef X_TEST_DISPLAY
@@ -329,6 +387,7 @@ void setup() {
   setupTicker();
   setupDisplay();
   loadParameters();
+  setupMenu();
 
   g_price_action = make_shared<Display::Action::Price>(10.0); // animation speed, in digits per second
 
@@ -356,8 +415,11 @@ void setup() {
 }
 
 void loop() {
-  if (g_start_ondemand_ap)
+  if (g_start_ondemand_ap && !g_flash_button->pressed())
     startOnDemandAP();
+
+  if (g_force_wipe==true)
+    factoryReset();
 
   g_webSocket.loop();
   delay(10);

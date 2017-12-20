@@ -13,14 +13,12 @@ void StaticText::tick(DisplayT *display, double elapsed_time)
 
 void StaticText::draw(DisplayT *display, Coords coords)
 {
-  display->setFont(m_font);
   coords += display->centerTextOffset(m_text);
   display->displayText(m_text, m_coords + coords);
 }
 
 void RotatingText::draw(DisplayT *display, Coords coords)
 {
-  display->setFont(m_font);
   int width = display->getTextWidth(m_text);
   int offset_x = (int)(m_elapsed_time * m_speed) % width;
   Coords offset_center = display->centerTextOffset(m_text);

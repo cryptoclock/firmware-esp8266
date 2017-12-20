@@ -42,10 +42,9 @@ public:
   void clearBuffer() {}
   void sendBuffer() {}
   int getTextWidth(const String& text) { return 0; }
-  void setFont(font_t font) {};
-  font_t getDefaultFont() { return nullptr; }
   void setBrightness(const uint8_t brightness);
   void setDrawColor(const uint8_t color) {};
+  void setRotation(const bool rotation) {};
   int getDisplayWidth() { return m_width; }
   int getDisplayHeight() { return m_height; }
   int getCurrentFontHeight() { return 1; }
