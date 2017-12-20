@@ -3,17 +3,15 @@
   #define X_DISPLAY_U8G2
   #define X_DISPLAY_WIDTH 32
   #define X_DISPLAY_HEIGHT 8
-  #define X_DISPLAY_DEFAULT_ROTATION U8G2_R0
   #include "display_u8g2.hpp"
-  U8G2_MAX7219_32X8_F_4W_SW_SPI g_display_hw(X_DISPLAY_DEFAULT_ROTATION, /* clock=*/ D7, /* data=*/ D5, /* cs=*/ D6, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
+  U8G2_MAX7219_32X8_F_4W_SW_SPI g_display_hw(U8G2_R0, /* clock=*/ D7, /* data=*/ D5, /* cs=*/ D6, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
 #elif defined(X_MODEL_TESTER)
   #define X_TEST_DISPLAY
   #define X_DISPLAY_U8G2
   #define X_DISPLAY_WIDTH 32
   #define X_DISPLAY_HEIGHT 8
-  #define X_DISPLAY_DEFAULT_ROTATION U8G2_R0
   #include "display_u8g2.hpp"
-  U8G2_MAX7219_32X8_F_4W_SW_SPI g_display_hw(X_DISPLAY_DEFAULT_ROTATION, /* clock=*/ D7, /* data=*/ D5, /* cs=*/ D6, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
+  U8G2_MAX7219_32X8_F_4W_SW_SPI g_display_hw(U8G2_R0, /* clock=*/ D7, /* data=*/ D5, /* cs=*/ D6, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
 #elif defined(X_MODEL_7LA0100) // 7seg led
   #define X_DISPLAY_TM1637
   #define X_DISPLAY_WIDTH 4 // digits

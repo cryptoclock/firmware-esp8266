@@ -5,9 +5,7 @@ namespace Display {
 Coords U8G2Matrix::correctOffsetForRotation(const Coords& coords)
 {
   Coords updated_coords = coords;
-  if (m_rotation==U8G2_R0)
-    updated_coords.y += 0;
-  else if (m_rotation==U8G2_R2)
+  if (m_rotation)
     updated_coords.y += 8;
   return updated_coords;
 }
@@ -103,12 +101,12 @@ void U8G2Matrix::setDrawColor(const uint8_t color)
 
 void U8G2Matrix::setRotation(const bool rotation)
 {
-  if (rotation)
-    m_rotation = U8G2_R0;
-  else
-    m_rotation = U8G2_R2;
+  m_rotation = rotation;
 
-  m_display->setDisplayRotation(m_rotation);
+  if (m_rotation)
+    m_display->setDisplayRotation(U8G2_R2);
+  else
+    m_display->setDisplayRotation(U8G2_R0);
 }
 
 

@@ -6,14 +6,14 @@ namespace Display {
 class U8G2Matrix : public DisplayT
 {
 public:
-  U8G2Matrix(U8G2 *display, const u8g2_cb_t* rotation, const int width, const int height, font_t default_font) :
+  U8G2Matrix(U8G2 *display, const bool rotation, const int width, const int height, font_t default_font) :
     DisplayT(true), m_display(display), m_rotation(rotation), m_width(width), m_height(height), m_default_font(default_font)
   {
     m_display->begin();
     m_display->setFont(u8g2_font_micro_tr);
     m_display->setFontMode(0);
-    m_display->setDisplayRotation(m_rotation);
     m_display->setContrast(0);
+    setRotation(m_rotation);
   }
 
   void displayNumber(int number, int length, int position, bool zero_fill);
@@ -43,7 +43,7 @@ private:
   Coords correctOffsetForRotation(const Coords& coords);
 
   U8G2* m_display;
-  const u8g2_cb_t* m_rotation;
+  bool m_rotation;
   const int m_width;
   const int m_height;
   font_t m_default_font;

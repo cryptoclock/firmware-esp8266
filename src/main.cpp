@@ -59,6 +59,7 @@ shared_ptr<Button> g_flash_button;
 
 bool g_start_ondemand_ap = false;
 bool g_hello_sent = true;
+bool g_force_wipe = false;
 
 enum class MODE { TICKER, MENU };
 MODE g_current_mode(MODE::TICKER);
@@ -70,7 +71,6 @@ Menu g_menu(
     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0),
     std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false),
 //    std::make_shared<MenuItemFunction>("","AP Mode", false),
-//    std::make_shared<MenuItemFunction>("","Wipe", false)
   }
 );
 
@@ -207,7 +207,7 @@ void setupDisplay()
 #if defined(X_DISPLAY_U8G2)
   g_display = new Display::U8G2Matrix(
     &g_display_hw,
-    X_DISPLAY_DEFAULT_ROTATION,
+    false,
     X_DISPLAY_WIDTH,
     X_DISPLAY_HEIGHT,
     u8g2_font_profont10_tf
@@ -302,6 +302,7 @@ void factoryReset(void)
   EEPROM.end();
 
   delay(1000);
+  g_wifi->resetSettings();
   ESP.reset();
 }
 
@@ -315,29 +316,34 @@ void startOnDemandAP(void)
   ESP.restart();
 }
 
-void changeMode(void)
+void switchMenu(void);
+void setupDefaultButtons()
+{
+//  g_flash_button->onShortPress([]() { g_start_ondemand_ap = true; });
+  g_flash_button->onShortPress(nullptr);
+  g_flash_button->onLongPress(switchMenu);
+  g_flash_button->onSuperLongPress([]() { g_force_wipe = true;} );
+  g_flash_button->setupTickCallback([]() { g_flash_button->tick(); });
+}
+
+void switchMenu(void)
 {
   if (g_current_mode != MODE::MENU) {
     g_current_mode = MODE::MENU;
-    g_menu.start(g_display, [&](){ // set callback on menu end
+    g_menu.start(g_display, [](){ // set callback when menu is finished
       g_current_mode = MODE::TICKER;
-      g_flash_button->onShortPress(nullptr);
-      g_flash_button->onLongPress(changeMode);
+      setupDefaultButtons();
     });
 
-    g_flash_button->onLongPress([&](){ g_menu.onLongPress(); });
-    g_flash_button->onShortPress([&](){ g_menu.onShortPress(); });
+    g_flash_button->onLongPress([](){ g_menu.onLongPress(); });
+    g_flash_button->onShortPress([](){ g_menu.onShortPress(); });
   }
 }
 
 void setupButton()
 {
   g_flash_button = make_shared<Button>(PORTAL_TRIGGER_PIN);
-  g_flash_button->onLongPress(changeMode);
-
-  // g_flash_button->onShortPress([&]() { g_start_ondemand_ap = true; });
-  // g_flash_button->onLongPress(factoryReset);
-  g_flash_button->setupTickCallback([&]() { g_flash_button->tick(); });
+  setupDefaultButtons();
 }
 
 void setupMenu()
@@ -409,6 +415,9 @@ void setup() {
 void loop() {
   if (g_start_ondemand_ap)
     startOnDemandAP();
+
+  if (g_force_wipe==true)
+    factoryReset();
 
   g_webSocket.loop();
   delay(10);

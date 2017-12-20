@@ -15,6 +15,11 @@ void Button::onLongPress(button_callback_t func)
   m_long_press_cb = func;
 }
 
+void Button::onSuperLongPress(button_callback_t func)
+{
+  m_super_long_press_cb = func;
+}
+
 void Button::tick(void)
 {
   unsigned long elapsed_time = millis() - m_pressed_at;
@@ -23,6 +28,11 @@ void Button::tick(void)
   if (state && m_currently_pressed && elapsed_time > m_long_press_delay && !m_long_press_dispatched) {
     if (m_long_press_cb) m_long_press_cb();
     m_long_press_dispatched = true;
+  }
+
+  if (state && m_currently_pressed && elapsed_time > m_super_long_press_delay && !m_super_long_press_dispatched) {
+    if (m_super_long_press_cb) m_super_long_press_cb();
+    m_super_long_press_dispatched = true;
   }
 
   if (state != m_currently_pressed) { // state change
@@ -35,5 +45,6 @@ void Button::tick(void)
     }
     m_currently_pressed = !m_currently_pressed;
     m_long_press_dispatched = false;
+    m_super_long_press_dispatched = false;
   }
 }
