@@ -116,11 +116,28 @@ void clock_callback()
   );
 }
 
+void websocketSendText(const String& text)
+{
+  DEBUG_SERIAL.printf("[WSc] Sending: '%s'\n", text.c_str());
+  g_webSocket.sendTXT(text.c_str(), text.length());
+}
+
 void websocketSendHello()
 {
   String text = ";HELLO " + String(X_MODEL_NUMBER) + " " + g_parameters["__device_uuid"];
-  DEBUG_SERIAL.printf("[WSc] Sending: '%s'\n", text.c_str());
-  g_webSocket.sendTXT(text);
+  websocketSendText(text);
+}
+
+void websocketSendParameter(const ParameterItem *item)
+{
+  if (item->name.startsWith("__")) return;
+  String text = ";PARAM " + item->name + " " + item->value;
+  websocketSendText(text);
+}
+
+void websocketSendAllParameters()
+{
+  g_parameters.iterateAllParameters([](const ParameterItem* item) { websocketSendParameter(item); });
 }
 
 void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
@@ -137,6 +154,7 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
         DEBUG_SERIAL.printf("[WSc] get text: %s\n", payload);
         if (!g_hello_sent) {
           websocketSendHello();
+          websocketSendAllParameters();
           g_hello_sent = true;
         }
         String str = (char*)payload;
