@@ -347,21 +347,17 @@ void setupButton()
   setupDefaultButtons();
 }
 
+
+
 void setupMenu()
 {
-  g_menu = std::make_shared<Menu>(&g_parameters);
-
-  g_menu->addItem(std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, [](const String& value){
-    g_display->setFont(value.toInt());
-  }));
-  g_menu->addItem(std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, [](const String& value){
-    g_display->setBrightness(value.toInt() * 16);
-  }));
-  g_menu->addItem(std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, [](const String& value){
-    g_display->setRotation(value=="1");
-  }));
+  const menu_items_t items({
+    std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, [](const String& value){ g_display->setFont(value.toInt()); } ),
+    std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, [](const String& value){ g_display->setBrightness(value.toInt() * 16); } ),
+    std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, [](const String& value){ g_display->setRotation(value=="1"); } )
+  });
+  g_menu = std::make_shared<Menu>(&g_parameters, items);
 }
-
 
 #ifdef X_TEST_DISPLAY
 shared_ptr<Display::Action::TestDisplay> g_test_display_action;

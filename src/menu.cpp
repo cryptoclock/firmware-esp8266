@@ -73,12 +73,6 @@ void Menu::draw(DisplayT *display, const Coords& coords)
   (*m_current)->draw(display, coords);
 }
 
-void Menu::addItem(const shared_ptr<MenuItem> &item)
-{
-  m_items.push_back(item);
-}
-
-
 void MenuItemNumericRange::draw(DisplayT *display, const Coords& coords)
 {
   if (isActive()) {

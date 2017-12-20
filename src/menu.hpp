@@ -86,8 +86,8 @@ typedef vector<shared_ptr<MenuItem>> menu_items_t;
 class Menu
 {
 public:
-  Menu(ParameterStore* parameters) :
-    m_parameters(parameters), m_current(m_items.begin()),
+  Menu(ParameterStore* parameters, const menu_items_t& items) :
+    m_parameters(parameters), m_items(items), m_current(m_items.begin()),
     m_end_of_menu_callback(nullptr), m_finished(false)
   {
   }
@@ -99,7 +99,6 @@ public:
   void onShortPress();
 
   bool isFinished() { return m_finished; }
-  void addItem(const shared_ptr<MenuItem>& item);
 
 private:
   void saveParameters();
