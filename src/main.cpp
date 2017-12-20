@@ -291,10 +291,12 @@ void connectToWiFi()
 
 void connectWebSocket()
 {
+  String ticker_url = g_parameters["ticker_path"] + g_parameters["currency_pair"] + "?uuid=" + g_parameters["__device_uuid"];
+  DEBUG_SERIAL.printf("[Wsc] Connecting to url '%s'\n",ticker_url.c_str());
   g_webSocket.beginSSL(
     g_parameters["ticker_server_host"],
     g_parameters["ticker_server_port"].toInt(),
-    g_parameters["ticker_path"] + g_parameters["currency_pair"]
+    ticker_url
   );
 
   g_webSocket.onEvent(webSocketEvent_callback);
