@@ -60,21 +60,15 @@ shared_ptr<Button> g_flash_button;
 bool g_start_ondemand_ap = false;
 bool g_hello_sent = true;
 bool g_force_wipe = false;
+bool g_display_clock = true;
+bool g_message_mode = false;
+bool g_should_send_hello = false;
+long g_last_heartbeat_sent_at = 0;
 
-enum class MODE { TICKER, MENU };
+enum class MODE { TICKER, MENU, ANNOUNCEMENT };
 MODE g_current_mode(MODE::TICKER);
 
 shared_ptr<Menu> g_menu = nullptr;
-// Menu g_menu(
-//   &g_parameters,
-//   {
-//     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0),
-//     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0),
-//     std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false),
-// //    std::make_shared<MenuItemFunction>("","AP Mode", false),
-//   }
-// );
-
 
 static const unsigned char s_crypto2_bits[] = {
    0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x80, 0x01, 0x53, 0x4b, 0x8f, 0x71,
@@ -90,8 +84,7 @@ static const unsigned char s_clock_inverted_bits[] = {
 
 void clock_callback()
 {
-  // don't display clock when menu is active
-  if (g_current_mode == MODE::MENU)
+  if (!g_display_clock)
     return;
 
   auto time = NTP.getTimeDateString();
@@ -102,7 +95,7 @@ void clock_callback()
       g_clock_action,
       g_price_action,
       0.5,
-      +1
+      Coords{0,+1}
     )
   );
   g_display->prependAction(g_clock_action);
@@ -111,16 +104,56 @@ void clock_callback()
       g_price_action,
       g_clock_action,
       0.5,
-      -1
+      Coords{0,-1}
     )
   );
+}
+
+shared_ptr<Display::ActionT> g_rotating_message_action;
+
+void setRotatingMessage(const String& message)
+{
+  g_rotating_message_action = make_shared<Display::Action::RotatingTextOnce>(message,20);
+  g_display->prependAction(
+    make_shared<Display::Action::SlideTransition>(
+      nullptr,
+      g_price_action,
+      0.5,
+      Coords{-1,0}
+    )
+  );
+  g_display->prependAction(g_rotating_message_action);
+  g_display->prependAction(
+    make_shared<Display::Action::SlideTransition>(
+      g_price_action,
+      nullptr,
+      0.5,
+      Coords{-1,0}
+    )
+  );
+
+
+//  g_display->prependAction(make_shared<Display::Action::RotatingText>("MESSAGE... ", 1.0, 20));
+//          g_display->prependAction(make_shared<Display::Action::SlidingText>("UPDATING... ", 1.0, 20));
+
 }
 
 void websocketSendHello()
 {
   String text = ";HELLO " + String(X_MODEL_NUMBER) + " " + g_parameters["__device_uuid"];
-  DEBUG_SERIAL.printf("[WSc] Sending: '%s'\n", text.c_str());
-  g_webSocket.sendTXT(text);
+  websocketSendText(text);
+}
+
+void websocketSendParameter(const ParameterItem *item)
+{
+  if (item->name.startsWith("__")) return;
+  String text = ";PARAM " + item->name + " " + item->value;
+  websocketSendText(text);
+}
+
+void websocketSendAllParameters()
+{
+  g_parameters.iterateAllParameters([](const ParameterItem* item) { websocketSendParameter(item); delay(50); });
 }
 
 void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
@@ -136,8 +169,8 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
       {
         DEBUG_SERIAL.printf("[WSc] get text: %s\n", payload);
         if (!g_hello_sent) {
-          websocketSendHello();
-          g_hello_sent = true;
+          g_should_send_hello = true;
+          setRotatingMessage("Pozor!! Premnozeni veverek na Klatovsku!");
         }
         String str = (char*)payload;
         if (str==";UPDATE") {
@@ -197,7 +230,9 @@ void configModeCallback (WiFiManager *myWiFiManager)
 void setupSerial()
 {
   DEBUG_SERIAL.begin(115200);
-  DEBUG_SERIAL.setDebugOutput(true);
+  DEBUG_SERIAL.setDebugOutput(1);
+  DEBUG_SERIAL.setDebugOutput(0);
+
   DEBUG_SERIAL.printf("Free memory: %i\n",ESP.getFreeHeap());
   DEBUG_SERIAL.printf("Last reset reason: %s\n",ESP.getResetReason().c_str());
   DEBUG_SERIAL.printf("Last reset info: %s\n",ESP.getResetInfo().c_str());
@@ -273,13 +308,14 @@ void connectToWiFi()
 
 void connectWebSocket()
 {
+  String ticker_url = g_parameters["ticker_path"] + g_parameters["currency_pair"] + "?uuid=" + g_parameters["__device_uuid"];
+  DEBUG_SERIAL.printf("[Wsc] Connecting to url '%s'\n",ticker_url.c_str());
+  g_webSocket.onEvent(webSocketEvent_callback);
   g_webSocket.beginSSL(
     g_parameters["ticker_server_host"],
     g_parameters["ticker_server_port"].toInt(),
     g_parameters["ticker_path"] + g_parameters["currency_pair"]
   );
-
-  g_webSocket.onEvent(webSocketEvent_callback);
 }
 
 void setupNTP()
@@ -395,7 +431,7 @@ void setup() {
   auto logo_top = make_shared<Display::Action::StaticBitmap>(s_crypto2_bits, 32, 8, 1.5);
   auto logo_bottom = make_shared<Display::Action::StaticBitmap>(s_clock_inverted_bits, 32, 8, 3.5);
   g_display->queueAction(logo_top);
-  g_display->queueAction(make_shared<Display::Action::SlideTransition>(logo_top, logo_bottom, 0.5, -1));
+  g_display->queueAction(make_shared<Display::Action::SlideTransition>(logo_top, logo_bottom, 0.5, Coords{0,-1}));
   g_display->queueAction(logo_bottom);
 
   /* WiFi */
@@ -420,6 +456,19 @@ void loop() {
 
   if (g_force_wipe==true)
     factoryReset();
+
+  if (g_should_send_hello) {
+    websocketSendHello();
+    websocketSendAllParameters();
+    g_hello_sent = true;
+    g_should_send_hello = false;
+  }
+
+  if (millis() - g_last_heartbeat_sent_at > 30000) {
+//    g_webSocket.disconnect();
+    websocketSendText(";HB");
+    g_last_heartbeat_sent_at = millis();
+  }
 
   g_webSocket.loop();
   delay(10);

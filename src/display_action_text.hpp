@@ -30,5 +30,20 @@ public:
 private:
   int m_speed;
 };
+
+class RotatingTextOnce : public StaticText
+{
+public:
+  RotatingTextOnce(const String& text, const int speed, const Coords& coords = Coords{0,0})
+    : StaticText(text, -1, coords), m_speed(speed)
+  {
+  }
+
+  void draw(DisplayT *display, Coords coords) override;
+  void tick(DisplayT *display, double elapsed_time) override;
+private:
+  int m_speed;
+};
+
 }
 }
