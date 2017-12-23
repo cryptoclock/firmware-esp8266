@@ -91,7 +91,7 @@ void clock_callback()
     return;
 
   auto time = NTP.getTimeDateString();
-  DEBUG_SERIAL.printf("[NTP] Displaying time %s\n",  time.c_str());
+  DEBUG_SERIAL.printf_P(PSTR("[NTP] Displaying time %s\n"),  time.c_str());
   g_clock_action->updateTime(time);
   g_display->prependAction(
     make_shared<Display::Action::SlideTransition>(
@@ -136,7 +136,7 @@ void setAnnouncement(const String& message, action_callback_t onfinished_cb)
 
 void websocketSendText(const String& text)
 {
-  DEBUG_SERIAL.printf("[WSc] Sending: '%s'\n", text.c_str());
+  DEBUG_SERIAL.printf_P(PSTR("[WSc] Sending: '%s'\n"), text.c_str());
   g_webSocket.sendTXT(text.c_str(), text.length());
 }
 
@@ -161,15 +161,15 @@ void websocketSendAllParameters()
 void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
-      DEBUG_SERIAL.printf("[WSc] Disconnected! %s\n",  payload);
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] Disconnected! %s\n"),  payload);
       break;
     case WStype_CONNECTED:
-      DEBUG_SERIAL.printf("[WSc] Connected to url: %s\n",  payload);
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: %s\n"),  payload);
       g_hello_sent = false;
       break;
     case WStype_TEXT:
       {
-        DEBUG_SERIAL.printf("[WSc] get text: %s\n", payload);
+        DEBUG_SERIAL.printf_P(PSTR("[WSc] get text: %s\n"), payload);
         if (!g_hello_sent) {
           websocketSendHello();
           websocketSendAllParameters();
@@ -191,21 +191,21 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
             g_announcement = str.substring(5);
           } // ignore otherwise
         } else if (str.startsWith(";")){
-          DEBUG_SERIAL.printf("[WSc] Unknown message '%s'\n",str.c_str());
+          DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown message '%s'\n"),str.c_str());
         } else {
           if (isdigit(str.charAt(0)) ||
             (str.charAt(0)=='-' && isdigit(str.charAt(1)))
           ) {
             long currentPrice = str.toInt();
             g_price_action->updatePrice(currentPrice);
-            DEBUG_SERIAL.printf("[WSc] get tick: %li\n", currentPrice);
-            DEBUG_SERIAL.printf("Free Heap: %i\n", ESP.getFreeHeap());
+            DEBUG_SERIAL.printf_P(PSTR("[WSc] get tick: %li\n"), currentPrice);
+            DEBUG_SERIAL.printf_P(PSTR("Free Heap: %i\n"), ESP.getFreeHeap());
           }
         }
       }
       break;
     case WStype_BIN:
-      DEBUG_SERIAL.printf("[WSc] get binary length: %u\n", length);
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] get binary length: %u\n"), length);
       hexdump(payload, length);
       break;
     case WStype_ERROR:
@@ -241,9 +241,9 @@ void setupSerial()
   DEBUG_SERIAL.setDebugOutput(1);
   DEBUG_SERIAL.setDebugOutput(0);
 
-  DEBUG_SERIAL.printf("Free memory: %i\n",ESP.getFreeHeap());
-  DEBUG_SERIAL.printf("Last reset reason: %s\n",ESP.getResetReason().c_str());
-  DEBUG_SERIAL.printf("Last reset info: %s\n",ESP.getResetInfo().c_str());
+  DEBUG_SERIAL.printf_P(PSTR("Free memory: %i\n"),ESP.getFreeHeap());
+  DEBUG_SERIAL.printf_P(PSTR("Last reset reason: %s\n"),ESP.getResetReason().c_str());
+  DEBUG_SERIAL.printf_P(PSTR("Last reset info: %s\n"),ESP.getResetInfo().c_str());
 }
 
 void setupDisplay()
@@ -317,7 +317,7 @@ void connectToWiFi()
 void connectWebSocket()
 {
   String ticker_url = g_parameters["ticker_path"] + g_parameters["currency_pair"] + "?uuid=" + g_parameters["__device_uuid"];
-  DEBUG_SERIAL.printf("[Wsc] Connecting to url '%s'\n",ticker_url.c_str());
+  DEBUG_SERIAL.printf_P(PSTR("[Wsc] Connecting to url '%s'\n"),ticker_url.c_str());
   g_webSocket.onEvent(webSocketEvent_callback);
   g_webSocket.beginSSL(
     g_parameters["ticker_server_host"],

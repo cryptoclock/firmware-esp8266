@@ -101,19 +101,19 @@ void WiFiCore::saveCallback(void)
 
 void WiFiCore::onConnect(WiFiEventStationModeConnected event_info)
 {
-  DEBUG_SERIAL.printf("[WiFiCore] Connected to SSID: %s channel %i\n",
+  DEBUG_SERIAL.printf_P(PSTR("[WiFiCore] Connected to SSID: %s channel %i\n"),
     event_info.ssid.c_str(), event_info.channel);
 }
 
 void WiFiCore::onDisconnect(WiFiEventStationModeDisconnected event_info)
 {
-  DEBUG_SERIAL.printf("[WiFiCore] Disconnected from SSID: %s\n", event_info.ssid.c_str());
-  DEBUG_SERIAL.printf("[WiFiCore] Reason: %d\n", event_info.reason);
+  DEBUG_SERIAL.printf_P(PSTR("[WiFiCore] Disconnected from SSID: %s\n"), event_info.ssid.c_str());
+  DEBUG_SERIAL.printf_P(PSTR("[WiFiCore] Reason: %d\n"), event_info.reason);
 }
 
 void WiFiCore::onGotIP(WiFiEventStationModeGotIP ipInfo)
 {
-  DEBUG_SERIAL.printf("[WiFiCore] Got IP: %s Gateway: %s, Mask: %s\n",
+  DEBUG_SERIAL.printf_P(PSTR("[WiFiCore] Got IP: %s Gateway: %s, Mask: %s\n"),
     ipInfo.ip.toString().c_str(), ipInfo.gw.toString().c_str(), ipInfo.mask.toString().c_str()
   );
 }

@@ -15,10 +15,10 @@ void AP_list::addToTop(const String &SSID, const String &password)
 {
   int index = getIndexBySSID(SSID);
   if (index >= 0) {
-    DEBUG_SERIAL.printf("[APs] Add: SSID %s already in list\n",SSID.c_str());
+    DEBUG_SERIAL.printf_P(PSTR("[APs] Add: SSID %s already in list\n"),SSID.c_str());
     return;
   }
-  DEBUG_SERIAL.printf("[APs] Add: SSID %s not in list, adding\n",SSID.c_str());
+  DEBUG_SERIAL.printf_P(PSTR("[APs] Add: SSID %s not in list, adding\n"),SSID.c_str());
 
   // bump down the list
   for (int i=c_max_stored_aps - 1;i>0;--i)
@@ -53,11 +53,11 @@ void AP_list::readFromEEPROM(void)
   char header[4];
   EEPROM.get(c_eeprom_offset,header);
   if (memcmp(header,"APs",3)!=0) {
-    DEBUG_SERIAL.println("[APs] Invalid EEPROM header, ignoring content");
+    DEBUG_SERIAL.println(F("[APs] Invalid EEPROM header, ignoring content"));
     return;
   }
 
-  DEBUG_SERIAL.printf("[APs] Reading from EEPROM at offset %i\n",c_eeprom_offset);
+  DEBUG_SERIAL.printf_P(PSTR("[APs] Reading from EEPROM at offset %i\n"),c_eeprom_offset);
   EEPROM.get(c_eeprom_offset + 3, m_aps);
   printAPs();
 }
@@ -66,14 +66,14 @@ void AP_list::printAPs(void)
 {
   for (int i=0;i<c_max_stored_aps;++i) {
     if (m_aps[i].ssid[0] == '\0') continue;
-    DEBUG_SERIAL.printf("[APs] AP #%i -> SSID: %s Password: [REDACTED]\n",
+    DEBUG_SERIAL.printf_P(PSTR("[APs] AP #%i -> SSID: %s Password: [REDACTED]\n"),
             i, m_aps[i].ssid);
   }
 }
 
 void AP_list::storeToEEPROM(void)
 {
-  DEBUG_SERIAL.printf("[APs] Storing to EEPROM at offset %i\n",c_eeprom_offset);
+  DEBUG_SERIAL.printf_P(PSTR("[APs] Storing to EEPROM at offset %i\n"),c_eeprom_offset);
   printAPs();
   EEPROM.put(c_eeprom_offset, "APs");
   EEPROM.put(c_eeprom_offset + 3, m_aps);
@@ -92,7 +92,7 @@ int AP_list::getIndexBySSID(const String &SSID)
 
 void AP_list::addAPsToWiFiManager(WiFiManager *manager)
 {
-  DEBUG_SERIAL.printf("[APs] Adding APs to WiFiManager\n");
+  DEBUG_SERIAL.println(F("[APs] Adding APs to WiFiManager\n"));
   for (int i=0;i<c_max_stored_aps;++i) {
     if (m_aps[i].ssid[0] == '\0') continue;
     manager->addAP(strdup(m_aps[i].ssid), strdup(m_aps[i].password));
