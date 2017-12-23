@@ -108,7 +108,6 @@ void MenuItemNumericRange::onLongPress()
   deactivate();
 }
 
-
 void MenuItemBoolean::draw(DisplayT *display, const Coords& coords)
 {
   if (isActive()) {

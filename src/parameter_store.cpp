@@ -93,3 +93,11 @@ bool ParameterStore::setValue(const String& name, const String& value)
   parameter->value = value;
   return true;
 }
+
+void ParameterStore::iterateAllParameters(parameter_iterate_func_t func)
+{
+  for (const auto& item_pair : m_items) {
+    const auto item = item_pair.second;
+    func(item);
+  }
+}

@@ -138,6 +138,12 @@ void setRotatingMessage(const String& message)
 
 }
 
+void websocketSendText(const String& text)
+{
+  DEBUG_SERIAL.printf("[WSc] Sending: '%s'\n", text.c_str());
+  g_webSocket.sendTXT(text.c_str(), text.length());
+}
+
 void websocketSendHello()
 {
   String text = ";HELLO " + String(X_MODEL_NUMBER) + " " + g_parameters["__device_uuid"];
@@ -169,8 +175,9 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
       {
         DEBUG_SERIAL.printf("[WSc] get text: %s\n", payload);
         if (!g_hello_sent) {
-          g_should_send_hello = true;
-          setRotatingMessage("Pozor!! Premnozeni veverek na Klatovsku!");
+          websocketSendHello();
+          websocketSendAllParameters();
+          g_hello_sent = true;
         }
         String str = (char*)payload;
         if (str==";UPDATE") {
@@ -314,7 +321,7 @@ void connectWebSocket()
   g_webSocket.beginSSL(
     g_parameters["ticker_server_host"],
     g_parameters["ticker_server_port"].toInt(),
-    g_parameters["ticker_path"] + g_parameters["currency_pair"]
+    ticker_url
   );
 }
 
@@ -324,8 +331,10 @@ void setupNTP()
   NTP.begin("ntp.nic.cz", 1, true);
   NTP.setInterval(1800);
 
+#if !defined(X_CLOCK_ONLY_DISPLAY)
   g_clock_action = make_shared<Display::Action::Clock>(3.0, Coords{0,0}); // display clock for 3 secs
   g_ticker_clock.attach(30.0, clock_callback);
+#endif
 }
 
 void factoryReset(void)
@@ -395,29 +404,14 @@ void setupMenu()
   g_menu = std::make_shared<Menu>(&g_parameters, items);
 }
 
+/* --------------------- */
+
 #ifdef X_TEST_DISPLAY
-shared_ptr<Display::Action::TestDisplay> g_test_display_action;
-
-void setup()
-{
-  setupSerial();
-  setupDisplay();
-  g_test_display_action = make_shared<Display::Action::TestDisplay>();
-  g_display->queueAction(g_test_display_action);
-
-  g_flash_button = make_shared<Button>(PORTAL_TRIGGER_PIN);
-  g_flash_button->onShortPress([&](){g_test_display_action->nextMode();});
-//  g_flash_button->onLongPress([](){});
-  g_flash_button->setupTickCallback([&]() { g_flash_button->tick(); });
-}
-
-void loop()
-{
-  g_flash_button->tick();
-  delay(5);
-}
-
+#include "main_tester.hpp"
+#elif defined(X_CLOCK_ONLY_DISPLAY)
+#include "main_clock_only.hpp"
 #else
+
 void setup() {
   setupSerial();
   setupTicker();

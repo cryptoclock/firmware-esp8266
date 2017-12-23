@@ -2,6 +2,7 @@
 #include "config_common.hpp"
 #include <Arduino.h>
 #include <map>
+#include <functional>
 
 struct ParameterItem {
   String name;
@@ -11,6 +12,8 @@ struct ParameterItem {
 };
 
 typedef std::map<String, ParameterItem*> ParameterMap_t;
+
+typedef std::function<void(const ParameterItem*)> parameter_iterate_func_t;
 
 class ParameterStore
 {
@@ -29,6 +32,7 @@ public:
   String& operator[] (const char *name) const;
   ParameterItem* findByName(const String& name) const;
 
+  void iterateAllParameters(parameter_iterate_func_t func);
 private:
   ParameterMap_t m_items;
 
