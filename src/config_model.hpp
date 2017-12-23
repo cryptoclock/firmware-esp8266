@@ -5,6 +5,13 @@
   #define X_DISPLAY_HEIGHT 8
   #include "display_u8g2.hpp"
   U8G2_MAX7219_32X8_F_4W_SW_SPI g_display_hw(U8G2_R0, /* clock=*/ D7, /* data=*/ D5, /* cs=*/ D6, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
+#elif defined(X_MODEL_3DT0100)
+  #define X_CLOCK_ONLY_DISPLAY
+  #define X_DISPLAY_U8G2
+  #define X_DISPLAY_WIDTH 32
+  #define X_DISPLAY_HEIGHT 8
+  #include "display_u8g2.hpp"
+  U8G2_MAX7219_32X8_F_4W_SW_SPI g_display_hw(U8G2_R0, /* clock=*/ D7, /* data=*/ D5, /* cs=*/ D6, /* dc=*/ U8X8_PIN_NONE, /* reset=*/ U8X8_PIN_NONE);
 #elif defined(X_MODEL_TESTER)
   #define X_TEST_DISPLAY
   #define X_DISPLAY_U8G2
