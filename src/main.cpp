@@ -161,7 +161,8 @@ void websocketSendAllParameters()
 void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
-      DEBUG_SERIAL.printf_P(PSTR("[WSc] Disconnected! %s\n"),  payload);
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] Disconnected!\n"));
+      hexdump(payload, length);
       break;
     case WStype_CONNECTED:
       DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: %s\n"),  payload);
