@@ -16,6 +16,8 @@ bool ActionT::isFinished()
 void ActionT::setFinished(bool status)
 {
   m_finished = status;
+  if (m_finished && m_onfinished_cb)
+    m_onfinished_cb();
 }
 
 /* === Transition === */

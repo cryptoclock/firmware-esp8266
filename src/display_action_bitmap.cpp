@@ -13,7 +13,7 @@ void StaticBitmap::tick(DisplayT *display, double elapsed_time)
 
 void StaticBitmap::draw(DisplayT *display, Coords coords)
 {
-  display->displayBitmap(m_data, coords, m_width, m_height);
+  display->displayBitmapP(m_data, coords, m_width, m_height);
 }
 
 }

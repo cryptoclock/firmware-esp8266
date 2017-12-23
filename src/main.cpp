@@ -70,13 +70,16 @@ MODE g_current_mode(MODE::TICKER);
 
 shared_ptr<Menu> g_menu = nullptr;
 
-static const unsigned char s_crypto2_bits[] = {
+String g_announcement="";
+shared_ptr<Display::ActionT> g_announcement_action;
+
+static const unsigned char s_crypto2_bits[] PROGMEM = {
    0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x80, 0x01, 0x53, 0x4b, 0x8f, 0x71,
    0xc3, 0x48, 0xd3, 0x9b, 0xc3, 0x70, 0x93, 0x99, 0xd3, 0x40, 0x8f, 0x99,
    0xce, 0x38, 0x03, 0x71, 0x00, 0x00, 0x00, 0x00
 };
 
-static const unsigned char s_clock_inverted_bits[] = {
+static const unsigned char s_clock_inverted_bits[] PROGMEM = {
    0xff, 0xff, 0xff, 0xff, 0xc7, 0x3c, 0x8e, 0xd9, 0xb3, 0x9c, 0x65, 0xe9,
    0xf3, 0x9c, 0xe5, 0xf1, 0xf3, 0x9c, 0xe5, 0xf1, 0xb3, 0x9c, 0x65, 0xe9,
    0xc7, 0x30, 0x8e, 0xd9, 0xff, 0xff, 0xff, 0xff
@@ -109,11 +112,9 @@ void clock_callback()
   );
 }
 
-shared_ptr<Display::ActionT> g_rotating_message_action;
-
-void setRotatingMessage(const String& message)
+void setAnnouncement(const String& message, action_callback_t onfinished_cb)
 {
-  g_rotating_message_action = make_shared<Display::Action::RotatingTextOnce>(message,20);
+  g_announcement_action = make_shared<Display::Action::RotatingTextOnce>(message,20,Coords{0,0},onfinished_cb);
   g_display->prependAction(
     make_shared<Display::Action::SlideTransition>(
       nullptr,
@@ -122,7 +123,7 @@ void setRotatingMessage(const String& message)
       Coords{-1,0}
     )
   );
-  g_display->prependAction(g_rotating_message_action);
+  g_display->prependAction(g_announcement_action);
   g_display->prependAction(
     make_shared<Display::Action::SlideTransition>(
       g_price_action,
@@ -131,11 +132,6 @@ void setRotatingMessage(const String& message)
       Coords{-1,0}
     )
   );
-
-
-//  g_display->prependAction(make_shared<Display::Action::RotatingText>("MESSAGE... ", 1.0, 20));
-//          g_display->prependAction(make_shared<Display::Action::SlidingText>("UPDATING... ", 1.0, 20));
-
 }
 
 void websocketSendText(const String& text)
@@ -180,6 +176,7 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
           g_hello_sent = true;
         }
         String str = (char*)payload;
+        if (str=="") return;
         if (str==";UPDATE") {
           g_webSocket.disconnect();
           DEBUG_SERIAL.println(F("Update request received, updating"));
@@ -189,8 +186,12 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
         } else if (str.startsWith(";ATH=")) { // All-Time-High
           int ATHPrice = str.substring(5).toInt();
           g_price_action->setATHPrice(ATHPrice);
+        } else if (str.startsWith(";MSG ") || str.startsWith(";MSG=")) { // Announcement
+          if (g_announcement=="") {
+            g_announcement = str.substring(5);
+          } // ignore otherwise
         } else if (str.startsWith(";")){
-          /* unknown message */
+          DEBUG_SERIAL.printf("[WSc] Unknown message '%s'\n",str.c_str());
         } else {
           if (isdigit(str.charAt(0)) ||
             (str.charAt(0)=='-' && isdigit(str.charAt(1)))
@@ -375,9 +376,10 @@ void setupDefaultButtons()
 void switchMenu(void)
 {
   if (g_current_mode != MODE::MENU) {
+    auto last_mode = g_current_mode;
     g_current_mode = MODE::MENU;
-    g_menu->start(g_display, [](){ // set callback when menu is finished
-      g_current_mode = MODE::TICKER;
+    g_menu->start(g_display, [=](){ // set callback when menu is finished
+      g_current_mode = last_mode;
       setupDefaultButtons();
     });
 
@@ -456,6 +458,14 @@ void loop() {
     websocketSendAllParameters();
     g_hello_sent = true;
     g_should_send_hello = false;
+  }
+
+  if (g_announcement!="") {
+    if (g_current_mode==MODE::TICKER) {
+      g_current_mode = MODE::ANNOUNCEMENT;
+      setAnnouncement(g_announcement, [](){ g_current_mode = MODE::TICKER; });
+      g_announcement = "";
+    }
   }
 
   if (millis() - g_last_heartbeat_sent_at > 30000) {
