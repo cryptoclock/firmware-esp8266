@@ -4,8 +4,10 @@
 #include <EEPROM.h>
 
 namespace Utils {
+void eeprom_BEGIN();
+void eeprom_END();
+void eeprom_WIPE();
 void eeprom_WriteString(int& offset, const String &s);
 String eeprom_ReadString(int& offset, const int max_chars = 255);
 void eeprom_Erase(const int offset, const int size);
-
 }

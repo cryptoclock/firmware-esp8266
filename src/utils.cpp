@@ -1,6 +1,25 @@
 #include "utils.hpp"
 
+const int EEPROM_SIZE = 2048;
+
 namespace Utils {
+void eeprom_BEGIN()
+{
+  EEPROM.begin(EEPROM_SIZE);
+}
+
+void eeprom_END()
+{
+  EEPROM.end();
+}
+
+void eeprom_WIPE()
+{
+  eeprom_BEGIN();
+  eeprom_Erase(0, EEPROM_SIZE);
+  eeprom_END();
+}
+
 void eeprom_WriteString(int& offset, const String &s)
 {
   int length = s.length();

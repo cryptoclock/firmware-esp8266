@@ -1,6 +1,6 @@
 #include "parameter_store.hpp"
 #include "wifi.hpp"
-#include <EEPROM.h>
+#include "utils.hpp"
 
 extern ParameterStore g_parameters;
 extern WiFiCore *g_wifi;
@@ -76,8 +76,7 @@ void WiFiCore::saveCallback(void)
 {
   DEBUG_SERIAL.println(F("[WiFiCore] Save callback called"));
 
-  EEPROM.begin(2048);
-
+  Utils::eeprom_BEGIN();
   // save APs
   auto manager = g_wifi->getWiFiManager();
   AP_list::saveAPsToEEPROM(manager);
@@ -86,8 +85,7 @@ void WiFiCore::saveCallback(void)
   g_wifi->updateParametersFromAP(manager);
   g_parameters.storeToEEPROM();
 
-  EEPROM.commit();
-  EEPROM.end();
+  Utils::eeprom_END();
 }
 
 void WiFiCore::onConnect(WiFiEventStationModeConnected event_info)

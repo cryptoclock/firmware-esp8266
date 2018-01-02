@@ -272,7 +272,7 @@ void setupDisplay()
 
 void loadParameters()
 {
-  EEPROM.begin(2048);
+  Utils::eeprom_BEGIN();
   g_parameters.loadFromEEPROM();
   g_wifi = new WiFiCore(g_display);
 
@@ -292,8 +292,7 @@ void loadParameters()
     g_parameters.setValue("__device_uuid", uuid_str);
     g_parameters.storeToEEPROM();
   }
-
-  EEPROM.end();
+  Utils::eeprom_END();
 }
 
 void setupTicker()
@@ -343,9 +342,7 @@ void factoryReset(void)
   DEBUG_SERIAL.println(F("Reseting settings"));
   g_wifi->resetSettings();
 
-  EEPROM.begin(2048);
-  Utils::eeprom_Erase(0,2048);
-  EEPROM.end();
+  Utils::eeprom_WIPE();
 
   delay(1000);
   g_wifi->resetSettings();
