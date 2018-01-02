@@ -52,7 +52,6 @@ WebSocketsClient g_webSocket;
 DisplayT *g_display;
 shared_ptr<Display::Action::Price> g_price_action;
 shared_ptr<Display::Action::Clock> g_clock_action;
-AP_list *g_APs;
 WiFiCore *g_wifi;
 
 shared_ptr<Button> g_flash_button;
@@ -275,8 +274,7 @@ void loadParameters()
 {
   EEPROM.begin(2048);
   g_parameters.loadFromEEPROM();
-  g_APs = new AP_list();
-  g_wifi = new WiFiCore(g_display, g_APs);
+  g_wifi = new WiFiCore(g_display);
 
   // sanitize parameters
   g_parameters.setValue("brightness", String(std::min(std::max(g_parameters["brightness"].toInt(),0L),15L)) );

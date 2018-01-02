@@ -3,11 +3,10 @@
 #include <EEPROM.h>
 
 extern ParameterStore g_parameters;
-extern AP_list *g_APs;
 extern WiFiCore *g_wifi;
 
-WiFiCore::WiFiCore(DisplayT *display, AP_list *ap_list) :
-  m_wifimanager(WiFiManager()), m_display(display), m_ap_list(ap_list)
+WiFiCore::WiFiCore(DisplayT *display) :
+  m_wifimanager(WiFiManager()), m_display(display)
 {
   m_parameters.reserve(g_parameters.all_items().size());
   for (const auto& item_pair : g_parameters.all_items()) {
@@ -22,8 +21,7 @@ WiFiCore::WiFiCore(DisplayT *display, AP_list *ap_list) :
 
   m_wifimanager.setSaveConfigCallback(&saveCallback);
 
-  m_ap_list->readFromEEPROM();
-  m_ap_list->addAPsToWiFiManager(&m_wifimanager);
+  AP_list::addAPsToWiFiManager(&m_wifimanager);
 
   m_ev_conn = WiFi.onStationModeConnected(onConnect);
   m_ev_disconn = WiFi.onStationModeDisconnected(onDisconnect);
@@ -82,14 +80,7 @@ void WiFiCore::saveCallback(void)
 
   // save APs
   auto manager = g_wifi->getWiFiManager();
-  for (int i=0;;++i) {
-    auto credentials = manager->getAP(i);
-    if(credentials == NULL)
-      break;
-
-    g_APs->addToTop(credentials->ssid, credentials->pass);
-  }
-  g_APs->storeToEEPROM();
+  AP_list::saveAPsToEEPROM(manager);
 
   // save parameters
   g_wifi->updateParametersFromAP(manager);
