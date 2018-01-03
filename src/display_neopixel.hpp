@@ -15,8 +15,8 @@ namespace Display {
 class Neopixel : public DisplayT
 {
 public:
-  Neopixel(const int width, const int height) :
-    DisplayT(true), m_width(width), m_height(height),
+  Neopixel(const int milis_per_tick, const int width, const int height) :
+    DisplayT(milis_per_tick), m_width(width), m_height(height),
     m_leds(new CRGB[width*height])
   {
 //    m_display->begin();

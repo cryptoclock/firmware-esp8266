@@ -8,8 +8,8 @@ namespace Display {
 class LixieNumeric : public DisplayT
 {
 public:
-  LixieNumeric(Lixie* display, const int num_digits) :
-    DisplayT(true), m_display(display), m_num_digits(num_digits)
+  LixieNumeric(Lixie* display, const int milis_per_tick, const int num_digits) :
+    DisplayT(milis_per_tick), m_display(display), m_num_digits(num_digits)
   {
     m_display->begin();
     m_display->max_power(5,450); // 5V, 450mA

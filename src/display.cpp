@@ -14,7 +14,7 @@ Coords DisplayT::centerTextOffset(const String& text)
 
 void DisplayT::setupTickCallback(Ticker::callback_t callback)
 {
-    m_ticker.attach(MILIS_PER_TICK / 1000.0,callback);
+    m_ticker.attach(c_milis_per_tick / 1000.0,callback);
 }
 
 void DisplayT::tick(void)

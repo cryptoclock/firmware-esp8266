@@ -250,17 +250,18 @@ void setupDisplay()
 #if defined(X_DISPLAY_U8G2)
   g_display = new Display::U8G2Matrix(
     &g_display_hw,
+    X_DISPLAY_MILIS_PER_TICK,
     false,
     X_DISPLAY_WIDTH,
     X_DISPLAY_HEIGHT
   );
 #elif defined(X_DISPLAY_TM1637)
-  g_display = new Display::TM1637(&g_display_hw, X_DISPLAY_WIDTH);
+  g_display = new Display::TM1637(&g_display_hw, X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH);
 #elif defined(X_DISPLAY_LIXIE)
   g_display_hw.initialize<X_DISPLAY_DATA_PIN, X_DISPLAY_WIDTH>();
-  g_display = new Display::LixieNumeric(&g_display_hw, X_DISPLAY_WIDTH);
+  g_display = new Display::LixieNumeric(&g_display_hw, X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH);
 #elif defined(X_DISPLAY_NEOPIXEL)
-  auto display = new Display::Neopixel(X_DISPLAY_WIDTH, X_DISPLAY_HEIGHT);
+  auto display = new Display::Neopixel(X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH, X_DISPLAY_HEIGHT);
   display->initialize<X_DISPLAY_DATA_PIN>();
   g_display = display;
 #else
