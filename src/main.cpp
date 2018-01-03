@@ -59,7 +59,6 @@ shared_ptr<Button> g_flash_button;
 bool g_start_ondemand_ap = false;
 bool g_hello_sent = true;
 bool g_force_wipe = false;
-bool g_display_clock = true;
 bool g_message_mode = false;
 bool g_should_send_hello = false;
 long g_last_heartbeat_sent_at = 0;
@@ -86,7 +85,7 @@ static const unsigned char s_clock_inverted_bits[] PROGMEM = {
 
 void clock_callback()
 {
-  if (!g_display_clock)
+  if (g_current_mode != MODE::TICKER)
     return;
 
   auto time = NTP.getTimeDateString();
