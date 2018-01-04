@@ -26,6 +26,8 @@ public:
   virtual void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h) =0;
   virtual void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h) = 0;
 
+  void displayTextHCentered(const String& value, const Coords& coords);
+
   virtual void fill(const Coords& coords) = 0;
 
   virtual void drawGlyph(const uint16_t glyph, const Coords& coords) = 0;
@@ -46,7 +48,8 @@ public:
   Coords centerTextOffset(const String& text);
 
   void setFont(const uint8_t font);
-//  uint8_t getNumFonts();
+  virtual void useFont() = 0;
+  const uint8_t getFont();
 
   void setupTickCallback(Ticker::callback_t callback);
   void tick(void);
