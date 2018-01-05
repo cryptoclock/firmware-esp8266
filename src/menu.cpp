@@ -1,8 +1,8 @@
 #include "config_common.hpp"
 
 #include "menu.hpp"
+#include "utils.hpp"
 #include "display_action_menu.hpp"
-#include <EEPROM.h>
 
 #include "display_u8g2.hpp"
 
@@ -61,11 +61,9 @@ void Menu::onShortPress()
 
 void Menu::saveParameters()
 {
-  // FIXME: prepsat
-  EEPROM.begin(2048);
+  Utils::eeprom_BEGIN();
   m_parameters->storeToEEPROM();
-  EEPROM.commit();
-  EEPROM.end();
+  Utils::eeprom_END();
 }
 
 void Menu::draw(DisplayT *display, const Coords& coords)

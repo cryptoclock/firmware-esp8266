@@ -12,7 +12,7 @@ void ParameterStore::debug_print(void)
 {
   for (const auto& item_pair : m_items) {
     const auto item = item_pair.second;
-    DEBUG_SERIAL.printf("[Parameters] name: '%s', value: '%s', description: '%s', field_length: '%i'\n",
+    DEBUG_SERIAL.printf_P(PSTR("[Parameters] name: '%s', value: '%s', description: '%s', field_length: '%i'\n"),
       item->name.c_str(), item->value.c_str(), item->description.c_str(), item->field_length);
   }
 }
@@ -24,7 +24,7 @@ void ParameterStore::loadFromEEPROM(void)
   int offset = c_eeprom_offset;
   String header = Utils::eeprom_ReadString(offset);
   if (header != "PARAMS") {
-    DEBUG_SERIAL.printf("[Parameters] Invalid EEPROM header, using defaults\n");
+    DEBUG_SERIAL.println(F("[Parameters] Invalid EEPROM header, using defaults\n"));
     return;
   }
 
@@ -36,7 +36,7 @@ void ParameterStore::loadFromEEPROM(void)
 
     auto item = findByName(name);
     if (item==nullptr) {
-      DEBUG_SERIAL.printf("[Parameters] Unknown parameter '%s', ignoring\n",name.c_str());
+      DEBUG_SERIAL.printf_P(PSTR("[Parameters] Unknown parameter '%s', ignoring\n"),name.c_str());
       continue;
     }
 

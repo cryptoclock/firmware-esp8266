@@ -52,7 +52,6 @@ WebSocketsClient g_webSocket;
 DisplayT *g_display;
 shared_ptr<Display::Action::Price> g_price_action;
 shared_ptr<Display::Action::Clock> g_clock_action;
-AP_list *g_APs;
 WiFiCore *g_wifi;
 
 shared_ptr<Button> g_flash_button;
@@ -60,29 +59,25 @@ shared_ptr<Button> g_flash_button;
 bool g_start_ondemand_ap = false;
 bool g_hello_sent = true;
 bool g_force_wipe = false;
+bool g_message_mode = false;
+bool g_should_send_hello = false;
+long g_last_heartbeat_sent_at = 0;
 
-enum class MODE { TICKER, MENU };
+enum class MODE { TICKER, MENU, ANNOUNCEMENT };
 MODE g_current_mode(MODE::TICKER);
 
 shared_ptr<Menu> g_menu = nullptr;
-// Menu g_menu(
-//   &g_parameters,
-//   {
-//     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0),
-//     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0),
-//     std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false),
-// //    std::make_shared<MenuItemFunction>("","AP Mode", false),
-//   }
-// );
 
+String g_announcement="";
+shared_ptr<Display::ActionT> g_announcement_action;
 
-static const unsigned char s_crypto2_bits[] = {
+static const unsigned char s_crypto2_bits[] PROGMEM = {
    0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x80, 0x01, 0x53, 0x4b, 0x8f, 0x71,
    0xc3, 0x48, 0xd3, 0x9b, 0xc3, 0x70, 0x93, 0x99, 0xd3, 0x40, 0x8f, 0x99,
    0xce, 0x38, 0x03, 0x71, 0x00, 0x00, 0x00, 0x00
 };
 
-static const unsigned char s_clock_inverted_bits[] = {
+static const unsigned char s_clock_inverted_bits[] PROGMEM = {
    0xff, 0xff, 0xff, 0xff, 0xc7, 0x3c, 0x8e, 0xd9, 0xb3, 0x9c, 0x65, 0xe9,
    0xf3, 0x9c, 0xe5, 0xf1, 0xf3, 0x9c, 0xe5, 0xf1, 0xb3, 0x9c, 0x65, 0xe9,
    0xc7, 0x30, 0x8e, 0xd9, 0xff, 0xff, 0xff, 0xff
@@ -90,19 +85,18 @@ static const unsigned char s_clock_inverted_bits[] = {
 
 void clock_callback()
 {
-  // don't display clock when menu is active
-  if (g_current_mode == MODE::MENU)
+  if (g_current_mode != MODE::TICKER)
     return;
 
   auto time = NTP.getTimeDateString();
-  DEBUG_SERIAL.printf("[NTP] Displaying time %s\n",  time.c_str());
+  DEBUG_SERIAL.printf_P(PSTR("[NTP] Displaying time %s\n"),  time.c_str());
   g_clock_action->updateTime(time);
   g_display->prependAction(
     make_shared<Display::Action::SlideTransition>(
       g_clock_action,
       g_price_action,
       0.5,
-      +1
+      Coords{0,+1}
     )
   );
   g_display->prependAction(g_clock_action);
@@ -111,14 +105,36 @@ void clock_callback()
       g_price_action,
       g_clock_action,
       0.5,
-      -1
+      Coords{0,-1}
+    )
+  );
+}
+
+void setAnnouncement(const String& message, action_callback_t onfinished_cb)
+{
+  g_announcement_action = make_shared<Display::Action::RotatingTextOnce>(message,20,Coords{0,0},onfinished_cb);
+  g_display->prependAction(
+    make_shared<Display::Action::SlideTransition>(
+      nullptr,
+      g_price_action,
+      0.5,
+      Coords{-1,0}
+    )
+  );
+  g_display->prependAction(g_announcement_action);
+  g_display->prependAction(
+    make_shared<Display::Action::SlideTransition>(
+      g_price_action,
+      nullptr,
+      0.5,
+      Coords{-1,0}
     )
   );
 }
 
 void websocketSendText(const String& text)
 {
-  DEBUG_SERIAL.printf("[WSc] Sending: '%s'\n", text.c_str());
+  DEBUG_SERIAL.printf_P(PSTR("[WSc] Sending: '%s'\n"), text.c_str());
   g_webSocket.sendTXT(text.c_str(), text.length());
 }
 
@@ -137,27 +153,29 @@ void websocketSendParameter(const ParameterItem *item)
 
 void websocketSendAllParameters()
 {
-  g_parameters.iterateAllParameters([](const ParameterItem* item) { websocketSendParameter(item); });
+  g_parameters.iterateAllParameters([](const ParameterItem* item) { websocketSendParameter(item); delay(50); });
 }
 
 void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
-      DEBUG_SERIAL.printf("[WSc] Disconnected! %s\n",  payload);
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] Disconnected!\n"));
+      hexdump(payload, length);
       break;
     case WStype_CONNECTED:
-      DEBUG_SERIAL.printf("[WSc] Connected to url: %s\n",  payload);
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: %s\n"),  payload);
       g_hello_sent = false;
       break;
     case WStype_TEXT:
       {
-        DEBUG_SERIAL.printf("[WSc] get text: %s\n", payload);
+        DEBUG_SERIAL.printf_P(PSTR("[WSc] get text: %s\n"), payload);
         if (!g_hello_sent) {
           websocketSendHello();
           websocketSendAllParameters();
           g_hello_sent = true;
         }
         String str = (char*)payload;
+        if (str=="") return;
         if (str==";UPDATE") {
           g_webSocket.disconnect();
           DEBUG_SERIAL.println(F("Update request received, updating"));
@@ -167,22 +185,26 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
         } else if (str.startsWith(";ATH=")) { // All-Time-High
           int ATHPrice = str.substring(5).toInt();
           g_price_action->setATHPrice(ATHPrice);
+        } else if (str.startsWith(";MSG ") || str.startsWith(";MSG=")) { // Announcement
+          if (g_announcement=="") {
+            g_announcement = str.substring(5);
+          } // ignore otherwise
         } else if (str.startsWith(";")){
-          /* unknown message */
+          DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown message '%s'\n"),str.c_str());
         } else {
           if (isdigit(str.charAt(0)) ||
             (str.charAt(0)=='-' && isdigit(str.charAt(1)))
           ) {
             long currentPrice = str.toInt();
             g_price_action->updatePrice(currentPrice);
-            DEBUG_SERIAL.printf("[WSc] get tick: %li\n", currentPrice);
-            DEBUG_SERIAL.printf("Free Heap: %i\n", ESP.getFreeHeap());
+            DEBUG_SERIAL.printf_P(PSTR("[WSc] get tick: %li\n"), currentPrice);
+            DEBUG_SERIAL.printf_P(PSTR("Free Heap: %i\n"), ESP.getFreeHeap());
           }
         }
       }
       break;
     case WStype_BIN:
-      DEBUG_SERIAL.printf("[WSc] get binary length: %u\n", length);
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] get binary length: %u\n"), length);
       hexdump(payload, length);
       break;
     case WStype_ERROR:
@@ -215,10 +237,12 @@ void configModeCallback (WiFiManager *myWiFiManager)
 void setupSerial()
 {
   DEBUG_SERIAL.begin(115200);
-  DEBUG_SERIAL.setDebugOutput(true);
-  DEBUG_SERIAL.printf("Free memory: %i\n",ESP.getFreeHeap());
-  DEBUG_SERIAL.printf("Last reset reason: %s\n",ESP.getResetReason().c_str());
-  DEBUG_SERIAL.printf("Last reset info: %s\n",ESP.getResetInfo().c_str());
+  DEBUG_SERIAL.setDebugOutput(1);
+  DEBUG_SERIAL.setDebugOutput(0);
+
+  DEBUG_SERIAL.printf_P(PSTR("Free memory: %i\n"),ESP.getFreeHeap());
+  DEBUG_SERIAL.printf_P(PSTR("Last reset reason: %s\n"),ESP.getResetReason().c_str());
+  DEBUG_SERIAL.printf_P(PSTR("Last reset info: %s\n"),ESP.getResetInfo().c_str());
 }
 
 void setupDisplay()
@@ -226,17 +250,18 @@ void setupDisplay()
 #if defined(X_DISPLAY_U8G2)
   g_display = new Display::U8G2Matrix(
     &g_display_hw,
+    X_DISPLAY_MILIS_PER_TICK,
     false,
     X_DISPLAY_WIDTH,
     X_DISPLAY_HEIGHT
   );
 #elif defined(X_DISPLAY_TM1637)
-  g_display = new Display::TM1637(&g_display_hw, X_DISPLAY_WIDTH);
+  g_display = new Display::TM1637(&g_display_hw, X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH);
 #elif defined(X_DISPLAY_LIXIE)
   g_display_hw.initialize<X_DISPLAY_DATA_PIN, X_DISPLAY_WIDTH>();
-  g_display = new Display::LixieNumeric(&g_display_hw, X_DISPLAY_WIDTH);
+  g_display = new Display::LixieNumeric(&g_display_hw, X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH);
 #elif defined(X_DISPLAY_NEOPIXEL)
-  auto display = new Display::Neopixel(X_DISPLAY_WIDTH, X_DISPLAY_HEIGHT);
+  auto display = new Display::Neopixel(X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH, X_DISPLAY_HEIGHT);
   display->initialize<X_DISPLAY_DATA_PIN>();
   g_display = display;
 #else
@@ -247,10 +272,9 @@ void setupDisplay()
 
 void loadParameters()
 {
-  EEPROM.begin(2048);
+  Utils::eeprom_BEGIN();
   g_parameters.loadFromEEPROM();
-  g_APs = new AP_list();
-  g_wifi = new WiFiCore(g_display, g_APs);
+  g_wifi = new WiFiCore(g_display);
 
   // sanitize parameters
   g_parameters.setValue("brightness", String(std::min(std::max(g_parameters["brightness"].toInt(),0L),15L)) );
@@ -268,8 +292,7 @@ void loadParameters()
     g_parameters.setValue("__device_uuid", uuid_str);
     g_parameters.storeToEEPROM();
   }
-
-  EEPROM.end();
+  Utils::eeprom_END();
 }
 
 void setupTicker()
@@ -292,14 +315,13 @@ void connectToWiFi()
 void connectWebSocket()
 {
   String ticker_url = g_parameters["ticker_path"] + g_parameters["currency_pair"] + "?uuid=" + g_parameters["__device_uuid"];
-  DEBUG_SERIAL.printf("[Wsc] Connecting to url '%s'\n",ticker_url.c_str());
+  DEBUG_SERIAL.printf_P(PSTR("[Wsc] Connecting to url '%s'\n"),ticker_url.c_str());
+  g_webSocket.onEvent(webSocketEvent_callback);
   g_webSocket.beginSSL(
     g_parameters["ticker_server_host"],
     g_parameters["ticker_server_port"].toInt(),
     ticker_url
   );
-
-  g_webSocket.onEvent(webSocketEvent_callback);
 }
 
 void setupNTP()
@@ -320,9 +342,7 @@ void factoryReset(void)
   DEBUG_SERIAL.println(F("Reseting settings"));
   g_wifi->resetSettings();
 
-  EEPROM.begin(2048);
-  Utils::eeprom_Erase(0,2048);
-  EEPROM.end();
+  Utils::eeprom_WIPE();
 
   delay(1000);
   g_wifi->resetSettings();
@@ -352,9 +372,10 @@ void setupDefaultButtons()
 void switchMenu(void)
 {
   if (g_current_mode != MODE::MENU) {
+    auto last_mode = g_current_mode;
     g_current_mode = MODE::MENU;
-    g_menu->start(g_display, [](){ // set callback when menu is finished
-      g_current_mode = MODE::TICKER;
+    g_menu->start(g_display, [=](){ // set callback when menu is finished
+      g_current_mode = last_mode;
       setupDefaultButtons();
     });
 
@@ -402,7 +423,7 @@ void setup() {
   auto logo_top = make_shared<Display::Action::StaticBitmap>(s_crypto2_bits, 32, 8, 1.5);
   auto logo_bottom = make_shared<Display::Action::StaticBitmap>(s_clock_inverted_bits, 32, 8, 3.5);
   g_display->queueAction(logo_top);
-  g_display->queueAction(make_shared<Display::Action::SlideTransition>(logo_top, logo_bottom, 0.5, -1));
+  g_display->queueAction(make_shared<Display::Action::SlideTransition>(logo_top, logo_bottom, 0.5, Coords{0,-1}));
   g_display->queueAction(logo_bottom);
 
   /* WiFi */
@@ -427,6 +448,27 @@ void loop() {
 
   if (g_force_wipe==true)
     factoryReset();
+
+  if (g_should_send_hello) {
+    websocketSendHello();
+    websocketSendAllParameters();
+    g_hello_sent = true;
+    g_should_send_hello = false;
+  }
+
+  if (g_announcement!="") {
+    if (g_current_mode==MODE::TICKER) {
+      g_current_mode = MODE::ANNOUNCEMENT;
+      setAnnouncement(g_announcement, [](){ g_current_mode = MODE::TICKER; });
+      g_announcement = "";
+    }
+  }
+
+  if (millis() - g_last_heartbeat_sent_at > 30000) {
+//    g_webSocket.disconnect();
+    websocketSendText(";HB");
+    g_last_heartbeat_sent_at = millis();
+  }
 
   g_webSocket.loop();
   delay(10);

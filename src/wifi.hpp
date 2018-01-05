@@ -7,7 +7,7 @@
 class WiFiCore
 {
 public:
-  WiFiCore(DisplayT *display, AP_list *ap_list);
+  WiFiCore(DisplayT *display);
 
   void setAPCallback(void (*func)(WiFiManager*));
   void startAP(const String& ssid_name, unsigned long timeout = 120);
@@ -25,7 +25,6 @@ public:
 private:
   WiFiManager m_wifimanager;
   DisplayT *m_display;
-  AP_list *m_ap_list;
   std::vector<WiFiManagerParameter*> m_parameters;
 
   WiFiEventHandler m_ev_conn, m_ev_disconn, m_ev_gotip;

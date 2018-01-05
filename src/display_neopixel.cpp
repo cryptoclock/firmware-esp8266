@@ -10,7 +10,7 @@ void Neopixel::displayText(const String& value, const Coords& coords)
     m_leds[i] = CRGB::Green;
   }
   FastLED.show();
-  DEBUG_SERIAL.println("SHOWING");
+  DEBUG_SERIAL.println(F("SHOWING"));
 }
 
 void Neopixel::setBrightness(const uint8_t brightness)

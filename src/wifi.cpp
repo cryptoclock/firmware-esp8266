@@ -1,13 +1,12 @@
 #include "parameter_store.hpp"
 #include "wifi.hpp"
-#include <EEPROM.h>
+#include "utils.hpp"
 
 extern ParameterStore g_parameters;
-extern AP_list *g_APs;
 extern WiFiCore *g_wifi;
 
-WiFiCore::WiFiCore(DisplayT *display, AP_list *ap_list) :
-  m_wifimanager(WiFiManager()), m_display(display), m_ap_list(ap_list)
+WiFiCore::WiFiCore(DisplayT *display) :
+  m_wifimanager(WiFiManager()), m_display(display)
 {
   m_parameters.reserve(g_parameters.all_items().size());
   for (const auto& item_pair : g_parameters.all_items()) {
@@ -22,8 +21,7 @@ WiFiCore::WiFiCore(DisplayT *display, AP_list *ap_list) :
 
   m_wifimanager.setSaveConfigCallback(&saveCallback);
 
-  m_ap_list->readFromEEPROM();
-  m_ap_list->addAPsToWiFiManager(&m_wifimanager);
+  AP_list::addAPsToWiFiManager(&m_wifimanager);
 
   m_ev_conn = WiFi.onStationModeConnected(onConnect);
   m_ev_disconn = WiFi.onStationModeDisconnected(onDisconnect);
@@ -78,42 +76,33 @@ void WiFiCore::saveCallback(void)
 {
   DEBUG_SERIAL.println(F("[WiFiCore] Save callback called"));
 
-  EEPROM.begin(2048);
-
+  Utils::eeprom_BEGIN();
   // save APs
   auto manager = g_wifi->getWiFiManager();
-  for (int i=0;;++i) {
-    auto credentials = manager->getAP(i);
-    if(credentials == NULL)
-      break;
-
-    g_APs->addToTop(credentials->ssid, credentials->pass);
-  }
-  g_APs->storeToEEPROM();
+  AP_list::saveAPsToEEPROM(manager);
 
   // save parameters
   g_wifi->updateParametersFromAP(manager);
   g_parameters.storeToEEPROM();
 
-  EEPROM.commit();
-  EEPROM.end();
+  Utils::eeprom_END();
 }
 
 void WiFiCore::onConnect(WiFiEventStationModeConnected event_info)
 {
-  DEBUG_SERIAL.printf("[WiFiCore] Connected to SSID: %s channel %i\n",
+  DEBUG_SERIAL.printf_P(PSTR("[WiFiCore] Connected to SSID: %s channel %i\n"),
     event_info.ssid.c_str(), event_info.channel);
 }
 
 void WiFiCore::onDisconnect(WiFiEventStationModeDisconnected event_info)
 {
-  DEBUG_SERIAL.printf("[WiFiCore] Disconnected from SSID: %s\n", event_info.ssid.c_str());
-  DEBUG_SERIAL.printf("[WiFiCore] Reason: %d\n", event_info.reason);
+  DEBUG_SERIAL.printf_P(PSTR("[WiFiCore] Disconnected from SSID: %s\n"), event_info.ssid.c_str());
+  DEBUG_SERIAL.printf_P(PSTR("[WiFiCore] Reason: %d\n"), event_info.reason);
 }
 
 void WiFiCore::onGotIP(WiFiEventStationModeGotIP ipInfo)
 {
-  DEBUG_SERIAL.printf("[WiFiCore] Got IP: %s Gateway: %s, Mask: %s\n",
+  DEBUG_SERIAL.printf_P(PSTR("[WiFiCore] Got IP: %s Gateway: %s, Mask: %s\n"),
     ipInfo.ip.toString().c_str(), ipInfo.gw.toString().c_str(), ipInfo.mask.toString().c_str()
   );
 }

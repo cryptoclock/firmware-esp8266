@@ -14,7 +14,7 @@ Coords DisplayT::centerTextOffset(const String& text)
 
 void DisplayT::setupTickCallback(Ticker::callback_t callback)
 {
-    m_ticker.attach(MILIS_PER_TICK / 1000.0,callback);
+    m_ticker.attach(c_milis_per_tick / 1000.0,callback);
 }
 
 void DisplayT::tick(void)
@@ -81,6 +81,18 @@ void DisplayT::cleanQueue(void)
 void DisplayT::setFont(const uint8_t font)
 {
   m_current_font = font;
+  useFont();
 };
+
+const uint8_t DisplayT::getFont()
+{
+  return m_current_font;
+}
+
+void DisplayT::displayTextHCentered(const String& value, const Coords& coords)
+{
+  auto offset = DisplayT::centerTextOffset(value);
+  displayText(value, coords + Coords{offset.x,0});
+}
 
 }

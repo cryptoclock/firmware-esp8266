@@ -6,8 +6,8 @@ namespace Display {
 class TM1637 : public DisplayT
 {
 public:
-  TM1637(TM1637Display* display, const int num_digits) :
-    DisplayT(true), m_display(display), m_num_digits(num_digits)
+  TM1637(TM1637Display* display, const int milis_per_tick, const int num_digits) :
+    DisplayT(milis_per_tick), m_display(display), m_num_digits(num_digits)
     {}
 
   void displayText(const String& value, const Coords& coords) {}

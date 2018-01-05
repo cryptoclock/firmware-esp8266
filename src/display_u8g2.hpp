@@ -6,13 +6,23 @@ namespace Display {
 class U8G2Matrix : public DisplayT
 {
 public:
-  U8G2Matrix(U8G2 *display, const bool rotation, const int width, const int height) :
-    DisplayT(true), m_display(display), m_rotation(rotation), m_width(width), m_height(height)
+  U8G2Matrix(U8G2 *display, const int milis_per_tick, const bool rotation, const int width, const int height) :
+    DisplayT(milis_per_tick), m_display(display), m_rotation(rotation), m_width(width), m_height(height)
   {
     m_display->begin();
+#if X_DISPLAY_HEIGHT<16
     m_fonts.push_back(u8g2_font_profont10_tr);
     m_fonts.push_back(u8g2_font_micro_tr);
     m_fonts.push_back(u8g2_font_u8glib_4_tr);
+#elif X_DISPLAY_HEIGHT<32
+    m_fonts.push_back(u8g2_font_profont15_mr);
+    m_fonts.push_back(u8g2_font_profont12_mr);
+    m_fonts.push_back(u8g2_font_profont10_mr);
+#else
+    m_fonts.push_back(u8g2_font_profont29_mr);
+    m_fonts.push_back(u8g2_font_profont22_mr);
+    m_fonts.push_back(u8g2_font_10x20_tr);
+#endif
 
     m_display->setFont(m_fonts[0]);
     m_display->setFontMode(0);

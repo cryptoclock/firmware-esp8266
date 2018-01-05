@@ -7,8 +7,6 @@
 
 #include "display_action.hpp"
 
-const int MILIS_PER_TICK = 33; // in ms
-
 using std::vector;
 using std::shared_ptr;
 
@@ -16,8 +14,8 @@ namespace Display {
 class DisplayT
 {
 public:
-  DisplayT(bool enabled = true) :
-    m_enabled(enabled), m_contrast(0), m_current_font(0)
+  DisplayT(const int milis_per_tick) :
+    m_enabled(true), m_contrast(0), m_current_font(0), c_milis_per_tick(milis_per_tick)
   {
     m_last_tick_at = micros();
   }
@@ -27,6 +25,8 @@ public:
   virtual void displayText(const String& value, const Coords& coords) = 0;
   virtual void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h) =0;
   virtual void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h) = 0;
+
+  void displayTextHCentered(const String& value, const Coords& coords);
 
   virtual void fill(const Coords& coords) = 0;
 
@@ -48,7 +48,8 @@ public:
   Coords centerTextOffset(const String& text);
 
   void setFont(const uint8_t font);
-//  uint8_t getNumFonts();
+  virtual void useFont() = 0;
+  const uint8_t getFont();
 
   void setupTickCallback(Ticker::callback_t callback);
   void tick(void);
@@ -66,6 +67,7 @@ protected:
   vector<shared_ptr<ActionT>> m_actions;
   Ticker m_ticker;
   uint8_t m_current_font;
+  const int c_milis_per_tick;
 //  uint8_t m_num_fonts;
 };
 }

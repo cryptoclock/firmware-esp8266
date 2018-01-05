@@ -41,7 +41,7 @@ void Price::tick(DisplayT *display, double elapsed_time)
   }
 }
 
-void Price::draw(DisplayT *display, Coords coords)
+void Price::draw(DisplayT *display, Coords orig_coords)
 {
   if (!display->isGraphic()) {
     if (display->isNumeric())
@@ -49,7 +49,7 @@ void Price::draw(DisplayT *display, Coords coords)
     return;
   }
 
-  coords += m_coords;
+  Coords coords = orig_coords + m_coords;
 
   String price_top = String((int)m_displayed_price);
   String price_bottom = String((int)m_displayed_price + 1);
@@ -99,6 +99,15 @@ void Price::draw(DisplayT *display, Coords coords)
     }
     offset_x += display->getTextWidth(String(price_bottom[i]))+1;
   }
+
+  if (display->getDisplayHeight() >= 64 ) {
+    auto old_font = display->getFont();
+    display->setFont(2);
+    display->displayTextHCentered("USD/BTC",orig_coords + Coords{0,0});
+    display->setFont(old_font);
+  }
+
+//  drawText();
 
   // blink pixel when we received price update
   display->setDrawColor(1);

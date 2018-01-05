@@ -1,100 +1,60 @@
 #include "aplist.hpp"
 #include <EEPROM.h>
 
-AP_list::AP_list() {
-  clear();
-}
+const int AP_SSID_MAX_LENGTH = 32+1;
+const int AP_PASSWORD_MAX_LENGTH = 64+1;
 
-void AP_list::clear(void)
-{
-  for(int i=0;i<c_max_stored_aps;++i)
-    clearItem(i);
-}
+const int AP_EEPROM_OFFSET = 0;
+const int AP_MAX_STORED_APS = 10;
 
-void AP_list::addToTop(const String &SSID, const String &password)
-{
-  int index = getIndexBySSID(SSID);
-  if (index >= 0) {
-    DEBUG_SERIAL.printf("[APs] Add: SSID %s already in list\n",SSID.c_str());
-    return;
-  }
-  DEBUG_SERIAL.printf("[APs] Add: SSID %s not in list, adding\n",SSID.c_str());
-
-  // bump down the list
-  for (int i=c_max_stored_aps - 1;i>0;--i)
-    m_aps[i] = m_aps[i-1];
-
-  // add to top
-  clearItem(0);
-  strcpy(m_aps[0].ssid,SSID.c_str());
-  strcpy(m_aps[0].password,password.c_str());
-}
-
-void AP_list::moveToTop(int index)
-{
-  if (index<1 || index > (c_max_stored_aps-1)) return;
-
-  AP temp = m_aps[index];
-
-  for (int i=index;i>0;--i)
-    m_aps[i] = m_aps[i-1];
-
-  m_aps[0] = temp;
-}
-
-void AP_list::clearItem(int index)
-{
-  if (index<0 || index > (c_max_stored_aps-1)) return;
-  memset(&m_aps[index], sizeof(AP),0);
-}
-
-void AP_list::readFromEEPROM(void)
-{
-  char header[4];
-  EEPROM.get(c_eeprom_offset,header);
-  if (memcmp(header,"APs",3)!=0) {
-    DEBUG_SERIAL.println("[APs] Invalid EEPROM header, ignoring content");
-    return;
-  }
-
-  DEBUG_SERIAL.printf("[APs] Reading from EEPROM at offset %i\n",c_eeprom_offset);
-  EEPROM.get(c_eeprom_offset + 3, m_aps);
-  printAPs();
-}
-
-void AP_list::printAPs(void)
-{
-  for (int i=0;i<c_max_stored_aps;++i) {
-    if (m_aps[i].ssid[0] == '\0') continue;
-    DEBUG_SERIAL.printf("[APs] AP #%i -> SSID: %s Password: [REDACTED]\n",
-            i, m_aps[i].ssid);
-  }
-}
-
-void AP_list::storeToEEPROM(void)
-{
-  DEBUG_SERIAL.printf("[APs] Storing to EEPROM at offset %i\n",c_eeprom_offset);
-  printAPs();
-  EEPROM.put(c_eeprom_offset, "APs");
-  EEPROM.put(c_eeprom_offset + 3, m_aps);
-//  EEPROM.commit();
-}
-
-int AP_list::getIndexBySSID(const String &SSID)
-{
-  for (int i=0;i<c_max_stored_aps;++i) {
-    if (m_aps[i].ssid[0] == '\0') continue;
-    if (String(m_aps[i].ssid) == SSID)
-      return i;
-  }
-  return -1;
-}
+struct AP {
+  char ssid[AP_SSID_MAX_LENGTH];
+  char password[AP_PASSWORD_MAX_LENGTH];
+};
 
 void AP_list::addAPsToWiFiManager(WiFiManager *manager)
 {
-  DEBUG_SERIAL.printf("[APs] Adding APs to WiFiManager\n");
-  for (int i=0;i<c_max_stored_aps;++i) {
-    if (m_aps[i].ssid[0] == '\0') continue;
-    manager->addAP(strdup(m_aps[i].ssid), strdup(m_aps[i].password));
+  DEBUG_SERIAL.println(F("[APs] Adding APs to WiFiManager"));
+
+  int offset = AP_EEPROM_OFFSET;
+
+  char header[3] = {0};
+  EEPROM.get(offset,header);
+  offset += sizeof(header);
+  if (memcmp(header,"APs",sizeof(header))!=0) {
+    DEBUG_SERIAL.println(F("[APs] Invalid EEPROM header, ignoring content"));
+    return;
+  }
+
+  for(int i=0;i<AP_MAX_STORED_APS;++i) {
+    AP ap = {0};
+    EEPROM.get(offset, ap);
+    offset += sizeof(ap);
+    if(ap.ssid[0]=='\0')
+      break;
+    DEBUG_SERIAL.printf_P(PSTR("[APs] SSID: %s Password: [redacted]\n"), ap.ssid, ap.password);
+    manager->addAP(strdup(ap.ssid), strdup(ap.password));
+  }
+}
+
+void AP_list::saveAPsToEEPROM(WiFiManager *manager)
+{
+  DEBUG_SERIAL.println(F("[APs] Storing APs to EEPROM"));
+
+  int offset = AP_EEPROM_OFFSET;
+  EEPROM.put(offset, "APs");
+  offset += 3;
+
+  for (int i=0;i<AP_MAX_STORED_APS;++i) {
+    auto credentials = manager->getAP(i);
+    if(credentials == NULL)
+      break;
+    AP ap = {0};
+    strncpy(ap.ssid, credentials->ssid.c_str(), AP_SSID_MAX_LENGTH-1);
+    strncpy(ap.password, credentials->pass.c_str(), AP_PASSWORD_MAX_LENGTH-1);
+
+    DEBUG_SERIAL.printf_P(PSTR("[APs] Writing SSID: %s Password: %s\n"), ap.ssid, ap.password);
+    EEPROM.put(offset, ap);
+    offset += sizeof(ap);
   }
 }
