@@ -153,7 +153,7 @@ void websocketSendParameter(const ParameterItem *item)
 
 void websocketSendAllParameters()
 {
-  g_parameters.iterateAllParameters([](const ParameterItem* item) { websocketSendParameter(item); delay(50); });
+  g_parameters.iterateAllParameters([](const ParameterItem* item) { websocketSendParameter(item); delay(10); });
 }
 
 void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
@@ -168,12 +168,10 @@ void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
       break;
     case WStype_TEXT:
       {
+        if (!g_hello_sent)
+          g_should_send_hello = true;
+
         DEBUG_SERIAL.printf_P(PSTR("[WSc] get text: %s\n"), payload);
-        if (!g_hello_sent) {
-          websocketSendHello();
-          websocketSendAllParameters();
-          g_hello_sent = true;
-        }
         String str = (char*)payload;
         if (str=="") return;
         if (str==";UPDATE") {
@@ -450,10 +448,10 @@ void loop() {
     factoryReset();
 
   if (g_should_send_hello) {
-    websocketSendHello();
-    websocketSendAllParameters();
     g_hello_sent = true;
     g_should_send_hello = false;
+    websocketSendHello();
+    websocketSendAllParameters();
   }
 
   if (g_announcement!="") {
