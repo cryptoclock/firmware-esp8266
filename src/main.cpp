@@ -6,11 +6,6 @@
 
 #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
 
-#include <WebSocketsClient.h>
-#undef NETWORK_W5100 // To fix WebSockets and NTPClientLib #define conflict
-#undef NETWORK_ENC28J60
-#undef NETWORK_ESP8266
-
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
@@ -33,6 +28,7 @@ using Display::Coords;
 #include "utils.hpp"
 #include "button.hpp"
 #include "menu.hpp"
+#include "data_source.hpp"
 
 #include <EEPROM.h>
 
@@ -47,21 +43,17 @@ using Display::Coords;
 
 Ticker g_ticker_clock;
 
-WebSocketsClient g_webSocket;
-
 DisplayT *g_display;
 shared_ptr<Display::Action::Price> g_price_action;
 shared_ptr<Display::Action::Clock> g_clock_action;
 WiFiCore *g_wifi;
+DataSource *g_data_source;
 
 shared_ptr<Button> g_flash_button;
 
 bool g_start_ondemand_ap = false;
-bool g_hello_sent = true;
 bool g_force_wipe = false;
 bool g_message_mode = false;
-bool g_should_send_hello = false;
-long g_last_heartbeat_sent_at = 0;
 
 enum class MODE { TICKER, MENU, ANNOUNCEMENT };
 MODE g_current_mode(MODE::TICKER);
@@ -130,89 +122,6 @@ void setAnnouncement(const String& message, action_callback_t onfinished_cb)
       Coords{-1,0}
     )
   );
-}
-
-void websocketSendText(const String& text)
-{
-  DEBUG_SERIAL.printf_P(PSTR("[WSc] Sending: '%s'\n"), text.c_str());
-  g_webSocket.sendTXT(text.c_str(), text.length());
-}
-
-void websocketSendHello()
-{
-  String text = ";HELLO " + String(X_MODEL_NUMBER) + " " + g_parameters["__device_uuid"];
-  websocketSendText(text);
-}
-
-void websocketSendParameter(const ParameterItem *item)
-{
-  if (item->name.startsWith("__")) return;
-  String text = ";PARAM " + item->name + " " + item->value;
-  websocketSendText(text);
-}
-
-void websocketSendAllParameters()
-{
-  g_parameters.iterateAllParameters([](const ParameterItem* item) { websocketSendParameter(item); delay(10); });
-}
-
-void webSocketEvent_callback(WStype_t type, uint8_t * payload, size_t length) {
-  switch(type) {
-    case WStype_DISCONNECTED:
-      DEBUG_SERIAL.printf_P(PSTR("[WSc] Disconnected!\n"));
-      hexdump(payload, length);
-      break;
-    case WStype_CONNECTED:
-      DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: %s\n"),  payload);
-      g_hello_sent = false;
-      break;
-    case WStype_TEXT:
-      {
-        if (!g_hello_sent)
-          g_should_send_hello = true;
-
-        DEBUG_SERIAL.printf_P(PSTR("[WSc] get text: %s\n"), payload);
-        String str = (char*)payload;
-        if (str=="") return;
-        if (str==";UPDATE") {
-          g_webSocket.disconnect();
-          DEBUG_SERIAL.println(F("Update request received, updating"));
-          g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
-          Firmware::update(g_parameters["update_url"]);
-          ESP.restart();
-        } else if (str.startsWith(";ATH=")) { // All-Time-High
-          int ATHPrice = str.substring(5).toInt();
-          g_price_action->setATHPrice(ATHPrice);
-        } else if (str.startsWith(";MSG ") || str.startsWith(";MSG=")) { // Announcement
-          if (g_announcement=="") {
-            g_announcement = str.substring(5);
-          } // ignore otherwise
-        } else if (str.startsWith(";")){
-          DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown message '%s'\n"),str.c_str());
-        } else {
-          if (isdigit(str.charAt(0)) ||
-            (str.charAt(0)=='-' && isdigit(str.charAt(1)))
-          ) {
-            long currentPrice = str.toInt();
-            g_price_action->updatePrice(currentPrice);
-            DEBUG_SERIAL.printf_P(PSTR("[WSc] get tick: %li\n"), currentPrice);
-            DEBUG_SERIAL.printf_P(PSTR("Free Heap: %i\n"), ESP.getFreeHeap());
-          }
-        }
-      }
-      break;
-    case WStype_BIN:
-      DEBUG_SERIAL.printf_P(PSTR("[WSc] get binary length: %u\n"), length);
-      hexdump(payload, length);
-      break;
-    case WStype_ERROR:
-    case WStype_FRAGMENT:
-    case WStype_FRAGMENT_BIN_START:
-    case WStype_FRAGMENT_TEXT_START:
-    case WStype_FRAGMENT_FIN:
-    default:
-      break;
-  }
 }
 
 //gets called when WiFiManager enters configuration mode
@@ -300,26 +209,45 @@ void setupTicker()
   digitalWrite(BUILTIN_LED, true); // high = off
 }
 
+void setupDataSource()
+{
+  String ticker_url = g_parameters["ticker_path"] + g_parameters["currency_pair"] + "?uuid=" + g_parameters["__device_uuid"];
+  g_data_source = new DataSource(g_parameters["ticker_server_host"], g_parameters["ticker_server_port"].toInt(), ticker_url);
+
+  g_data_source->setOnUpdateRequest([&]() {
+    DEBUG_SERIAL.println(F("Update request received, updating"));
+    g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
+    Firmware::update(g_parameters["update_url"]);
+    ESP.restart();
+  });
+
+  g_data_source->setOnAnnouncement([&](const String& msg){
+    if (g_announcement=="") {
+      g_announcement = msg;
+    } // ignore otherwise
+  });
+
+  g_data_source->setOnPriceATH([&](const String& price){
+    g_price_action->setATHPrice(price.toInt());
+  });
+
+  g_data_source->setOnPriceChange([&](const String& price){
+    long currentPrice = price.toInt();
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] price tick: %li\n"),currentPrice);
+    g_price_action->updatePrice(currentPrice);
+    DEBUG_SERIAL.printf_P(PSTR("Free Heap: %i\n"), ESP.getFreeHeap());
+  });
+
+  g_data_source->connect();
+}
+
 void connectToWiFi()
 {
   //set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
   g_wifi->setAPCallback(configModeCallback);
   g_wifi->connectToWiFiOrFallbackToAP();
 
-  //if you get here you have connected to the WiFi
   DEBUG_SERIAL.println(F("connected...yeey :)"));
-}
-
-void connectWebSocket()
-{
-  String ticker_url = g_parameters["ticker_path"] + g_parameters["currency_pair"] + "?uuid=" + g_parameters["__device_uuid"];
-  DEBUG_SERIAL.printf_P(PSTR("[Wsc] Connecting to url '%s'\n"),ticker_url.c_str());
-  g_webSocket.onEvent(webSocketEvent_callback);
-  g_webSocket.beginSSL(
-    g_parameters["ticker_server_host"],
-    g_parameters["ticker_server_port"].toInt(),
-    ticker_url
-  );
 }
 
 void setupNTP()
@@ -347,11 +275,10 @@ void factoryReset(void)
   ESP.reset();
 }
 
-
 void startOnDemandAP(void)
 {
   DEBUG_SERIAL.println(F("ODA"));
-  g_webSocket.disconnect();
+  g_data_source->disconnect();
   DEBUG_SERIAL.println(F("Starting portal"));
   g_wifi->startAP("OnDemandAP_"+String(ESP.getChipId()), 120);
   ESP.restart();
@@ -360,7 +287,6 @@ void startOnDemandAP(void)
 void switchMenu(void);
 void setupDefaultButtons()
 {
-//  g_flash_button->onShortPress([]() { g_start_ondemand_ap = true; });
   g_flash_button->onShortPress(switchMenu);
   g_flash_button->onLongPress([]() { g_start_ondemand_ap = true; });
   g_flash_button->onSuperLongPress([]() { g_force_wipe = true;} );
@@ -387,8 +313,6 @@ void setupButton()
   g_flash_button = make_shared<Button>(PORTAL_TRIGGER_PIN);
   setupDefaultButtons();
 }
-
-
 
 void setupMenu()
 {
@@ -437,7 +361,7 @@ void setup() {
 
   setupButton();
   setupNTP();
-  connectWebSocket();
+  setupDataSource();
 }
 
 void loop() {
@@ -447,13 +371,6 @@ void loop() {
   if (g_force_wipe==true)
     factoryReset();
 
-  if (g_should_send_hello) {
-    g_hello_sent = true;
-    g_should_send_hello = false;
-    websocketSendHello();
-    websocketSendAllParameters();
-  }
-
   if (g_announcement!="") {
     if (g_current_mode==MODE::TICKER) {
       g_current_mode = MODE::ANNOUNCEMENT;
@@ -462,13 +379,7 @@ void loop() {
     }
   }
 
-  if (millis() - g_last_heartbeat_sent_at > 30000) {
-//    g_webSocket.disconnect();
-    websocketSendText(";HB");
-    g_last_heartbeat_sent_at = millis();
-  }
-
-  g_webSocket.loop();
+  g_data_source->loop();
   delay(10);
 }
 
