@@ -1,7 +1,7 @@
 void setup()
 {
   setupSerial();
-  setupTicker();
+  setupHW();
   setupDisplay();
   loadParameters();
   setupMenu();
@@ -19,7 +19,6 @@ void setup()
   setupButton();
   setupNTP();
   g_clock_action = make_shared<Display::Action::Clock>(-1, Coords{0,0}); // display clock
-//  g_ticker_clock.attach(30.0, clock_callback);
   g_display->prependAction(g_clock_action);
 }
 

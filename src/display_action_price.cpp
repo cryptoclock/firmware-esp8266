@@ -2,8 +2,7 @@
 #include "display_action_price.hpp"
 #include <cmath>
 
-namespace Display {
-namespace Action {
+namespace Display { namespace Action {
 void Price::tick(DisplayT *display, double elapsed_time)
 {
   m_elapsed_time += elapsed_time;
@@ -144,9 +143,7 @@ void Price::updatePrice(const int new_price)
 
 void Price::setATHPrice(const int ath_price)
 {
-//  m_ath_price = ath_price;
-  m_ath_price = 10000;
+  m_ath_price = ath_price;
 }
 
-}
-}
+}}

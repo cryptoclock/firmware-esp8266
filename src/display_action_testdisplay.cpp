@@ -18,8 +18,8 @@ void TestDisplay::draw(DisplayT *display, Coords coords)
   int w = display->getDisplayWidth();
   int h = display->getDisplayHeight();
 
-  int offset = (int) (m_elapsed_time*2) % 8;
-  int brightness = (int) (m_elapsed_time*2) % 16;
+  int offset = (int) (m_elapsed_time*8) % 8;
+  int brightness = (int) (m_elapsed_time*8) % 16;
 
   // modes
   switch(m_current_mode % 5) {
