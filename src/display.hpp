@@ -15,7 +15,7 @@ class DisplayT
 {
 public:
   DisplayT(const int milis_per_tick) :
-    m_enabled(true), m_contrast(0), m_current_font(0), c_milis_per_tick(milis_per_tick)
+    m_enabled(true), m_current_font(0), c_milis_per_tick(milis_per_tick), m_brightness(0)
   {
     m_last_tick_at = micros();
   }
@@ -37,7 +37,20 @@ public:
   virtual void clearBuffer(void) = 0;
   virtual void sendBuffer(void) = 0;
   virtual int getTextWidth(const String& text) = 0;
-  virtual void setBrightness(const uint8_t brightness) = 0; // 0..255
+
+  void setDisplayBrightness(const uint8_t brightness)
+  {
+    m_brightness = brightness;
+    setBrightness(m_brightness);
+  }
+  void useBrightness(const uint8_t brightness)
+  {
+    setBrightness(brightness);
+  }
+  void resetBrightness() {
+    setBrightness(m_brightness);
+  }
+
   virtual void setDrawColor(const uint8_t color) = 0;
   virtual void setRotation(const bool rotation) = 0;
   virtual int getDisplayWidth() = 0;
@@ -61,13 +74,15 @@ public:
   void cleanQueue(void);
 
 protected:
+  virtual void setBrightness(const uint8_t brightness) = 0; // 0..255
+
   unsigned long m_last_tick_at;
   bool m_enabled;
-  uint8_t m_contrast;
   vector<shared_ptr<ActionT>> m_actions;
   Ticker m_ticker;
   uint8_t m_current_font;
   const int c_milis_per_tick;
+  uint8_t m_brightness;
 //  uint8_t m_num_fonts;
 };
 }

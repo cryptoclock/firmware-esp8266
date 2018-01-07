@@ -79,7 +79,6 @@ int U8G2Matrix::getTextWidth(const String& text)
 
 void U8G2Matrix::setBrightness(const uint8_t brightness)
 {
-//  m_display->setContrast(brightness * (255.0/100.0));
   m_display->setContrast(brightness);
 }
 

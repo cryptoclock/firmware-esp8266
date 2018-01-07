@@ -19,13 +19,18 @@ public:
   void updatePrice(const int new_price);
   void setATHPrice(const int ath_price);
 private:
+  void blinkIfATH(DisplayT *display);
+  void blinkPixelIfReceivedPriceUpdate(DisplayT *display);
+
   double m_animation_speed;
   int m_price;
   int m_last_price;
   double m_displayed_price;
   int m_ath_price;
+  double m_price_last_changed_at;
   double m_price_last_updated_at;
-  const double m_price_timeout = 60.0; // after X seconds without receiving price updates, stop displaying it
+  const double m_price_timeout = 300.0; // after X seconds without receiving price updates, stop displaying it
+  static constexpr double c_ath_animation_length = 4.0;
 };
 }
 }

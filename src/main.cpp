@@ -150,7 +150,7 @@ void loadParameters()
   g_parameters.setValue("brightness", String(std::min(std::max(g_parameters["brightness"].toInt(),0L),15L)) );
   g_parameters.setValue("font", String(std::min(std::max(g_parameters["font"].toInt(),0L),2L)) );
 
-  g_display->setBrightness(g_parameters["brightness"].toInt() * 16);
+  g_display->setDisplayBrightness(g_parameters["brightness"].toInt() * 16);
   g_display->setRotation(g_parameters["rotate_display"]=="1");
   g_display->setFont(g_parameters["font"].toInt());
 
@@ -290,7 +290,7 @@ void setupMenu()
 {
   const menu_items_t items({
     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, [](const String& value){ g_display->setFont(value.toInt()); } ),
-    std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, [](const String& value){ g_display->setBrightness(value.toInt() * 16); } ),
+    std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, [](const String& value){ g_display->setDisplayBrightness(value.toInt() * 16); } ),
     std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, [](const String& value){ g_display->setRotation(value=="1"); } )
   });
   g_menu = std::make_shared<Menu>(&g_parameters, items);

@@ -24,28 +24,28 @@ void TestDisplay::draw(DisplayT *display, Coords coords)
   // modes
   switch(m_current_mode % 5) {
     case 0:
-      display->setBrightness(255);
+      display->setDisplayBrightness(255);
       display->fill({0,0});
       break;
     case 1: // walking columns
-      display->setBrightness(255);
+      display->setDisplayBrightness(255);
       for (int x=offset; x<w; x+=8)
         display->drawLine({x,0},{x,h});
       break;
     case 2: // walking rows
-      display->setBrightness(255);
+      display->setDisplayBrightness(255);
       for (int y=offset; y<h; y+=8)
         display->drawLine({0,y},{w,y});
       break;
     case 3: // walking diagonals
-      display->setBrightness(255);
+      display->setDisplayBrightness(255);
       for (int x=offset; x<w; x+=8)
         display->drawLine({x+8,0},{x,h});
       display->drawLine({offset,0},{0,offset});
       break;
     case 4: // brightness
       {
-        display->setBrightness(brightness*16);
+        display->setDisplayBrightness(brightness*16);
         Coords coords{1,-2};
         String text("Bright " + String(brightness));
         display->displayText(text, coords);

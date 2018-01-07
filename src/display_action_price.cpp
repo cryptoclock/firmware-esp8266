@@ -41,6 +41,27 @@ void Price::tick(DisplayT *display, double elapsed_time)
   }
 }
 
+void Price::blinkIfATH(DisplayT *display)
+{
+  if (m_displayed_price >= m_ath_price &&
+    (m_elapsed_time - m_price_last_changed_at < c_ath_animation_length)) {
+    if ((int)((m_elapsed_time - m_price_last_changed_at) * 10) % 4 < 2 ) {
+      display->useBrightness(0);
+    } else {
+      display->useBrightness(255);
+    }
+  } else {
+    display->resetBrightness();
+  }
+}
+
+void Price::blinkPixelIfReceivedPriceUpdate(DisplayT *display)
+{
+  // blink pixel when we received price update
+  if (m_elapsed_time - m_price_last_updated_at <= 0.05)
+    display->drawPixel({display->getDisplayWidth()-1, display->getDisplayHeight()-1});
+}
+
 void Price::draw(DisplayT *display, Coords orig_coords)
 {
   if (!display->isGraphic()) {
@@ -53,9 +74,7 @@ void Price::draw(DisplayT *display, Coords orig_coords)
 
   String price_top = String((int)m_displayed_price);
   String price_bottom = String((int)m_displayed_price + 1);
-  // if (m_price<0 ||
-  //   (m_elapsed_time - m_price_last_updated_at > m_price_timeout))
-  if (m_price<0)
+  if (m_price<0 || (m_elapsed_time - m_price_last_updated_at) > m_price_timeout)
   {
     String text = "-----";
     display->displayText(text, coords + display->centerTextOffset(text));
@@ -75,16 +94,7 @@ void Price::draw(DisplayT *display, Coords orig_coords)
   if (price_bottom.length()>price_top.length())
     price_top = " " + price_top;
 
-
-  if (m_displayed_price >= m_ath_price && (int)m_elapsed_time % 2 == 0 ) {
-    display->setDrawColor(1);
-    display->fill(coords);
-    display->setDrawColor(0);
-  } else {
-    display->setDrawColor(0);
-    display->fill(coords);
-    display->setDrawColor(1);
-  }
+  blinkIfATH(display);
 
   coords += display->centerTextOffset(price_bottom); // higher price has more spaces
 
@@ -107,16 +117,15 @@ void Price::draw(DisplayT *display, Coords orig_coords)
     display->setFont(old_font);
   }
 
-//  drawText();
-
+  blinkPixelIfReceivedPriceUpdate(display);
   // blink pixel when we received price update
-  display->setDrawColor(1);
   if (m_elapsed_time - m_price_last_updated_at <= 0.05)
     display->drawPixel({display->getDisplayWidth()-1, display->getDisplayHeight()-1});
 }
 
 void Price::updatePrice(const int new_price)
 {
+  m_price_last_updated_at = m_elapsed_time;
   if (m_price == new_price)
     return;
 
@@ -130,12 +139,13 @@ void Price::updatePrice(const int new_price)
   }
   m_price = new_price;
 
-  m_price_last_updated_at = m_elapsed_time;
+  m_price_last_changed_at = m_elapsed_time;
 }
 
 void Price::setATHPrice(const int ath_price)
 {
-  m_ath_price = ath_price;
+//  m_ath_price = ath_price;
+  m_ath_price = 10000;
 }
 
 }

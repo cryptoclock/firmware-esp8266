@@ -35,6 +35,7 @@ void DisplayT::tick(void)
       continue;
     }
     clearBuffer();
+    resetBrightness();
     action->draw(this, Coords{0,0});
     sendBuffer();
     break;
