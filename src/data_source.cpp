@@ -49,7 +49,8 @@ void DataSource::sendText(const String& text)
 
 void DataSource::sendHello()
 {
-  String text = ";HELLO " + String(X_MODEL_NUMBER) + " " + g_parameters["__device_uuid"];
+  String text = ";HELLO " + String(X_MODEL_NUMBER) + " " +
+    g_parameters["__device_uuid"] + " " + FIRMWARE_VERSION + " " + ESP.getSketchMD5();
   sendText(text);
 }
 
