@@ -5,8 +5,6 @@
 #undef NETWORK_ENC28J60
 #undef NETWORK_ESP8266
 
-extern ParameterStore g_parameters;
-
 typedef std::function<void(const String&)> on_price_change_t;
 typedef std::function<void(const String&)> on_price_ath_t;
 typedef std::function<void(void)> on_update_request_t;
@@ -16,7 +14,7 @@ class DataSource
 {
 public:
   DataSource(const String& host, const int port, const String& url)
-    : m_host(host), m_port(port), m_url(url),
+    : m_host(host), m_port(port), m_url(url), m_connected(false), m_last_connected_at(0),
     m_should_send_hello(false), m_hello_sent(true), m_last_heartbeat_sent_at(0),
     m_on_price_change(nullptr), m_on_price_ath(nullptr), m_on_update_request(nullptr),  m_on_announcement(nullptr)
   {
@@ -44,10 +42,15 @@ private:
 
   const String m_host;
   const int m_port;
-  const String &m_url;
+  const String m_url;
+  bool m_connected;
+  long m_last_connected_at;
   bool m_should_send_hello;
   bool m_hello_sent;
   long m_last_heartbeat_sent_at;
+
+  static const int c_heartbeat_interval = 30 * 1000;
+  static const int c_force_reconnect_interval = 120 * 1000;
 
   on_price_change_t m_on_price_change;
   on_price_ath_t m_on_price_ath;

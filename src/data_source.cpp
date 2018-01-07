@@ -1,6 +1,7 @@
 #include "data_source.hpp"
 
 extern DataSource *g_data_source;
+extern ParameterStore g_parameters;
 
 void DataSource::connect()
 {
@@ -15,14 +16,21 @@ void DataSource::disconnect()
 
 void DataSource::loop()
 {
-  if (m_should_send_hello) {
+  // force reconnect
+  if (!m_connected && (millis() - m_last_connected_at > c_force_reconnect_interval)) {
+    m_last_connected_at = millis();
+    disconnect();
+    connect();
+  }
+
+  if (m_connected && m_should_send_hello) {
     m_hello_sent = true;
     m_should_send_hello = false;
     sendHello();
     sendAllParameters();
   }
 
-  if (millis() - m_last_heartbeat_sent_at > 30000) {
+  if (m_connected && millis() - m_last_heartbeat_sent_at > c_heartbeat_interval) {
     sendText(";HB");
     m_last_heartbeat_sent_at = millis();
   }
@@ -32,8 +40,6 @@ void DataSource::loop()
 
 void DataSource::s_callback(WStype_t type, uint8_t * payload, size_t length)
 { g_data_source->callback(type, payload, length); }
-
-
 
 void DataSource::sendText(const String& text)
 {
@@ -91,21 +97,29 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
 {
   switch(type) {
   case WStype_DISCONNECTED:
+    if (m_connected) {
+      m_last_connected_at = millis();
+      m_connected = false;
+    }
+
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Disconnected!\n"));
     hexdump(payload, length);
     break;
   case WStype_CONNECTED:
+    m_connected = true;
+    m_last_connected_at = millis();
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: %s\n"),  payload);
     m_hello_sent = false;
     break;
   case WStype_TEXT:
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] get text: %s\n"), payload);
+    m_connected = true;
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] got text: %s\n"), payload);
     if (!m_hello_sent)
       m_should_send_hello = true;
     textCallback(String((char*)payload));
     break;
   case WStype_BIN:
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] get binary length: %u\n"), length);
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] got binary, length: %u\n"), length);
     hexdump(payload, length);
     break;
   case WStype_ERROR:

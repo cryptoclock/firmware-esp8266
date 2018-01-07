@@ -29,6 +29,7 @@ using Display::Coords;
 #include "button.hpp"
 #include "menu.hpp"
 #include "data_source.hpp"
+#include "bitmaps.hpp"
 
 #include <EEPROM.h>
 
@@ -53,7 +54,6 @@ shared_ptr<Button> g_flash_button;
 
 bool g_start_ondemand_ap = false;
 bool g_force_wipe = false;
-bool g_message_mode = false;
 
 enum class MODE { TICKER, MENU, ANNOUNCEMENT };
 MODE g_current_mode(MODE::TICKER);
@@ -62,18 +62,6 @@ shared_ptr<Menu> g_menu = nullptr;
 
 String g_announcement="";
 shared_ptr<Display::ActionT> g_announcement_action;
-
-static const unsigned char s_crypto2_bits[] PROGMEM = {
-   0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x80, 0x01, 0x53, 0x4b, 0x8f, 0x71,
-   0xc3, 0x48, 0xd3, 0x9b, 0xc3, 0x70, 0x93, 0x99, 0xd3, 0x40, 0x8f, 0x99,
-   0xce, 0x38, 0x03, 0x71, 0x00, 0x00, 0x00, 0x00
-};
-
-static const unsigned char s_clock_inverted_bits[] PROGMEM = {
-   0xff, 0xff, 0xff, 0xff, 0xc7, 0x3c, 0x8e, 0xd9, 0xb3, 0x9c, 0x65, 0xe9,
-   0xf3, 0x9c, 0xe5, 0xf1, 0xf3, 0x9c, 0xe5, 0xf1, 0xb3, 0x9c, 0x65, 0xe9,
-   0xc7, 0x30, 0x8e, 0xd9, 0xff, 0xff, 0xff, 0xff
-};
 
 void clock_callback()
 {
@@ -84,21 +72,11 @@ void clock_callback()
   DEBUG_SERIAL.printf_P(PSTR("[NTP] Displaying time %s\n"),  time.c_str());
   g_clock_action->updateTime(time);
   g_display->prependAction(
-    make_shared<Display::Action::SlideTransition>(
-      g_clock_action,
-      g_price_action,
-      0.5,
-      Coords{0,+1}
-    )
+    make_shared<Display::Action::SlideTransition>(g_clock_action, g_price_action, 0.5, Coords{0,+1})
   );
   g_display->prependAction(g_clock_action);
   g_display->prependAction(
-    make_shared<Display::Action::SlideTransition>(
-      g_price_action,
-      g_clock_action,
-      0.5,
-      Coords{0,-1}
-    )
+    make_shared<Display::Action::SlideTransition>(g_price_action, g_clock_action, 0.5, Coords{0,-1})
   );
 }
 
@@ -106,38 +84,23 @@ void setAnnouncement(const String& message, action_callback_t onfinished_cb)
 {
   g_announcement_action = make_shared<Display::Action::RotatingTextOnce>(message,20,Coords{0,0},onfinished_cb);
   g_display->prependAction(
-    make_shared<Display::Action::SlideTransition>(
-      nullptr,
-      g_price_action,
-      0.5,
-      Coords{-1,0}
-    )
+    make_shared<Display::Action::SlideTransition>(nullptr, g_price_action, 0.5, Coords{-1,0})
   );
   g_display->prependAction(g_announcement_action);
   g_display->prependAction(
-    make_shared<Display::Action::SlideTransition>(
-      g_price_action,
-      nullptr,
-      0.5,
-      Coords{-1,0}
-    )
+    make_shared<Display::Action::SlideTransition>(g_price_action, nullptr, 0.5, Coords{-1,0})
   );
 }
 
-//gets called when WiFiManager enters configuration mode
 void configModeCallback (WiFiManager *myWiFiManager)
 {
   DEBUG_SERIAL.println(F("Entered config mode"));
   DEBUG_SERIAL.println(WiFi.softAPIP());
-  //if you used auto generated SSID, print it
   String ap_ssid = myWiFiManager->getConfigPortalSSID();
   DEBUG_SERIAL.println(ap_ssid);
 
   g_display->prependAction(make_shared<Display::Action::RotatingText>(
-    "PLEASE CONNECT TO AP " + ap_ssid + "  ",
-    -1, // duration
-    20, // speed
-    Coords{0,0}
+    "PLEASE CONNECT TO AP " + ap_ssid + "  ", -1, 20, Coords{0,0}
   ));
 }
 
@@ -202,7 +165,7 @@ void loadParameters()
   Utils::eeprom_END();
 }
 
-void setupTicker()
+void setupHW()
 {
   //set led pin as output
   pinMode(BUILTIN_LED, OUTPUT);
@@ -239,6 +202,15 @@ void setupDataSource()
   });
 
   g_data_source->connect();
+}
+
+void setupLogo()
+{
+  auto logo_top = make_shared<Display::Action::StaticBitmap>(s_crypto2_bits, 32, 8, 1.5);
+  auto logo_bottom = make_shared<Display::Action::StaticBitmap>(s_clock_inverted_bits, 32, 8, 3.5);
+  g_display->queueAction(logo_top);
+  g_display->queueAction(make_shared<Display::Action::SlideTransition>(logo_top, logo_bottom, 0.5, Coords{0,-1}));
+  g_display->queueAction(logo_bottom);
 }
 
 void connectToWiFi()
@@ -334,19 +306,12 @@ void setupMenu()
 
 void setup() {
   setupSerial();
-  setupTicker();
+  setupHW();
   setupDisplay();
   loadParameters();
   setupMenu();
 
-  g_price_action = make_shared<Display::Action::Price>(10.0); // animation speed, in digits per second
-
-  /* logo */
-  auto logo_top = make_shared<Display::Action::StaticBitmap>(s_crypto2_bits, 32, 8, 1.5);
-  auto logo_bottom = make_shared<Display::Action::StaticBitmap>(s_clock_inverted_bits, 32, 8, 3.5);
-  g_display->queueAction(logo_top);
-  g_display->queueAction(make_shared<Display::Action::SlideTransition>(logo_top, logo_bottom, 0.5, Coords{0,-1}));
-  g_display->queueAction(logo_bottom);
+  setupLogo();
 
   /* WiFi */
   g_display->queueAction(make_shared<Display::Action::RotatingText>("--> WiFi ", -1, 20));
@@ -357,6 +322,8 @@ void setup() {
   /* Update */
   g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
   Firmware::update(g_parameters["update_url"]);
+
+  g_price_action = make_shared<Display::Action::Price>(10.0); // animation speed, in digits per second
   g_display->replaceAction(g_price_action);
 
   setupButton();
