@@ -39,6 +39,7 @@ private:
 
   void callback(WStype_t type, uint8_t * payload, size_t length);
   void textCallback(const String& text);
+  void parameterCallback(const String& name, const String& value);
 
   const String m_host;
   const int m_port;

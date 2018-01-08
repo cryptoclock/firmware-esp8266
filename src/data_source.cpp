@@ -80,6 +80,13 @@ void DataSource::textCallback(const String& str)
   } else if (str.startsWith(";MSG ") || str.startsWith(";MSG=")) { // Announcement
     if (m_on_announcement)
       m_on_announcement(str.substring(5));
+  } else if (str.startsWith(";PARAM ")) { // parameter update
+    String pair = str.substring(7);
+    int index = pair.indexOf(" ");
+    String param_name = pair.substring(0,index-1);
+    String param_value = pair.substring(index);
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] Parameter '%s' updated to '%s'\n"),param_name.c_str(), param_value.c_str());
+    parameterCallback(param_name, param_value);
   } else if (str.startsWith(";")){
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown message '%s'\n"),str.c_str());
   } else {
@@ -92,6 +99,13 @@ void DataSource::textCallback(const String& str)
       DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown text '%s'\n"),str.c_str());
     }
   }
+}
+
+void DataSource::parameterCallback(const String& param_name, const String& param_value)
+{
+  if (param_name=="" || param_name.startsWith("_"))
+    return;
+  g_parameters.setValue(param_name, param_value);
 }
 
 void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)

@@ -4,6 +4,8 @@
 #include <map>
 #include <functional>
 
+//typedef std::function<bool()
+
 struct ParameterItem {
   String name;
   String description;
