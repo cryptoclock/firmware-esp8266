@@ -61,7 +61,7 @@ public:
   Coords centerTextOffset(const String& text);
 
   void setFont(const uint8_t font);
-  virtual void useFont() = 0;
+  virtual void useFont() {};
   const uint8_t getFont();
 
   void setupTickCallback(Ticker::callback_t callback);
