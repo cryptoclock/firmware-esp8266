@@ -109,15 +109,23 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
   case WStype_CONNECTED:
     m_connected = true;
     m_last_connected_at = millis();
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: %s\n"),  payload);
+    if (payload==nullptr)
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: <nullptr>\n"));
+    else
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: %s\n"),payload);
     m_hello_sent = false;
     break;
   case WStype_TEXT:
     m_connected = true;
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] got text: %s\n"), payload);
     if (!m_hello_sent)
       m_should_send_hello = true;
-    textCallback(String((char*)payload));
+
+    if (payload==nullptr) {
+      DEBUG_SERIAL.println(F("[WSc] got empty text!"));
+    } else {
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] got text: %s\n"), payload);
+      textCallback(String((char*)payload));
+    }
     break;
   case WStype_BIN:
     DEBUG_SERIAL.printf_P(PSTR("[WSc] got binary, length: %u\n"), length);
