@@ -80,6 +80,13 @@ void DataSource::textCallback(const String& str)
   } else if (str.startsWith(";MSG ") || str.startsWith(";MSG=")) { // Announcement
     if (m_on_announcement)
       m_on_announcement(str.substring(5));
+  } else if (str.startsWith(";PARAM ")) { // parameter update
+    String pair = str.substring(7);
+    int index = pair.indexOf(" ");
+    String param_name = pair.substring(0,index-1);
+    String param_value = pair.substring(index);
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] Parameter '%s' updated to '%s'\n"),param_name.c_str(), param_value.c_str());
+    parameterCallback(param_name, param_value);
   } else if (str.startsWith(";")){
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown message '%s'\n"),str.c_str());
   } else {
@@ -92,6 +99,13 @@ void DataSource::textCallback(const String& str)
       DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown text '%s'\n"),str.c_str());
     }
   }
+}
+
+void DataSource::parameterCallback(const String& param_name, const String& param_value)
+{
+  if (param_name=="" || param_name.startsWith("_"))
+    return;
+  g_parameters.setValue(param_name, param_value);
 }
 
 void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
@@ -109,15 +123,23 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
   case WStype_CONNECTED:
     m_connected = true;
     m_last_connected_at = millis();
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: %s\n"),  payload);
+    if (payload==nullptr)
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: <nullptr>\n"));
+    else
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: %s\n"),payload);
     m_hello_sent = false;
     break;
   case WStype_TEXT:
     m_connected = true;
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] got text: %s\n"), payload);
     if (!m_hello_sent)
       m_should_send_hello = true;
-    textCallback(String((char*)payload));
+
+    if (payload==nullptr) {
+      DEBUG_SERIAL.println(F("[WSc] got empty text!"));
+    } else {
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] got text: %s\n"), payload);
+      textCallback(String((char*)payload));
+    }
     break;
   case WStype_BIN:
     DEBUG_SERIAL.printf_P(PSTR("[WSc] got binary, length: %u\n"), length);
