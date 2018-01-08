@@ -66,6 +66,15 @@ void DataSource::sendAllParameters()
   g_parameters.iterateAllParameters([this](const ParameterItem* item) { sendParameter(item); delay(10); });
 }
 
+bool DataSource::sendOTPRequest()
+{
+  if (m_connected) {
+    sendText(";OTP_REQ");
+    return true;
+  }
+  return false;
+}
+
 void DataSource::textCallback(const String& str)
 {
   if (str=="") return;
@@ -87,6 +96,12 @@ void DataSource::textCallback(const String& str)
     String param_value = pair.substring(index);
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Parameter '%s' updated to '%s'\n"),param_name.c_str(), param_value.c_str());
     parameterCallback(param_name, param_value);
+  } else if (str.startsWith(";OTP ")||str.startsWith(";OTP=")) { // OTP
+    if (m_on_otp)
+      m_on_otp(str.substring(5));
+  } else if (str.startsWith(";OTP_ACK")) { // OTP acknowledge
+    if (m_on_otp_ack)
+      m_on_otp_ack();
   } else if (str.startsWith(";")){
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown message '%s'\n"),str.c_str());
   } else {

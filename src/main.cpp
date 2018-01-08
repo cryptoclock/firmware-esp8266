@@ -55,7 +55,7 @@ shared_ptr<Button> g_flash_button;
 bool g_start_ondemand_ap = false;
 bool g_force_wipe = false;
 
-enum class MODE { TICKER, MENU, ANNOUNCEMENT };
+enum class MODE { TICKER, MENU, ANNOUNCEMENT, OTP};
 MODE g_current_mode(MODE::TICKER);
 
 shared_ptr<Menu> g_menu = nullptr;
@@ -286,12 +286,30 @@ void setupButton()
   setupDefaultButtons();
 }
 
+void sendOTPRequest(void)
+{
+  bool result = g_data_source->sendOTPRequest();
+  g_display->prependAction(
+    make_shared<Display::Action::StaticText>((result ? "-OK-" : "Failed"),2.0)
+  );
+  g_menu->end();
+  g_data_source->setOnOTP([](const String& otp){
+    g_display->prependAction(make_shared<Display::Action::RotatingText>("  OTP: " + otp, -1, 20));
+    g_current_mode = MODE::OTP;
+  });
+  g_data_source->setOnOTPack([](){
+    g_display->removeTopAction();
+    g_current_mode = MODE::TICKER;
+  });
+}
+
 void setupMenu()
 {
   const menu_items_t items({
     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, [](const String& value){ g_display->setFont(value.toInt()); } ),
     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, [](const String& value){ g_display->setDisplayBrightness(value.toInt() * 16); } ),
-    std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, [](const String& value){ g_display->setRotation(value=="1"); } )
+    std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, [](const String& value){ g_display->setRotation(value=="1"); } ),
+    std::make_shared<MenuItemAction>("__otp","OTP","OTP", sendOTPRequest)
   });
   g_menu = std::make_shared<Menu>(&g_parameters, items);
 }

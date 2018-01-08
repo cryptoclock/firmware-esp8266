@@ -10,6 +10,7 @@ using std::vector;
 using Display::Coords;
 
 typedef std::function<void(const String& value)> menuitem_onchange_callback_t;
+typedef std::function<void(void)> menuitem_action_callback_t;
 
 class MenuItem
 {
@@ -28,8 +29,8 @@ public:
   virtual void setValue(const String& value) = 0;
   //void setOnChange(menuitem_onchange_callback_t cb) { m_onchange_cb = cb; }
   bool isActive() const { return m_active; }
-  void activate() { m_active = true; }
-  void deactivate() { m_active = false; }
+  virtual void activate() { m_active = true; }
+  virtual void deactivate() { m_active = false; }
 
   String getName() const { return m_name; }
 protected:
@@ -81,6 +82,24 @@ private:
   bool m_current;
 };
 
+class MenuItemAction : public MenuItem
+{
+public:
+  MenuItemAction(const String& name, const String& display_name, const String& display_name_short,
+    menuitem_action_callback_t action_cb)
+    : MenuItem(name, display_name, display_name_short, nullptr), m_action(action_cb)
+  {}
+
+  void onLongPress();
+  void onShortPress();
+  const String getValue() const;
+  void setValue(const String& value);
+  void draw(DisplayT *display, const Coords& coords) override;
+  void activate() override;
+private:
+  menuitem_action_callback_t m_action;
+};
+
 typedef vector<shared_ptr<MenuItem>> menu_items_t;
 
 class Menu
@@ -100,9 +119,9 @@ public:
 
   bool isFinished() { return m_finished; }
 
+  void end();
 private:
   void saveParameters();
-  void end();
 
   ParameterStore *m_parameters;
 

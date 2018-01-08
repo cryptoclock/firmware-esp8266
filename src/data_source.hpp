@@ -9,6 +9,8 @@ typedef std::function<void(const String&)> on_price_change_t;
 typedef std::function<void(const String&)> on_price_ath_t;
 typedef std::function<void(void)> on_update_request_t;
 typedef std::function<void(const String&)> on_announcement_t;
+typedef std::function<void(const String&)> on_otp_t;
+typedef std::function<void(void)> on_otp_ack_t;
 
 class DataSource
 {
@@ -16,7 +18,8 @@ public:
   DataSource(const String& host, const int port, const String& url)
     : m_host(host), m_port(port), m_url(url), m_connected(false), m_last_connected_at(0),
     m_should_send_hello(false), m_hello_sent(true), m_last_heartbeat_sent_at(0),
-    m_on_price_change(nullptr), m_on_price_ath(nullptr), m_on_update_request(nullptr),  m_on_announcement(nullptr)
+    m_on_price_change(nullptr), m_on_price_ath(nullptr), m_on_update_request(nullptr),  m_on_announcement(nullptr),
+    m_on_otp(nullptr), m_on_otp_ack(nullptr)
   {
     m_websocket.onEvent(DataSource::s_callback);
   }
@@ -29,6 +32,9 @@ public:
   void setOnPriceATH(on_price_ath_t func) { m_on_price_ath = func; }
   void setOnUpdateRequest(on_update_request_t func) { m_on_update_request = func; }
   void setOnAnnouncement(on_announcement_t func) { m_on_announcement = func; }
+  void setOnOTP(on_otp_t func) { m_on_otp = func; }
+  void setOnOTPack(on_otp_ack_t func) { m_on_otp_ack = func; }
+  bool sendOTPRequest();
 
   static void s_callback(WStype_t type, uint8_t * payload, size_t length);
 private:
@@ -57,6 +63,7 @@ private:
   on_price_ath_t m_on_price_ath;
   on_update_request_t m_on_update_request;
   on_announcement_t m_on_announcement;
-
+  on_otp_t m_on_otp;
+  on_otp_ack_t m_on_otp_ack;
   WebSocketsClient m_websocket;
 };

@@ -17,7 +17,6 @@ void StaticText::draw(DisplayT *display, Coords coords)
   display->displayText(m_text, m_coords + coords);
 }
 
-
 void RotatingText::draw(DisplayT *display, Coords coords)
 {
   int width = display->getTextWidth(m_text);

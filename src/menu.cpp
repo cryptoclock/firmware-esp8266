@@ -139,3 +139,40 @@ void MenuItemBoolean::setValue(const String& value)
 {
   m_current = (value == "1");
 }
+
+
+void MenuItemAction::draw(DisplayT *display, const Coords& coords)
+{
+  display->displayText(m_display_name, coords);
+}
+
+void MenuItemAction::onShortPress()
+{
+  // m_current = !m_current;
+  //
+  // if (m_onchange_cb)
+  //   m_onchange_cb(getValue());
+}
+
+void MenuItemAction::onLongPress()
+{
+  deactivate();
+}
+
+void MenuItemAction::activate()
+{
+    if (m_action)
+      m_action();
+}
+
+const String MenuItemAction::getValue() const
+{
+  // String s = m_current ? "1" : "0";
+  // return s;
+  return "";
+}
+
+void MenuItemAction::setValue(const String& value)
+{
+//  m_current = (value == "1");
+}
