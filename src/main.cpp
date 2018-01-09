@@ -288,13 +288,16 @@ void setupButton()
 
 void sendOTPRequest(void)
 {
+  static const double otp_timeout = 180.0;
   bool result = g_data_source->sendOTPRequest();
   g_display->prependAction(
     make_shared<Display::Action::StaticText>((result ? "-OK-" : "Failed"),2.0)
   );
   g_menu->end();
   g_data_source->setOnOTP([](const String& otp){
-    g_display->prependAction(make_shared<Display::Action::RotatingText>("  OTP: " + otp, -1, 20));
+    g_display->prependAction(make_shared<Display::Action::RotatingText>("  OTP: " + otp, otp_timeout, 20, Coords{0,0}, [](){
+      g_current_mode = MODE::TICKER;
+    }));
     g_current_mode = MODE::OTP;
   });
   g_data_source->setOnOTPack([](){
