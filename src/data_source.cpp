@@ -63,7 +63,7 @@ void DataSource::sendParameter(const ParameterItem *item)
 
 void DataSource::sendAllParameters()
 {
-  g_parameters.iterateAllParameters([this](const ParameterItem* item) { sendParameter(item); delay(10); });
+  g_parameters.iterateAllParameters([this](const ParameterItem* item) { sendParameter(item); delay(20); });
 }
 
 bool DataSource::sendOTPRequest()
