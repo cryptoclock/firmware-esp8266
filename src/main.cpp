@@ -45,7 +45,7 @@ using Display::Coords;
 Ticker g_ticker_clock;
 
 DisplayT *g_display;
-shared_ptr<Display::Action::Price> g_price_action;
+shared_ptr<Display::PriceAction> g_price_action;
 shared_ptr<Display::Action::Clock> g_clock_action;
 WiFiCore *g_wifi;
 DataSource *g_data_source;
@@ -334,6 +334,32 @@ void setup() {
 
   setupLogo();
 
+  Price price1("0");
+  Price price2("123");
+  Price price3("123.456");
+  Price price4("1234.56");
+  Price price5("12345.67");
+  Price price6("123456.789");
+  Price price7("1234567.89");
+  Price price8("0.0");
+  Price price9("0.123");
+  Price price10("0.00123456789");
+
+  Price priceA("123.45678");
+  Price priceB("123.56789");
+
+  price1.debug_print();
+  price2.debug_print();
+  price3.debug_print();
+  price4.debug_print();
+  price5.debug_print();
+  price6.debug_print();
+  price7.debug_print();
+  price8.debug_print();
+  price9.debug_print();
+  price10.debug_print();
+  DEBUG_SERIAL.printf("delta: %li\n",priceA.delta(priceB));
+
   /* WiFi */
   g_display->queueAction(make_shared<Display::Action::RotatingText>("--> WiFi ", -1, 20));
   connectToWiFi();
@@ -344,7 +370,7 @@ void setup() {
   g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
   Firmware::update(g_parameters["update_url"]);
 
-  g_price_action = make_shared<Display::Action::Price>(10.0); // animation speed, in digits per second
+  g_price_action = make_shared<Display::PriceAction>(10.0); // animation speed, in digits per second
   g_display->replaceAction(g_price_action);
 
   setupButton();
