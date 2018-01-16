@@ -92,7 +92,7 @@ void DataSource::textCallback(const String& str)
   } else if (str.startsWith(";PARAM ")) { // parameter update
     String pair = str.substring(7);
     int index = pair.indexOf(" ");
-    String param_name = pair.substring(0,index-1);
+    String param_name = pair.substring(0,index);
     String param_value = pair.substring(index);
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Parameter '%s' updated to '%s'\n"),param_name.c_str(), param_value.c_str());
     parameterCallback(param_name, param_value);
