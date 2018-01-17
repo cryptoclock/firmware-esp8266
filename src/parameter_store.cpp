@@ -36,8 +36,12 @@ void ParameterStore::loadFromEEPROM(void)
 
     auto item = findByName(name);
     if (item==nullptr) {
-      DEBUG_SERIAL.printf_P(PSTR("[Parameters] Unknown parameter '%s', ignoring\n"),name.c_str());
-      continue;
+      item = findByName("__LEGACY_"+name);
+      if (item==nullptr) {
+        DEBUG_SERIAL.printf_P(PSTR("[Parameters] Unknown parameter '%s', ignoring\n"),name.c_str());
+        continue;
+      }
+      DEBUG_SERIAL.printf_P(PSTR("[Parameters] Legacy parameter '%s', value '%s'\n"),name.c_str(), value.c_str());
     }
 
     item->value = value;
@@ -54,6 +58,8 @@ void ParameterStore::storeToEEPROM(void)
   Utils::eeprom_WriteString(offset, "PARAMS");
   for (const auto& item_pair : m_items) {
     const auto item = item_pair.second;
+    if (item->name.startsWith("__LEGACY_"))
+      continue;
     Utils::eeprom_WriteString(offset, item->name);
     Utils::eeprom_WriteString(offset, item->value);
   }

@@ -162,6 +162,14 @@ void loadParameters()
     g_parameters.setValue("__device_uuid", uuid_str);
     g_parameters.storeToEEPROM();
   }
+
+  // handle legacy parameters
+  if (g_parameters["__LEGACY_ticker_server_host"]!="")
+  {
+    g_parameters.setValue("ticker_url", "wss://" + g_parameters["__LEGACY_ticker_server_host"] + ":" +
+      g_parameters["__LEGACY_ticker_server_port"] + g_parameters["__LEGACY_ticker_path"] + g_parameters["__LEGACY_currency_pair"]);
+  }
+
   Utils::eeprom_END();
 }
 
@@ -174,8 +182,10 @@ void setupHW()
 
 void setupDataSource()
 {
-  String ticker_url = g_parameters["ticker_path"] + g_parameters["currency_pair"] + "?uuid=" + g_parameters["__device_uuid"];
-  g_data_source = new DataSource(g_parameters["ticker_server_host"], g_parameters["ticker_server_port"].toInt(), ticker_url);
+  String hostname, path;
+  int port;
+  Utils::parseURL(g_parameters["ticker_url"], hostname, port, path);
+  g_data_source = new DataSource(hostname, port, path + "?uuid=" + g_parameters["__device_uuid"]);
 
   g_data_source->setOnUpdateRequest([&]() {
     DEBUG_SERIAL.println(F("Update request received, updating"));

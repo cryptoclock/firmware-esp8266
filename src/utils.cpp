@@ -47,4 +47,34 @@ void eeprom_Erase(const int offset, const int size) {
       EEPROM.write(offset+i, 0x0);
 }
 
+
+void parseHostname(const String& hostname, String& server, int& port)
+{
+  int colon_pos = hostname.indexOf(':');
+  if (colon_pos==-1) {
+    server = hostname;
+  } else {
+    server = hostname.substring(0,colon_pos);
+    port = hostname.substring(colon_pos+1).toInt();
+  }
+}
+void parseURL(String url, String &server, int &port, String& path)
+{
+  if (url.startsWith("https://") || url.startsWith("http://") || url.startsWith("wss://") || url.startsWith("ws://")) {
+    url = url.substring(url.indexOf('/')+2);
+  }
+
+  int slash_pos = url.indexOf('/');
+  if (slash_pos==-1) {
+    parseHostname(url, server, port);
+  } else {
+    parseHostname(url.substring(0,slash_pos), server, port);
+    path = url.substring(slash_pos);
+  }
+
+  if (path == "") path = "/";
+  if (port == 0) port = 443;
+  return;
+}
+
 }

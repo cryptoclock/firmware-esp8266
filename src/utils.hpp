@@ -10,4 +10,5 @@ void eeprom_WIPE();
 void eeprom_WriteString(int& offset, const String &s);
 String eeprom_ReadString(int& offset, const int max_chars = 255);
 void eeprom_Erase(const int offset, const int size);
+void parseURL(String url, String &server, int &port, String& path);
 }
