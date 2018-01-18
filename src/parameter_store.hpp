@@ -16,29 +16,28 @@ struct ParameterItem {
   parameter_onchange_t on_change;
 };
 
-//typedef std::map<String, ParameterItem*> ParameterMap_t;
 typedef std::map<String, ParameterItem> ParameterMap_t;
 typedef std::function<void(const ParameterItem*)> parameter_iterate_func_t;
 
 class ParameterStore
 {
 public:
-//  ParameterStore(ParameterItem *items);
   ParameterStore() {}
 
   void addItem(ParameterItem item);
 
-  void loadFromEEPROM(void);
+  void loadFromEEPROMwithoutInit(void);
+  void storeToEEPROMwithoutInit(void);
   void storeToEEPROM(void);
 
   void debug_print(void);
 
-//  int size(void) { return m_size; }
   ParameterMap_t& all_items(void);
 
   bool setValue(const String& name, const String& value);
   String& operator[] (const char *name);
   ParameterItem* findByName(const String& name);
+  void setIfExistsAndTriggerCallback(const String& name, const String& value);
 
   void iterateAllParameters(parameter_iterate_func_t func);
 private:

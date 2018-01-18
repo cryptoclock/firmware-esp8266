@@ -146,4 +146,11 @@ void Price::setATHPrice(const int ath_price)
   m_ath_price = ath_price;
 }
 
+void Price::reset()
+{
+  m_price = -1;
+  m_last_price = -1;
+  m_displayed_price = -1;
+}
+
 }}

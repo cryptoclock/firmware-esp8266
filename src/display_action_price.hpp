@@ -18,6 +18,7 @@ public:
   void draw(DisplayT *display, Coords coords);
   void updatePrice(const int new_price);
   void setATHPrice(const int ath_price);
+  void reset();
 private:
   void blinkIfATH(DisplayT *display);
   void blinkPixelIfReceivedPriceUpdate(DisplayT *display);

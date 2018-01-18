@@ -122,7 +122,6 @@ public:
 
   void end();
 private:
-  void ifParameterExecuteCallback(shared_ptr<MenuItem> item);
   void saveParameters();
 
   ParameterStore *m_parameters;

@@ -24,22 +24,12 @@ void Menu::start(DisplayT *display, button_callback_t changeMode)
   m_current = m_items.begin();
 }
 
-void Menu::ifParameterExecuteCallback(shared_ptr<MenuItem> item)
-{
-  auto parameter = m_parameters->findByName(item->getName());
-  if (parameter) {
-    parameter->value = item->getValue();
-    if (parameter->on_change)
-      parameter->on_change(*parameter, false);
-  }
-}
-
 void Menu::onLongPress()
 {
   auto item = (*m_current);
   if (item->isActive()) {
     item->onLongPress();
-    ifParameterExecuteCallback(item);
+    m_parameters->setIfExistsAndTriggerCallback(item->getName(), item->getValue());
     saveParameters();
   } else {
     item->activate();
@@ -56,9 +46,10 @@ void Menu::end()
 
 void Menu::onShortPress()
 {
-  if ((*m_current)->isActive()) {
-    (*m_current)->onShortPress();
-    ifParameterExecuteCallback(*m_current);
+  auto item = *m_current;
+  if (item->isActive()) {
+    item->onShortPress();
+    m_parameters->setIfExistsAndTriggerCallback(item->getName(), item->getValue());
   } else {
     m_current++;
     if (m_current==m_items.end())
@@ -68,9 +59,7 @@ void Menu::onShortPress()
 
 void Menu::saveParameters()
 {
-  Utils::eeprom_BEGIN();
   m_parameters->storeToEEPROM();
-  Utils::eeprom_END();
 }
 
 void Menu::draw(DisplayT *display, const Coords& coords)

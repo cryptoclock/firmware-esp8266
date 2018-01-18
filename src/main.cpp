@@ -151,9 +151,14 @@ void setupParameters()
   g_parameters.addItem({"__LEGACY_currency_pair","","", 0, nullptr});
   g_parameters.addItem({"__device_uuid","","", 0, nullptr}); // new uuid will be generated on every device wipe
   g_parameters.addItem({"update_url","Update server","update.cryptoclock.net", 50, nullptr});
-  // -> trigger update ?
-  g_parameters.addItem({"ticker_url","Ticker server","wss://ticker.cryptoclock.net:443/", 100, nullptr});
-  // -> trigger restart
+  g_parameters.addItem({"ticker_url","Ticker server","wss://ticker.cryptoclock.net:443/", 100, [](ParameterItem& item, bool init)
+  {
+    if (init==false) {
+      g_data_source->reconnect();
+      g_price_action->reset();
+      g_announcement = " ";
+    }
+  }});
   g_parameters.addItem({"brightness","Brightness (0-15)","15", 5, [](ParameterItem& item, bool init)
   {
     int brightness = std::min(std::max(item.value.toInt(),0L),15L); // sanitize
@@ -177,7 +182,7 @@ void setupParameters()
 void loadParameters()
 {
   Utils::eeprom_BEGIN();
-  g_parameters.loadFromEEPROM();
+  g_parameters.loadFromEEPROMwithoutInit();
   g_wifi = new WiFiCore(g_display);
 
   // no uuid set, generate new one
@@ -186,7 +191,7 @@ void loadParameters()
     ESP8266TrueRandom.uuid(uuid);
     const String uuid_str = ESP8266TrueRandom.uuidToString(uuid);
     g_parameters.setValue("__device_uuid", uuid_str);
-    g_parameters.storeToEEPROM();
+    g_parameters.storeToEEPROMwithoutInit();
   }
 
   // handle legacy parameters
@@ -207,10 +212,7 @@ void setupHW()
 
 void setupDataSource()
 {
-  String hostname, path;
-  int port;
-  Utils::parseURL(g_parameters["ticker_url"], hostname, port, path);
-  g_data_source = new DataSource(hostname, port, path + "?uuid=" + g_parameters["__device_uuid"]);
+  g_data_source = new DataSource;
 
   g_data_source->setOnUpdateRequest([&]() {
     DEBUG_SERIAL.println(F("Update request received, updating"));

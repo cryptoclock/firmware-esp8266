@@ -16,7 +16,7 @@ void ParameterStore::debug_print(void)
   }
 }
 
-void ParameterStore::loadFromEEPROM(void)
+void ParameterStore::loadFromEEPROMwithoutInit(void)
 {
   DEBUG_SERIAL.println(F("[Parameters] Loading from EEPROM"));
 
@@ -51,7 +51,7 @@ void ParameterStore::loadFromEEPROM(void)
   debug_print();
 }
 
-void ParameterStore::storeToEEPROM(void)
+void ParameterStore::storeToEEPROMwithoutInit(void)
 {
   DEBUG_SERIAL.println(F("[Parameters] Storing to EEPROM"));
   debug_print();
@@ -65,6 +65,13 @@ void ParameterStore::storeToEEPROM(void)
     Utils::eeprom_WriteString(offset, item.value);
   }
   Utils::eeprom_WriteString(offset, "ENDPARAMS");
+}
+
+void ParameterStore::storeToEEPROM(void)
+{
+  Utils::eeprom_BEGIN();
+  storeToEEPROMwithoutInit();
+  Utils::eeprom_END();
 }
 
 ParameterMap_t& ParameterStore::all_items(void)
@@ -103,8 +110,18 @@ bool ParameterStore::setValue(const String& name, const String& value)
 
 void ParameterStore::iterateAllParameters(parameter_iterate_func_t func)
 {
-  for (const auto& item_pair : m_items) {
-    const auto item = item_pair.second;
+  for (auto& item_pair : m_items) {
+    auto &item = item_pair.second;
     func(&item);
+  }
+}
+
+void ParameterStore::setIfExistsAndTriggerCallback(const String& name, const String& value)
+{
+  auto parameter = findByName(name);
+  if (parameter) {
+    parameter->value = value;
+    if (parameter->on_change)
+      parameter->on_change(*parameter, false);
   }
 }

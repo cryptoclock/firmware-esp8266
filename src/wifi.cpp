@@ -10,16 +10,13 @@ WiFiCore::WiFiCore(DisplayT *display) :
 {
   m_parameters.reserve(g_parameters.all_items().size());
 
-  // FIXME: change to iterate
-  for (const auto& item_pair : g_parameters.all_items()) {
-    const auto param = item_pair.second;
-    if (param.name.startsWith("__")) // reserved parameter, don't display
-      continue;
-
-    auto *wifi_param = new WiFiManagerParameter(param.name.c_str(), param.description.c_str(), param.value.c_str(), param.field_length);
-    m_parameters.push_back(wifi_param);
-    m_wifimanager.addParameter(wifi_param);
-  }
+  g_parameters.iterateAllParameters([this](const ParameterItem* item) {
+    if (!item->name.startsWith("__")) {// reserved parameter, don't display
+      auto *wifi_param = new WiFiManagerParameter(item->name.c_str(), item->description.c_str(), item->value.c_str(), item->field_length);
+      m_parameters.push_back(wifi_param);
+      m_wifimanager.addParameter(wifi_param);
+    }
+  });
 
   m_wifimanager.setSaveConfigCallback(&saveCallback);
 
@@ -85,7 +82,7 @@ void WiFiCore::saveCallback(void)
 
   // save parameters
   g_wifi->updateParametersFromAP(manager);
-  g_parameters.storeToEEPROM();
+  g_parameters.storeToEEPROMwithoutInit();
 
   Utils::eeprom_END();
 }

@@ -15,8 +15,8 @@ typedef std::function<void(void)> on_otp_ack_t;
 class DataSource
 {
 public:
-  DataSource(const String& host, const int port, const String& url)
-    : m_host(host), m_port(port), m_url(url), m_connected(false), m_last_connected_at(0),
+  DataSource()
+    : m_connected(false), m_last_connected_at(0),
     m_should_send_hello(false), m_hello_sent(true), m_last_heartbeat_sent_at(0),
     m_on_price_change(nullptr), m_on_price_ath(nullptr), m_on_update_request(nullptr),  m_on_announcement(nullptr),
     m_on_otp(nullptr), m_on_otp_ack(nullptr)
@@ -26,6 +26,7 @@ public:
 
   void connect();
   void disconnect();
+  void reconnect();
   void loop();
 
   void setOnPriceChange(on_price_change_t func) { m_on_price_change = func; }
@@ -47,9 +48,9 @@ private:
   void textCallback(const String& text);
   void parameterCallback(const String& name, const String& value);
 
-  const String m_host;
-  const int m_port;
-  const String m_url;
+  // String m_host;
+  // int m_port;
+  // String m_url;
   bool m_connected;
   long m_last_connected_at;
   bool m_should_send_hello;

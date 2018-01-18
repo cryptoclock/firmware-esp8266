@@ -1,12 +1,21 @@
 #include "data_source.hpp"
 
+#include "utils.hpp"
+
 extern DataSource *g_data_source;
 extern ParameterStore g_parameters;
 
 void DataSource::connect()
 {
-  DEBUG_SERIAL.printf_P(PSTR("[Wsc] Connecting to host %s port %i url '%s'\n"),m_host.c_str(), m_port, m_url.c_str());
-  m_websocket.beginSSL(m_host, m_port, m_url);
+  String host, path;
+  int port;
+
+  String ticker_url = g_parameters["ticker_url"];
+  Utils::parseURL(ticker_url, host, port, path);
+  path += "?uuid=" + g_parameters["__device_uuid"];
+
+  DEBUG_SERIAL.printf_P(PSTR("[Wsc] Connecting to host %s port %i url '%s'\n"),host.c_str(), port, path.c_str());
+  m_websocket.beginSSL(host, port, path);
 }
 
 void DataSource::disconnect()
@@ -14,14 +23,18 @@ void DataSource::disconnect()
   m_websocket.disconnect();
 }
 
+void DataSource::reconnect()
+{
+  m_last_connected_at = millis();
+  disconnect();
+  connect();
+}
+
 void DataSource::loop()
 {
   // force reconnect
-  if (!m_connected && (millis() - m_last_connected_at > c_force_reconnect_interval)) {
-    m_last_connected_at = millis();
-    disconnect();
-    connect();
-  }
+  if (!m_connected && (millis() - m_last_connected_at > c_force_reconnect_interval))
+    reconnect();
 
   if (m_connected && m_should_send_hello) {
     m_hello_sent = true;
@@ -93,7 +106,7 @@ void DataSource::textCallback(const String& str)
     String pair = str.substring(7);
     int index = pair.indexOf(" ");
     String param_name = pair.substring(0,index);
-    String param_value = pair.substring(index);
+    String param_value = pair.substring(index+1);
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Parameter '%s' updated to '%s'\n"),param_name.c_str(), param_value.c_str());
     parameterCallback(param_name, param_value);
   } else if (str.startsWith(";OTP ")||str.startsWith(";OTP=")) { // OTP
@@ -120,7 +133,15 @@ void DataSource::parameterCallback(const String& param_name, const String& param
 {
   if (param_name=="" || param_name.startsWith("_"))
     return;
-  g_parameters.setValue(param_name, param_value);
+
+  if (param_name=="ticker_path") // legacy
+  {
+    String value = Utils::urlChangePath(g_parameters["ticker_url"],param_value);
+    g_parameters.setIfExistsAndTriggerCallback("ticker_url", value);
+  } else {
+    g_parameters.setIfExistsAndTriggerCallback(param_name, param_value);
+  }
+  g_parameters.storeToEEPROM();
 }
 
 void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
