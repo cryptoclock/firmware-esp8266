@@ -24,16 +24,22 @@ void Menu::start(DisplayT *display, button_callback_t changeMode)
   m_current = m_items.begin();
 }
 
+void Menu::ifParameterExecuteCallback(shared_ptr<MenuItem> item)
+{
+  auto parameter = m_parameters->findByName(item->getName());
+  if (parameter) {
+    parameter->value = item->getValue();
+    if (parameter->on_change)
+      parameter->on_change(*parameter, false);
+  }
+}
+
 void Menu::onLongPress()
 {
   auto item = (*m_current);
   if (item->isActive()) {
     item->onLongPress();
-
-    auto parameter = m_parameters->findByName(item->getName());
-    if (parameter)
-      parameter->value = item->getValue();
-
+    ifParameterExecuteCallback(item);
     saveParameters();
   } else {
     item->activate();
@@ -52,6 +58,7 @@ void Menu::onShortPress()
 {
   if ((*m_current)->isActive()) {
     (*m_current)->onShortPress();
+    ifParameterExecuteCallback(*m_current);
   } else {
     m_current++;
     if (m_current==m_items.end())
@@ -109,7 +116,7 @@ void MenuItemNumericRange::onLongPress()
 void MenuItemBoolean::draw(DisplayT *display, const Coords& coords)
 {
   if (isActive()) {
-    String text = m_display_name_short + (m_current ? " On" : " Off");
+    String text = m_display_name_short + (m_current ? m_on_text : m_off_text);
     display->displayText(text, coords);
   } else {
     display->displayText(m_display_name, coords);
@@ -146,14 +153,7 @@ void MenuItemAction::draw(DisplayT *display, const Coords& coords)
   display->displayText(m_display_name, coords);
 }
 
-void MenuItemAction::onShortPress()
-{
-  // m_current = !m_current;
-  //
-  // if (m_onchange_cb)
-  //   m_onchange_cb(getValue());
-}
-
+void MenuItemAction::onShortPress() {}
 void MenuItemAction::onLongPress()
 {
   deactivate();
@@ -161,18 +161,13 @@ void MenuItemAction::onLongPress()
 
 void MenuItemAction::activate()
 {
-    if (m_action)
-      m_action();
+  if (m_action)
+    m_action();
 }
 
 const String MenuItemAction::getValue() const
 {
-  // String s = m_current ? "1" : "0";
-  // return s;
   return "";
 }
 
-void MenuItemAction::setValue(const String& value)
-{
-//  m_current = (value == "1");
-}
+void MenuItemAction::setValue(const String& value) {}

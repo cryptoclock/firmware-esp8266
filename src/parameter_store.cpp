@@ -2,10 +2,9 @@
 #include <EEPROM.h>
 #include "utils.hpp"
 
-ParameterStore::ParameterStore(ParameterItem *items)
+void ParameterStore::addItem(ParameterItem item)
 {
-  for (int i=0;items[i].name!="";++i)
-    m_items.emplace(items[i].name, &items[i]);
+  m_items.emplace(item.name, item);
 }
 
 void ParameterStore::debug_print(void)
@@ -13,7 +12,7 @@ void ParameterStore::debug_print(void)
   for (const auto& item_pair : m_items) {
     const auto item = item_pair.second;
     DEBUG_SERIAL.printf_P(PSTR("[Parameters] name: '%s', value: '%s', description: '%s', field_length: '%i'\n"),
-      item->name.c_str(), item->value.c_str(), item->description.c_str(), item->field_length);
+      item.name.c_str(), item.value.c_str(), item.description.c_str(), item.field_length);
   }
 }
 
@@ -45,6 +44,8 @@ void ParameterStore::loadFromEEPROM(void)
     }
 
     item->value = value;
+    if (item->on_change!=nullptr)
+      item->on_change(*item, true);
   }
 
   debug_print();
@@ -58,10 +59,10 @@ void ParameterStore::storeToEEPROM(void)
   Utils::eeprom_WriteString(offset, "PARAMS");
   for (const auto& item_pair : m_items) {
     const auto item = item_pair.second;
-    if (item->name.startsWith("__LEGACY_"))
+    if (item.name.startsWith("__LEGACY_"))
       continue;
-    Utils::eeprom_WriteString(offset, item->name);
-    Utils::eeprom_WriteString(offset, item->value);
+    Utils::eeprom_WriteString(offset, item.name);
+    Utils::eeprom_WriteString(offset, item.value);
   }
   Utils::eeprom_WriteString(offset, "ENDPARAMS");
 }
@@ -71,16 +72,16 @@ ParameterMap_t& ParameterStore::all_items(void)
   return m_items;
 }
 
-ParameterItem* ParameterStore::findByName(const String& name) const
+ParameterItem* ParameterStore::findByName(const String& name)
 {
   auto item = m_items.find(name);
   if (item==m_items.end()) // not found
     return nullptr;
 
-  return (*item).second;
+  return &(*item).second;
 }
 
-String& ParameterStore::operator[] (const char *name) const
+String& ParameterStore::operator[] (const char *name)
 {
   static String notfound("");
   ParameterItem *item = findByName(name);
@@ -104,6 +105,6 @@ void ParameterStore::iterateAllParameters(parameter_iterate_func_t func)
 {
   for (const auto& item_pair : m_items) {
     const auto item = item_pair.second;
-    func(item);
+    func(&item);
   }
 }

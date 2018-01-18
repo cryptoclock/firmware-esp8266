@@ -67,8 +67,8 @@ class MenuItemBoolean : public MenuItem
 {
 public:
   MenuItemBoolean(const String& name, const String& display_name, const String& display_name_short,
-    const bool current_value, menuitem_onchange_callback_t onchange_cb)
-    : MenuItem(name, display_name, display_name_short, onchange_cb), m_current(current_value)
+    const bool current_value, const String& on_text, const String& off_text, menuitem_onchange_callback_t onchange_cb)
+    : MenuItem(name, display_name, display_name_short, onchange_cb), m_current(current_value), m_on_text(on_text), m_off_text(off_text)
   {}
 
   void onLongPress();
@@ -80,6 +80,7 @@ public:
 
 private:
   bool m_current;
+  String m_on_text, m_off_text;
 };
 
 class MenuItemAction : public MenuItem
@@ -121,6 +122,7 @@ public:
 
   void end();
 private:
+  void ifParameterExecuteCallback(shared_ptr<MenuItem> item);
   void saveParameters();
 
   ParameterStore *m_parameters;

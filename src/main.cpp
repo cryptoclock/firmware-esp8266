@@ -42,6 +42,9 @@ using Display::Coords;
 
 #include <ESP8266TrueRandom.h>
 
+
+ParameterStore g_parameters;
+
 Ticker g_ticker_clock;
 
 DisplayT *g_display;
@@ -140,19 +143,42 @@ void setupDisplay()
   g_display->setupTickCallback([&]() { g_display->tick(); }); // can't be moved to class declaration because of lambda capture
 }
 
+void setupParameters()
+{
+  g_parameters.addItem({"__LEGACY_ticker_server_host","","", 0, nullptr});
+  g_parameters.addItem({"__LEGACY_ticker_server_port","","", 0, nullptr});
+  g_parameters.addItem({"__LEGACY_ticker_path","","", 0, nullptr});
+  g_parameters.addItem({"__LEGACY_currency_pair","","", 0, nullptr});
+  g_parameters.addItem({"__device_uuid","","", 0, nullptr}); // new uuid will be generated on every device wipe
+  g_parameters.addItem({"update_url","Update server","update.cryptoclock.net", 50, nullptr});
+  // -> trigger update ?
+  g_parameters.addItem({"ticker_url","Ticker server","wss://ticker.cryptoclock.net:443/", 100, nullptr});
+  // -> trigger restart
+  g_parameters.addItem({"brightness","Brightness (0-15)","15", 5, [](ParameterItem& item, bool init)
+  {
+    int brightness = std::min(std::max(item.value.toInt(),0L),15L); // sanitize
+    item.value = String(brightness);
+    g_display->setDisplayBrightness(brightness * 16);
+  }});
+  g_parameters.addItem({"font","Font (0-2)","0", 5, [](ParameterItem& item, bool init)
+  {
+    int font = std::min(std::max(item.value.toInt(),0L),2L);
+    item.value = String(font);
+    g_display->setFont(font);
+  }});
+  g_parameters.addItem({"rotate_display","Rotate Display (0,1)","0", 5, [](ParameterItem& item, bool init)
+  {
+    int rotate = std::min(std::max(item.value.toInt(),0L),1L);
+    item.value = String(rotate);
+    g_display->setRotation(rotate);
+  }});
+}
+
 void loadParameters()
 {
   Utils::eeprom_BEGIN();
   g_parameters.loadFromEEPROM();
   g_wifi = new WiFiCore(g_display);
-
-  // sanitize parameters
-  g_parameters.setValue("brightness", String(std::min(std::max(g_parameters["brightness"].toInt(),0L),15L)) );
-  g_parameters.setValue("font", String(std::min(std::max(g_parameters["font"].toInt(),0L),2L)) );
-
-  g_display->setDisplayBrightness(g_parameters["brightness"].toInt() * 16);
-  g_display->setRotation(g_parameters["rotate_display"]=="1");
-  g_display->setFont(g_parameters["font"].toInt());
 
   // no uuid set, generate new one
   if (g_parameters["__device_uuid"] == "") {
@@ -169,7 +195,6 @@ void loadParameters()
     g_parameters.setValue("ticker_url", "wss://" + g_parameters["__LEGACY_ticker_server_host"] + ":" +
       g_parameters["__LEGACY_ticker_server_port"] + g_parameters["__LEGACY_ticker_path"] + g_parameters["__LEGACY_currency_pair"]);
   }
-
   Utils::eeprom_END();
 }
 
@@ -319,9 +344,9 @@ void sendOTPRequest(void)
 void setupMenu()
 {
   const menu_items_t items({
-    std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, [](const String& value){ g_display->setFont(value.toInt()); } ),
-    std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, [](const String& value){ g_display->setDisplayBrightness(value.toInt() * 16); } ),
-    std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, [](const String& value){ g_display->setRotation(value=="1"); } ),
+    std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, nullptr),
+    std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, nullptr),
+    std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, "^^^","^^^", nullptr),
     std::make_shared<MenuItemAction>("__otp","OTP","OTP", sendOTPRequest)
   });
   g_menu = std::make_shared<Menu>(&g_parameters, items);
@@ -339,6 +364,7 @@ void setup() {
   setupSerial();
   setupHW();
   setupDisplay();
+  setupParameters();
   loadParameters();
   setupMenu();
 

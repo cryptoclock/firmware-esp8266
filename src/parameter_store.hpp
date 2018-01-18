@@ -4,23 +4,29 @@
 #include <map>
 #include <functional>
 
-//typedef std::function<bool()
+struct ParameterItem;
+
+typedef std::function<void(ParameterItem& item, bool init)> parameter_onchange_t;
 
 struct ParameterItem {
   String name;
   String description;
   String value;
   int field_length;
+  parameter_onchange_t on_change;
 };
 
-typedef std::map<String, ParameterItem*> ParameterMap_t;
-
+//typedef std::map<String, ParameterItem*> ParameterMap_t;
+typedef std::map<String, ParameterItem> ParameterMap_t;
 typedef std::function<void(const ParameterItem*)> parameter_iterate_func_t;
 
 class ParameterStore
 {
 public:
-  ParameterStore(ParameterItem *items);
+//  ParameterStore(ParameterItem *items);
+  ParameterStore() {}
+
+  void addItem(ParameterItem item);
 
   void loadFromEEPROM(void);
   void storeToEEPROM(void);
@@ -31,8 +37,8 @@ public:
   ParameterMap_t& all_items(void);
 
   bool setValue(const String& name, const String& value);
-  String& operator[] (const char *name) const;
-  ParameterItem* findByName(const String& name) const;
+  String& operator[] (const char *name);
+  ParameterItem* findByName(const String& name);
 
   void iterateAllParameters(parameter_iterate_func_t func);
 private:
