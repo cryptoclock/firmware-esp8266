@@ -5,6 +5,8 @@
 #undef NETWORK_ENC28J60
 #undef NETWORK_ESP8266
 
+#include <queue>
+
 typedef std::function<void(const String&)> on_price_change_t;
 typedef std::function<void(const String&)> on_price_ath_t;
 typedef std::function<void(void)> on_update_request_t;
@@ -40,6 +42,7 @@ public:
   static void s_callback(WStype_t type, uint8_t * payload, size_t length);
 private:
   void sendText(const String& text);
+  void queueText(const String& text);
   void sendHello();
   void sendParameter(const ParameterItem *item);
   void sendAllParameters();
@@ -67,4 +70,5 @@ private:
   on_otp_t m_on_otp;
   on_otp_ack_t m_on_otp_ack;
   WebSocketsClient m_websocket;
+  std::queue<String> m_send_queue;
 };

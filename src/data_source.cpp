@@ -36,19 +36,18 @@ void DataSource::loop()
   if (!m_connected && (millis() - m_last_connected_at > c_force_reconnect_interval))
     reconnect();
 
-  if (m_connected && m_should_send_hello) {
-    m_hello_sent = true;
-    m_should_send_hello = false;
-    sendHello();
-    sendAllParameters();
-  }
-
+  // send heartbeat
   if (m_connected && millis() - m_last_heartbeat_sent_at > c_heartbeat_interval) {
-    sendText(";HB");
+    queueText(";HB");
     m_last_heartbeat_sent_at = millis();
   }
 
   m_websocket.loop();
+
+  if (!m_send_queue.empty()) {
+    sendText(m_send_queue.front());
+    m_send_queue.pop();
+  }
 }
 
 void DataSource::s_callback(WStype_t type, uint8_t * payload, size_t length)
@@ -60,29 +59,34 @@ void DataSource::sendText(const String& text)
   m_websocket.sendTXT(text.c_str(), text.length());
 }
 
+void DataSource::queueText(const String& text)
+{
+  m_send_queue.push(text);
+}
+
 void DataSource::sendHello()
 {
   String text = ";HELLO " + String(X_MODEL_NUMBER) + " " +
     g_parameters["__device_uuid"] + " " + FIRMWARE_VERSION + " " + ESP.getSketchMD5();
-  sendText(text);
+  queueText(text);
 }
 
 void DataSource::sendParameter(const ParameterItem *item)
 {
   if (item->name.startsWith("__")) return;
   String text = ";PARAM " + item->name + " " + item->value;
-  sendText(text);
+  queueText(text);
 }
 
 void DataSource::sendAllParameters()
 {
-  g_parameters.iterateAllParameters([this](const ParameterItem* item) { sendParameter(item); delay(20); });
+  g_parameters.iterateAllParameters([this](const ParameterItem* item) { sendParameter(item); /* delay(20); */ });
 }
 
 bool DataSource::sendOTPRequest()
 {
   if (m_connected) {
-    sendText(";OTP_REQ");
+    queueText(";OTP_REQ");
     return true;
   }
   return false;
@@ -167,8 +171,11 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
     break;
   case WStype_TEXT:
     m_connected = true;
-    if (!m_hello_sent)
-      m_should_send_hello = true;
+    if (!m_hello_sent) {
+      m_hello_sent = true;
+      sendHello();
+      sendAllParameters();
+    }
 
     if (payload==nullptr) {
       DEBUG_SERIAL.println(F("[WSc] got empty text!"));
