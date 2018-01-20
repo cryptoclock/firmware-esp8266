@@ -19,6 +19,7 @@ public:
 
   virtual void tick(DisplayT *display, double elapsed_time) = 0;
   virtual void draw(DisplayT *display, Coords coords) = 0;
+  void reset();
   bool isFinished(void);
   void setFinished(bool status = true);
 

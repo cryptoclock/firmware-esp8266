@@ -8,7 +8,7 @@ void StaticText::tick(DisplayT *display, double elapsed_time)
   m_elapsed_time += elapsed_time;
 
   if (m_duration >= 0 && m_elapsed_time > m_duration)
-    m_finished = true;
+    setFinished(true);
 }
 
 void StaticText::draw(DisplayT *display, Coords coords)

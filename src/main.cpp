@@ -19,6 +19,7 @@
 #include "display_action_clock.hpp"
 #include "display_action_testdisplay.hpp"
 #include "display_action_menu.hpp"
+#include "display_action_multi.hpp"
 using Display::Coords;
 
 #include "config.hpp"
@@ -323,6 +324,13 @@ void setupButton()
   setupDefaultButtons();
 }
 
+void forceSetTickerMode()
+{
+  g_current_mode = MODE::TICKER;
+  g_display->cleanQueue();
+  g_display->prependAction(g_price_action);
+}
+
 void sendOTPRequest(void)
 {
   static const double otp_timeout = 180.0;
@@ -331,15 +339,21 @@ void sendOTPRequest(void)
     make_shared<Display::Action::StaticText>((result ? "-OK-" : "Failed"),2.0)
   );
   g_menu->end();
+
   g_data_source->setOnOTP([](const String& otp){
-    g_display->prependAction(make_shared<Display::Action::RotatingText>("  OTP: " + otp, otp_timeout, 20, Coords{0,0}, [](){
-      g_current_mode = MODE::TICKER;
-    }));
+    auto multi = Display::Action::createRepeatedSlide({-1,0}, otp_timeout, 1.0,
+      make_shared<Display::Action::StaticText>("OTP:", 0.8),
+      make_shared<Display::Action::StaticText>(otp, 5.0),
+      []() { forceSetTickerMode(); }
+    );
+    g_display->prependAction(multi);
     g_current_mode = MODE::OTP;
   });
+
   g_data_source->setOnOTPack([](){
-    g_display->removeTopAction();
-    g_current_mode = MODE::TICKER;
+    if (g_current_mode == MODE::OTP) {
+      forceSetTickerMode();
+    }
   });
 }
 

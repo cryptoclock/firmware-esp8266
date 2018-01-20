@@ -20,6 +20,12 @@ void ActionT::setFinished(bool status)
     m_onfinished_cb();
 }
 
+void ActionT::reset()
+{
+  m_elapsed_time = 0.0;
+  m_finished = false;
+}
+
 /* === Transition === */
 
 void Action::SlideTransition::tick(DisplayT *display, double elapsed_time)
