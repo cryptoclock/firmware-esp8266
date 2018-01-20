@@ -100,6 +100,8 @@ void DataSource::textCallback(const String& str)
       disconnect();
       m_on_update_request();
     }
+  } else if (str.startsWith(";RESET")) {
+    ESP.restart();
   } else if (str.startsWith(";ATH=")) { // All-Time-High
     if (m_on_price_ath)
       m_on_price_ath(str.substring(5));
