@@ -91,13 +91,16 @@ void clock_callback()
 
 void setAnnouncement(const String& message, action_callback_t onfinished_cb)
 {
+  g_current_mode = MODE::ANNOUNCEMENT;
+
+  auto current_action = g_display->getTopAction();
   g_announcement_action = make_shared<Display::Action::RotatingTextOnce>(message,20,Coords{0,0},onfinished_cb);
   g_display->prependAction(
     make_shared<Display::Action::SlideTransition>(nullptr, g_price_action, 0.5, Coords{-1,0})
   );
   g_display->prependAction(g_announcement_action);
   g_display->prependAction(
-    make_shared<Display::Action::SlideTransition>(g_price_action, nullptr, 0.5, Coords{-1,0})
+    make_shared<Display::Action::SlideTransition>(current_action, nullptr, 0.5, Coords{-1,0})
   );
 }
 
@@ -372,10 +375,21 @@ void sendOTPRequest(void)
   });
 }
 
+void displayDeviceInfo(void)
+{
+  String info= "v" FIRMWARE_VERSION;
+  info += " " __DATE__ " " __TIME__;
+  info += " MD5: " + Utils::shortenText(ESP.getSketchMD5(),3);
+  info += " UUID: " + Utils::shortenText(g_parameters["__device_uuid"],3);
+  info += " SDK: " + String(ESP.getSdkVersion());
+  setAnnouncement(info, [](){g_menu->end();});
+}
+
 void setupMenu()
 {
   const menu_items_t items({
     std::make_shared<MenuItemAction>("__otp","OTP","OTP", sendOTPRequest),
+    std::make_shared<MenuItemAction>("__info","Info","Info", displayDeviceInfo),
     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, nullptr),
     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, nullptr),
     std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, "^^^","^^^", nullptr),
@@ -429,7 +443,6 @@ void loop() {
 
   if (g_announcement!="") {
     if (g_current_mode==MODE::TICKER) {
-      g_current_mode = MODE::ANNOUNCEMENT;
       setAnnouncement(g_announcement, [](){ g_current_mode = MODE::TICKER; });
       g_announcement = "";
     }

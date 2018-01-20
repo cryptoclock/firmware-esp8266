@@ -85,4 +85,9 @@ String urlChangePath(String url, const String& new_path)
   return String("wss://" + host + ":" + port + new_path);
 }
 
+String shortenText(const String& text, const int lead)
+{
+  return (text.substring(0,lead) + ".." + text.substring(text.length()-lead-1,text.length()-1));
+}
+
 }

@@ -12,4 +12,5 @@ String eeprom_ReadString(int& offset, const int max_chars = 255);
 void eeprom_Erase(const int offset, const int size);
 void parseURL(String url, String &server, int &port, String& path);
 String urlChangePath(String url, const String& new_path);
+String shortenText(const String& text, const int lead);
 }

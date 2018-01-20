@@ -74,6 +74,14 @@ void DisplayT::removeTopAction(void)
     m_actions.erase(m_actions.begin());
 }
 
+shared_ptr<ActionT> DisplayT::getTopAction(void)
+{
+  if (m_actions.empty())
+    return nullptr;
+  return m_actions[0];
+}
+
+
 void DisplayT::cleanQueue(void)
 {
   m_actions.clear();

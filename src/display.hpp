@@ -72,6 +72,7 @@ public:
   void removeTopAction(void);
   void removeBottomAction(void);
   void cleanQueue(void);
+  shared_ptr<ActionT> getTopAction(void);
 
 protected:
   virtual void setBrightness(const uint8_t brightness) = 0; // 0..255
