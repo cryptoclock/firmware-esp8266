@@ -143,9 +143,9 @@ void DataSource::parameterCallback(const String& param_name, const String& param
   if (param_name=="ticker_path") // legacy
   {
     String value = Utils::urlChangePath(g_parameters["ticker_url"],param_value);
-    g_parameters.setIfExistsAndTriggerCallback("ticker_url", value);
+    g_parameters.setIfExistsAndTriggerCallback("ticker_url", value, true);
   } else {
-    g_parameters.setIfExistsAndTriggerCallback(param_name, param_value);
+    g_parameters.setIfExistsAndTriggerCallback(param_name, param_value, true);
   }
   g_parameters.storeToEEPROM();
 }

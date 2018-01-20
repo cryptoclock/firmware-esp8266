@@ -6,7 +6,7 @@
 
 struct ParameterItem;
 
-typedef std::function<void(ParameterItem& item, bool init)> parameter_onchange_t;
+typedef std::function<void(ParameterItem& item, bool init, bool final_change)> parameter_onchange_t;
 
 struct ParameterItem {
   String name;
@@ -37,8 +37,7 @@ public:
   bool setValue(const String& name, const String& value);
   String& operator[] (const char *name);
   ParameterItem* findByName(const String& name);
-  void setIfExistsAndTriggerCallback(const String& name, const String& value);
-  void sendParameterToDataSource(const String& name, const String& value);
+  void setIfExistsAndTriggerCallback(const String& name, const String& value, bool final_change);
 
   void iterateAllParameters(parameter_iterate_func_t func);
 private:

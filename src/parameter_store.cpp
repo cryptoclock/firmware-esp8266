@@ -48,7 +48,7 @@ void ParameterStore::loadFromEEPROMwithoutInit(void)
 
     item->value = value;
     if (item->on_change!=nullptr)
-      item->on_change(*item, true);
+      item->on_change(*item, true, true);
   }
 
   debug_print();
@@ -119,18 +119,14 @@ void ParameterStore::iterateAllParameters(parameter_iterate_func_t func)
   }
 }
 
-void ParameterStore::setIfExistsAndTriggerCallback(const String& name, const String& value)
+void ParameterStore::setIfExistsAndTriggerCallback(const String& name, const String& value, bool final_change)
 {
   auto parameter = findByName(name);
   if (parameter) {
     parameter->value = value;
     if (parameter->on_change)
-      parameter->on_change(*parameter, false);
+      parameter->on_change(*parameter, false, final_change);
+    if (final_change)
+      g_data_source->sendParameter(parameter);
   }
-}
-
-void ParameterStore::sendParameterToDataSource(const String& name, const String& value)
-{
-  if (auto parameter = findByName(name))
-    g_data_source->sendParameter(parameter);
 }

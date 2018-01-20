@@ -4,3 +4,5 @@
 #if !defined(FIRMWARE_VERSION)
 # define FIRMWARE_VERSION "1.0.0"
 #endif
+
+#define NTP_SERVER "0.pool.ntp.org"

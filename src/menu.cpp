@@ -29,8 +29,7 @@ void Menu::onLongPress()
   auto item = (*m_current);
   if (item->isActive()) {
     item->onLongPress();
-    m_parameters->setIfExistsAndTriggerCallback(item->getName(), item->getValue());
-    m_parameters->sendParameterToDataSource(item->getName(), item->getValue());
+    m_parameters->setIfExistsAndTriggerCallback(item->getName(), item->getValue(), true);
     saveParameters();
   } else {
     item->activate();
@@ -50,7 +49,7 @@ void Menu::onShortPress()
   auto item = *m_current;
   if (item->isActive()) {
     item->onShortPress();
-    m_parameters->setIfExistsAndTriggerCallback(item->getName(), item->getValue());
+    m_parameters->setIfExistsAndTriggerCallback(item->getName(), item->getValue(), false);
   } else {
     m_current++;
     if (m_current==m_items.end())

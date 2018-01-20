@@ -73,6 +73,11 @@ void clock_callback()
     return;
 
   auto time = NTP.getTimeDateString();
+#if !defined(X_CLOCK_ONLY_DISPLAY)
+  if (time=="Time not set")
+    return;
+#endif
+
   DEBUG_SERIAL.printf_P(PSTR("[NTP] Displaying time %s\n"),  time.c_str());
   g_clock_action->updateTime(time);
   g_display->prependAction(
@@ -152,7 +157,7 @@ void setupParameters()
   g_parameters.addItem({"__LEGACY_currency_pair","","", 0, nullptr});
   g_parameters.addItem({"__device_uuid","","", 0, nullptr}); // new uuid will be generated on every device wipe
   g_parameters.addItem({"update_url","Update server","update.cryptoclock.net", 50, nullptr});
-  g_parameters.addItem({"ticker_url","Ticker server","wss://ticker.cryptoclock.net:443/", 100, [](ParameterItem& item, bool init)
+  g_parameters.addItem({"ticker_url","Ticker server","wss://ticker.cryptoclock.net:443/", 100, [](ParameterItem& item, bool init, bool final_change)
   {
     if (init==false) {
       g_data_source->reconnect();
@@ -160,23 +165,32 @@ void setupParameters()
       g_announcement = " ";
     }
   }});
-  g_parameters.addItem({"brightness","Brightness (0-15)","15", 5, [](ParameterItem& item, bool init)
+  g_parameters.addItem({"brightness","Brightness (0-15)","15", 5, [](ParameterItem& item, bool init, bool final_change)
   {
     int brightness = std::min(std::max(item.value.toInt(),0L),15L); // sanitize
     item.value = String(brightness);
     g_display->setDisplayBrightness(brightness * 16);
   }});
-  g_parameters.addItem({"font","Font (0-2)","0", 5, [](ParameterItem& item, bool init)
+  g_parameters.addItem({"font","Font (0-2)","0", 5, [](ParameterItem& item, bool init, bool final_change)
   {
     int font = std::min(std::max(item.value.toInt(),0L),2L);
     item.value = String(font);
     g_display->setFont(font);
   }});
-  g_parameters.addItem({"rotate_display","Rotate Display (0,1)","0", 5, [](ParameterItem& item, bool init)
+  g_parameters.addItem({"rotate_display","Rotate Display (0,1)","0", 5, [](ParameterItem& item, bool init, bool final_change)
   {
     int rotate = std::min(std::max(item.value.toInt(),0L),1L);
     item.value = String(rotate);
     g_display->setRotation(rotate);
+  }});
+  g_parameters.addItem({"timezone","Timezone (-11..+13)","1", 5, [](ParameterItem& item, bool init, bool final_change)
+  {
+    if (final_change) {
+      int timezone = std::min(std::max(item.value.toInt(),-11L),13L);
+      item.value = String(timezone);
+      NTP.stop();
+      NTP.begin(NTP_SERVER, timezone, true);
+    }
   }});
 }
 
@@ -263,7 +277,8 @@ void connectToWiFi()
 void setupNTP()
 {
   DEBUG_SERIAL.println(F("Starting NTP.."));
-  NTP.begin("ntp.nic.cz", 1, true);
+  int timezone = g_parameters["timezone"].toInt();
+  NTP.begin(NTP_SERVER, timezone, true);
   NTP.setInterval(1800);
 
 #if !defined(X_CLOCK_ONLY_DISPLAY)
@@ -360,10 +375,11 @@ void sendOTPRequest(void)
 void setupMenu()
 {
   const menu_items_t items({
+    std::make_shared<MenuItemAction>("__otp","OTP","OTP", sendOTPRequest),
     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, nullptr),
     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, nullptr),
     std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, "^^^","^^^", nullptr),
-    std::make_shared<MenuItemAction>("__otp","OTP","OTP", sendOTPRequest)
+    std::make_shared<MenuItemNumericRange>("timezone","Tzone", "Tz",-11,+13, 0, nullptr)
   });
   g_menu = std::make_shared<Menu>(&g_parameters, items);
 }
