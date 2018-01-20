@@ -38,6 +38,7 @@ public:
   String& operator[] (const char *name);
   ParameterItem* findByName(const String& name);
   void setIfExistsAndTriggerCallback(const String& name, const String& value);
+  void sendParameterToDataSource(const String& name, const String& value);
 
   void iterateAllParameters(parameter_iterate_func_t func);
 private:

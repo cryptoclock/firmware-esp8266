@@ -30,6 +30,7 @@ void Menu::onLongPress()
   if (item->isActive()) {
     item->onLongPress();
     m_parameters->setIfExistsAndTriggerCallback(item->getName(), item->getValue());
+    m_parameters->sendParameterToDataSource(item->getName(), item->getValue());
     saveParameters();
   } else {
     item->activate();

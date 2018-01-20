@@ -39,21 +39,19 @@ public:
   void setOnOTPack(on_otp_ack_t func) { m_on_otp_ack = func; }
   bool sendOTPRequest();
 
+  void sendParameter(const ParameterItem *item);
+
   static void s_callback(WStype_t type, uint8_t * payload, size_t length);
 private:
   void sendText(const String& text);
   void queueText(const String& text);
   void sendHello();
-  void sendParameter(const ParameterItem *item);
   void sendAllParameters();
 
   void callback(WStype_t type, uint8_t * payload, size_t length);
   void textCallback(const String& text);
   void parameterCallback(const String& name, const String& value);
 
-  // String m_host;
-  // int m_port;
-  // String m_url;
   bool m_connected;
   long m_last_connected_at;
   bool m_should_send_hello;

@@ -1,6 +1,9 @@
 #include "parameter_store.hpp"
 #include <EEPROM.h>
 #include "utils.hpp"
+#include "data_source.hpp"
+
+extern DataSource *g_data_source;
 
 void ParameterStore::addItem(ParameterItem item)
 {
@@ -124,4 +127,10 @@ void ParameterStore::setIfExistsAndTriggerCallback(const String& name, const Str
     if (parameter->on_change)
       parameter->on_change(*parameter, false);
   }
+}
+
+void ParameterStore::sendParameterToDataSource(const String& name, const String& value)
+{
+  if (auto parameter = findByName(name))
+    g_data_source->sendParameter(parameter);
 }

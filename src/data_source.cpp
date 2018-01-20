@@ -44,7 +44,7 @@ void DataSource::loop()
 
   m_websocket.loop();
 
-  if (!m_send_queue.empty()) {
+  if (m_connected && !m_send_queue.empty()) {
     sendText(m_send_queue.front());
     m_send_queue.pop();
   }
