@@ -49,7 +49,7 @@ ParameterStore g_parameters;
 Ticker g_ticker_clock;
 
 DisplayT *g_display;
-shared_ptr<Display::Action::Price> g_price_action;
+shared_ptr<Display::PriceAction> g_price_action;
 shared_ptr<Display::Action::Clock> g_clock_action;
 WiFiCore *g_wifi;
 DataSource *g_data_source;
@@ -426,7 +426,7 @@ void setup() {
   g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
   Firmware::update(g_parameters["update_url"]);
 
-  g_price_action = make_shared<Display::Action::Price>(10.0); // animation speed, in digits per second
+  g_price_action = make_shared<Display::PriceAction>(10.0); // animation speed, in digits per second
   g_display->replaceAction(g_price_action);
 
   setupButton();

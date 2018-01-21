@@ -2,8 +2,8 @@
 #include "display_action_price.hpp"
 #include <cmath>
 
-namespace Display { namespace Action {
-void Price::tick(DisplayT *display, double elapsed_time)
+namespace Display {
+void PriceAction::tick(DisplayT *display, double elapsed_time)
 {
   m_elapsed_time += elapsed_time;
 
@@ -40,7 +40,7 @@ void Price::tick(DisplayT *display, double elapsed_time)
   }
 }
 
-void Price::blinkIfATH(DisplayT *display)
+void PriceAction::blinkIfATH(DisplayT *display)
 {
   if (m_displayed_price >= m_ath_price &&
     (m_elapsed_time - m_price_last_changed_at < c_ath_animation_length)) {
@@ -54,14 +54,14 @@ void Price::blinkIfATH(DisplayT *display)
   }
 }
 
-void Price::blinkPixelIfReceivedPriceUpdate(DisplayT *display)
+void PriceAction::blinkPixelIfReceivedPriceUpdate(DisplayT *display)
 {
   // blink pixel when we received price update
   if (m_elapsed_time - m_price_last_updated_at <= 0.05)
     display->drawPixel({display->getDisplayWidth()-1, display->getDisplayHeight()-1});
 }
 
-void Price::draw(DisplayT *display, Coords orig_coords)
+void PriceAction::draw(DisplayT *display, Coords orig_coords)
 {
   if (!display->isGraphic()) {
     if (display->isNumeric())
@@ -122,7 +122,7 @@ void Price::draw(DisplayT *display, Coords orig_coords)
     display->drawPixel({display->getDisplayWidth()-1, display->getDisplayHeight()-1});
 }
 
-void Price::updatePrice(const int new_price)
+void PriceAction::updatePrice(const int new_price)
 {
   m_price_last_updated_at = m_elapsed_time;
   if (m_price == new_price)
@@ -141,7 +141,7 @@ void Price::updatePrice(const int new_price)
   m_price_last_changed_at = m_elapsed_time;
 }
 
-void Price::setATHPrice(const int ath_price)
+void PriceAction::setATHPrice(const int ath_price)
 {
   m_ath_price = ath_price;
 }
