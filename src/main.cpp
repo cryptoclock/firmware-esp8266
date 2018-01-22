@@ -246,14 +246,14 @@ void setupDataSource()
   });
 
   g_data_source->setOnPriceATH([&](const String& price){
-    g_price_action->setATHPrice(price.toInt());
+    g_price_action->setATHPrice(price);
   });
 
   g_data_source->setOnPriceChange([&](const String& price){
-    long currentPrice = price.toInt();
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] price tick: %li\n"),currentPrice);
-    g_price_action->updatePrice(currentPrice);
-    DEBUG_SERIAL.printf_P(PSTR("Free Heap: %i\n"), ESP.getFreeHeap());
+    auto currentPrice = Price(price);
+    currentPrice.debug_print();
+    g_price_action->updatePrice(price);
+    DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free Heap: %i\n"), ESP.getFreeHeap());
   });
 
   g_data_source->connect();

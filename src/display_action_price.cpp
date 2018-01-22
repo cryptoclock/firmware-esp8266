@@ -15,10 +15,10 @@ void PriceAction::tick(DisplayT *display, double elapsed_time)
     m_displayed_price < std::min(m_price, m_last_price) ||
     m_displayed_price > std::max(m_price, m_last_price);
 
-  const double displayed_price_delta = fabs(m_displayed_price - m_price);
-  const double price_delta = fabs(m_price - m_last_price);
-  const double price_delta_from_start = outside_bounds ? 0 : fabs(m_displayed_price - m_last_price);
-  const double price_delta_from_end = outside_bounds ? price_delta : fabs(m_displayed_price - m_price);
+  const double displayed_price_delta = fabs(m_displayed_price.delta(m_price));
+  const double price_delta = fabs(m_price.delta(m_last_price));
+  const double price_delta_from_start = outside_bounds ? 0 : fabs(m_displayed_price.delta(m_last_price));
+  const double price_delta_from_end = outside_bounds ? price_delta : fabs(m_displayed_price.delta(m_price));
 
   double animation_multiplier = std::max(std::min(std::min(price_delta_from_start, price_delta_from_end), 3.0) / 3.0, 0.2);
   if (outside_bounds)
@@ -29,15 +29,18 @@ void PriceAction::tick(DisplayT *display, double elapsed_time)
   const double animation_speed = m_animation_speed * animation_multiplier;
   const double time_delta = elapsed_time * animation_speed;
 
-  if (m_price >= m_displayed_price)
-    m_displayed_price = std::min(m_displayed_price + time_delta, (double) m_price);
-  else
-    m_displayed_price = std::max(m_displayed_price - time_delta, (double) m_price);
-
-  if (fabs(m_price - m_displayed_price) < 0.001) {
-    m_displayed_price = m_price;
-    m_last_price = m_price;
+  double p_anim_delta = time_delta*m_displayed_price.increment();
+  if (m_price >= m_displayed_price) {
+    m_displayed_price = std::min(m_displayed_price + p_anim_delta, m_price);
+  } else {
+    m_displayed_price = std::max(m_displayed_price - p_anim_delta, m_price);
   }
+
+  // FIXME ?
+  // if (fabs(m_price.delta(m_displayed_price)) < (0.001*m_price.increment())) {
+  //   m_displayed_price = m_price;
+  //   m_last_price = m_price;
+  // }
 }
 
 void PriceAction::blinkIfATH(DisplayT *display)
@@ -64,16 +67,17 @@ void PriceAction::blinkPixelIfReceivedPriceUpdate(DisplayT *display)
 void PriceAction::draw(DisplayT *display, Coords orig_coords)
 {
   if (!display->isGraphic()) {
-    if (display->isNumeric())
-      display->displayNumber((int)m_displayed_price);
+    // FIXME: for numeric-only displays
+//    if (display->isNumeric())
+//      display->displayNumber((int)m_displayed_price);
     return;
   }
 
   Coords coords = orig_coords + m_coords;
 
-  String price_top = String((int)m_displayed_price);
-  String price_bottom = String((int)m_displayed_price + 1);
-  if (m_price<0 || (m_elapsed_time - m_price_last_updated_at) > m_price_timeout)
+  String price_top = m_displayed_price.toString();
+  String price_bottom = m_displayed_price.nextPrice().toString();
+  if (!m_price.isInitialized() || (m_elapsed_time - m_price_last_updated_at) > m_price_timeout)
   {
     String text = "-----";
     display->displayText(text, coords + display->centerTextOffset(text));
@@ -82,10 +86,11 @@ void PriceAction::draw(DisplayT *display, Coords orig_coords)
 
   // fractional part = vertical position of animated glyph(s)
   double tmp;
-  double fract = (double) std::modf(m_displayed_price,&tmp);
+  double fract = (double) std::modf(m_displayed_price.get()*m_displayed_price.increment_exponent(),&tmp);
 
-  if (fract<0.01)
-    price_bottom = price_top; // for horizontal shift during rollovers
+// FIXME:
+//  if (fract<0.01)
+//    price_bottom = price_top; // for horizontal shift during rollovers
 
   int offset_top = (int) (-fract * display->getDisplayHeight());
   int offset_bottom = offset_top + display->getDisplayHeight();
@@ -122,17 +127,23 @@ void PriceAction::draw(DisplayT *display, Coords orig_coords)
     display->drawPixel({display->getDisplayWidth()-1, display->getDisplayHeight()-1});
 }
 
-void PriceAction::updatePrice(const int new_price)
+void PriceAction::updatePrice(const String& n_price)
 {
+  Price new_price(n_price);
+  if (new_price.displayFloatPart())
+    m_display_float_part = true;
+  new_price.setDisplayFloatPart(true); // force
+
   m_price_last_updated_at = m_elapsed_time;
   if (m_price == new_price)
     return;
+
 
   if (new_price>m_ath_price)
     m_ath_price = new_price;
 
   m_last_price = m_price;
-  if (m_price==-1) {
+  if (!m_price.isInitialized()) {
     m_last_price = new_price;
     m_displayed_price = new_price;
   }
@@ -141,16 +152,17 @@ void PriceAction::updatePrice(const int new_price)
   m_price_last_changed_at = m_elapsed_time;
 }
 
-void PriceAction::setATHPrice(const int ath_price)
+void PriceAction::setATHPrice(const String& ath_price)
 {
-  m_ath_price = ath_price;
+  m_ath_price = Price(ath_price);
 }
 
-void Price::reset()
+void PriceAction::reset()
 {
-  m_price = -1;
-  m_last_price = -1;
-  m_displayed_price = -1;
+  m_price = Price("");
+  m_last_price = Price("");
+  m_displayed_price = Price("");
+  m_display_float_part = false;
 }
 
-}}
+}
