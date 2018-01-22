@@ -78,9 +78,26 @@ public:
     uint8_t l_digits = String((int) m_price).length();
     uint8_t r_digits = m_display_decimals - l_digits - 1;
 
+    if (m_display_float_part && m_price >= 1.0)
+      r_digits = 3;
+
+    if (m_display_float_part && m_price >= 10.0)
+      r_digits = 2;
+
+    if (m_display_float_part && m_price >= 100.0)
+      r_digits = 1;
+
+    if (m_display_float_part && m_price >= 1000.0) {
+      m_display_float_part = false;
+      r_digits = 0;
+    }
+
     if (m_display_float_part && (l_digits+1<m_display_decimals)) {
       String str =  String(m_price, r_digits+5);
-      return str.substring(0,l_digits+1+r_digits);
+      if (m_price<1.0)
+        return str.substring(1,1 + 2 + r_digits);
+      else
+        return str.substring(0,l_digits+1+r_digits);
     } else {
       return String((int)m_price).substring(0,m_display_decimals);
     }
