@@ -36,11 +36,10 @@ void PriceAction::tick(DisplayT *display, double elapsed_time)
     m_displayed_price = std::max(m_displayed_price - p_anim_delta, m_price);
   }
 
-  // FIXME ?
-  // if (fabs(m_price.delta(m_displayed_price)) < (0.001*m_price.increment())) {
-  //   m_displayed_price = m_price;
-  //   m_last_price = m_price;
-  // }
+  if (fabs(m_price.delta(m_displayed_price)) < 0.001) {
+     m_displayed_price = m_price;
+     m_last_price = m_price;
+  }
 }
 
 void PriceAction::blinkIfATH(DisplayT *display)
@@ -86,11 +85,16 @@ void PriceAction::draw(DisplayT *display, Coords orig_coords)
 
   // fractional part = vertical position of animated glyph(s)
   double tmp;
-  double fract = (double) std::modf(m_displayed_price.get()*m_displayed_price.increment_exponent(),&tmp);
+  double fract = (double) std::modf(m_displayed_price.get(),&tmp);
+  fract = (double) std::modf(fract*m_displayed_price.increment_exponent(),&tmp);
+  if (fract>0.999)
+    fract = 0.0;
+  if (fract<0.001)
+    fract = 0.1;
 
-// FIXME:
-//  if (fract<0.01)
-//    price_bottom = price_top; // for horizontal shift during rollovers
+  // FIXME:
+  // if (fract<(0.01*m_displayed_price.increment()))
+  //   price_bottom = price_top; // for horizontal shift during rollovers
 
   int offset_top = (int) (-fract * display->getDisplayHeight());
   int offset_bottom = offset_top + display->getDisplayHeight();
@@ -105,11 +109,13 @@ void PriceAction::draw(DisplayT *display, Coords orig_coords)
   int offset_x = 0;
   for (unsigned int i=0;i<price_top.length();++i)
   {
+    const int offset_dot_top = (price_top.charAt(i)=='.') ? -1 : 0;
+    const int offset_dot_bottom = (price_bottom.charAt(i)=='.') ? -1 : 0;
     if (price_top[i]==price_bottom[i]) {
-      display->drawGlyph(price_top.charAt(i), coords + Coords{offset_x, 0});
+      display->drawGlyph(price_top.charAt(i), coords + Coords{offset_x + offset_dot_top, 0});
     } else {
-      display->drawGlyph(price_top.charAt(i), coords + Coords{offset_x, offset_top});
-      display->drawGlyph(price_bottom.charAt(i), coords + Coords{offset_x, offset_bottom});
+      display->drawGlyph(price_top.charAt(i), coords + Coords{offset_x + offset_dot_top, offset_top});
+      display->drawGlyph(price_bottom.charAt(i), coords + Coords{offset_x + offset_dot_bottom, offset_bottom});
     }
     offset_x += display->getTextWidth(String(price_bottom[i]))+1;
   }

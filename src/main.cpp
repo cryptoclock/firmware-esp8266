@@ -72,6 +72,9 @@ void clock_callback()
   if (g_current_mode != MODE::TICKER)
     return;
 
+  if (g_parameters["clock_mode"].toInt() == 0)
+    return;
+
   auto time = NTP.getTimeDateString();
 #if !defined(X_CLOCK_ONLY_DISPLAY)
   if (time=="Time not set")
@@ -185,6 +188,12 @@ void setupParameters()
     int rotate = std::min(std::max(item.value.toInt(),0L),1L);
     item.value = String(rotate);
     g_display->setRotation(rotate);
+  }});
+  g_parameters.addItem({"clock_mode","Show Clock (0-1)","1", 5, [](ParameterItem& item, bool init, bool final_change)
+  {
+    int clock_mode = std::min(std::max(item.value.toInt(),0L),1L);
+    item.value = String(clock_mode);
+//    g_clock_mode
   }});
   g_parameters.addItem({"timezone","Timezone (-11..+13)","1", 5, [](ParameterItem& item, bool init, bool final_change)
   {
@@ -393,6 +402,7 @@ void setupMenu()
     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, nullptr),
     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, nullptr),
     std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, "^^^","^^^", nullptr),
+    std::make_shared<MenuItemBoolean>("clock_mode","Clock", "Cl", false, "On","Off", nullptr),
     std::make_shared<MenuItemNumericRange>("timezone","Tzone", "Tz",-11,+13, 0, nullptr)
   });
   g_menu = std::make_shared<Menu>(&g_parameters, items);

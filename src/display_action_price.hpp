@@ -110,9 +110,9 @@ public:
     return Price(m_price + increment(), m_display_float_part);
   }
 
-  long delta(const Price& other)
+  double delta(const Price& other)
   {
-    return (long) ((m_price - other.m_price) * increment_exponent());
+    return ((m_price - other.m_price) * increment_exponent());
   }
 
   double get() {
