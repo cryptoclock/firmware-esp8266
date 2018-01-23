@@ -26,6 +26,7 @@ void DataSource::disconnect()
 void DataSource::reconnect()
 {
   m_last_connected_at = millis();
+  m_last_data_received_at = millis();
   disconnect();
   connect();
 }
@@ -33,8 +34,15 @@ void DataSource::reconnect()
 void DataSource::loop()
 {
   // force reconnect
-  if (!m_connected && (millis() - m_last_connected_at > c_force_reconnect_interval))
+  if (!m_connected && (millis() - m_last_connected_at > c_force_reconnect_interval)) {
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] Couldn't autoconnect for %i secs, forcing reconnect\n"), c_force_reconnect_interval / 1000);
     reconnect();
+  }
+
+  if (m_connected && (millis() - m_last_data_received_at > c_no_data_reconnect_interval)) {
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] No data received for %i secs, forcing reconnect\n"), c_no_data_reconnect_interval / 1000);
+    reconnect();
+  }
 
   // send heartbeat
   if (m_connected && millis() - m_last_heartbeat_sent_at > c_heartbeat_interval) {
@@ -44,9 +52,10 @@ void DataSource::loop()
 
   m_websocket.loop();
 
-  if (m_connected && !m_send_queue.empty()) {
+  if (m_connected && !m_send_queue.empty() && millis() - m_text_last_sent_at > 150) {
     sendText(m_send_queue.front());
     m_send_queue.pop();
+    m_text_last_sent_at = millis();
   }
 }
 
@@ -156,6 +165,7 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
   case WStype_DISCONNECTED:
     if (m_connected) {
       m_last_connected_at = millis();
+      m_last_data_received_at = millis();
       m_connected = false;
     }
 
@@ -165,6 +175,7 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
   case WStype_CONNECTED:
     m_connected = true;
     m_last_connected_at = millis();
+    m_last_data_received_at = millis();
     if (payload==nullptr)
       DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: <nullptr>\n"));
     else
@@ -172,6 +183,7 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
     m_hello_sent = false;
     break;
   case WStype_TEXT:
+    m_last_data_received_at = millis();
     m_connected = true;
     if (!m_hello_sent) {
       m_hello_sent = true;
@@ -187,6 +199,7 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
     }
     break;
   case WStype_BIN:
+    m_last_data_received_at = millis();
     DEBUG_SERIAL.printf_P(PSTR("[WSc] got binary, length: %u\n"), length);
     hexdump(payload, length);
     break;

@@ -67,8 +67,8 @@ void PriceAction::draw(DisplayT *display, Coords orig_coords)
 {
   if (!display->isGraphic()) {
     // FIXME: for numeric-only displays
-//    if (display->isNumeric())
-//      display->displayNumber((int)m_displayed_price);
+    if (display->isNumeric())
+      display->displayNumber((int)m_displayed_price.get());
     return;
   }
 
@@ -122,6 +122,7 @@ void PriceAction::draw(DisplayT *display, Coords orig_coords)
 
   if (display->getDisplayHeight() >= 64 ) {
     auto old_font = display->getFont();
+    // TODO:
     display->setFont(2);
     display->displayTextHCentered("USD/BTC",orig_coords + Coords{0,0});
     display->setFont(old_font);
@@ -138,12 +139,11 @@ void PriceAction::updatePrice(const String& n_price)
   Price new_price(n_price);
   if (new_price.displayFloatPart())
     m_display_float_part = true;
-  new_price.setDisplayFloatPart(true); // force
+  new_price.setDisplayFloatPart(m_display_float_part); // once we receive price with floating point part, it's always enabled
 
   m_price_last_updated_at = m_elapsed_time;
   if (m_price == new_price)
     return;
-
 
   if (new_price>m_ath_price)
     m_ath_price = new_price;

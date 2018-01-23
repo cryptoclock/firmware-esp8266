@@ -20,6 +20,7 @@ public:
   DataSource()
     : m_connected(false), m_last_connected_at(0),
     m_should_send_hello(false), m_hello_sent(true), m_last_heartbeat_sent_at(0),
+    m_last_data_received_at(0), m_text_last_sent_at(0),
     m_on_price_change(nullptr), m_on_price_ath(nullptr), m_on_update_request(nullptr),  m_on_announcement(nullptr),
     m_on_otp(nullptr), m_on_otp_ack(nullptr)
   {
@@ -57,9 +58,12 @@ private:
   bool m_should_send_hello;
   bool m_hello_sent;
   long m_last_heartbeat_sent_at;
+  long m_last_data_received_at;
+  long m_text_last_sent_at;
 
   static const int c_heartbeat_interval = 30 * 1000;
   static const int c_force_reconnect_interval = 120 * 1000;
+  static const int c_no_data_reconnect_interval = 300 * 1000;
 
   on_price_change_t m_on_price_change;
   on_price_ath_t m_on_price_ath;
