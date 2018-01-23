@@ -299,7 +299,7 @@ void setupNTP()
 #endif
 }
 
-void factoryReset(void)
+void factoryReset()
 {
   g_display->prependAction(make_shared<Display::Action::RotatingText>("RESET... ", -1, 20));
   DEBUG_SERIAL.println(F("Reseting settings"));
@@ -312,7 +312,7 @@ void factoryReset(void)
   ESP.reset();
 }
 
-void startOnDemandAP(void)
+void startOnDemandAP()
 {
   DEBUG_SERIAL.println(F("ODA"));
   g_data_source->disconnect();
@@ -321,7 +321,7 @@ void startOnDemandAP(void)
   ESP.restart();
 }
 
-void switchMenu(void);
+void switchMenu();
 void setupDefaultButtons()
 {
   g_flash_button->onShortPress(switchMenu);
@@ -330,7 +330,7 @@ void setupDefaultButtons()
   g_flash_button->setupTickCallback([]() { g_flash_button->tick(); });
 }
 
-void switchMenu(void)
+void switchMenu()
 {
   if (g_current_mode != MODE::MENU) {
     auto last_mode = g_current_mode;
@@ -356,9 +356,10 @@ void forceSetTickerMode()
   g_current_mode = MODE::TICKER;
   g_display->cleanQueue();
   g_display->prependAction(g_price_action);
+  setupDefaultButtons();
 }
 
-void sendOTPRequest(void)
+void sendOTPRequest()
 {
   static const double otp_timeout = 180.0;
   bool result = g_data_source->sendOTPRequest();
@@ -377,14 +378,21 @@ void sendOTPRequest(void)
     g_current_mode = MODE::OTP;
   });
 
+  // on receiving OTP web confirmation
   g_data_source->setOnOTPack([](){
-    if (g_current_mode == MODE::OTP) {
+    if (g_current_mode == MODE::OTP)
       forceSetTickerMode();
-    }
+  });
+
+  g_flash_button->onShortPress([](){
+    if (g_current_mode == MODE::OTP)
+      forceSetTickerMode();
+    else
+      setupDefaultButtons();
   });
 }
 
-void displayDeviceInfo(void)
+void displayDeviceInfo()
 {
   String info= "v" FIRMWARE_VERSION;
   info += " " __DATE__ " " __TIME__;
