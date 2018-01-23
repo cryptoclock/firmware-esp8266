@@ -1,3 +1,4 @@
+#pragma once
 #include "config_common.hpp"
 #include <TM1637Display.h>
 #include "display.hpp"

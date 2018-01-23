@@ -29,7 +29,7 @@ void PriceAction::tick(DisplayT *display, double elapsed_time)
   const double animation_speed = m_animation_speed * animation_multiplier;
   const double time_delta = elapsed_time * animation_speed;
 
-  double p_anim_delta = time_delta*m_displayed_price.increment();
+  double p_anim_delta = time_delta*m_displayed_price.getIncrement();
   if (m_price >= m_displayed_price) {
     m_displayed_price = std::min(m_displayed_price + p_anim_delta, m_price);
   } else {
@@ -86,14 +86,14 @@ void PriceAction::draw(DisplayT *display, Coords orig_coords)
   // fractional part = vertical position of animated glyph(s)
   double tmp;
   double fract = (double) std::modf(m_displayed_price.get(),&tmp);
-  fract = (double) std::modf(fract*m_displayed_price.increment_exponent(),&tmp);
+  fract = (double) std::modf(fract*m_displayed_price.getIncrExponent(),&tmp);
   if (fract>0.999)
     fract = 0.0;
   if (fract<0.001)
     fract = 0.1;
 
   // FIXME:
-  // if (fract<(0.01*m_displayed_price.increment()))
+  // if (fract<(0.01*m_displayed_price.getIncrement()))
   //   price_bottom = price_top; // for horizontal shift during rollovers
 
   int offset_top = (int) (-fract * display->getDisplayHeight());

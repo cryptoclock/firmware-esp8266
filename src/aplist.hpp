@@ -1,3 +1,4 @@
+#pragma once
 #include "config_common.hpp"
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 

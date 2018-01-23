@@ -1,3 +1,4 @@
+#pragma once
 #include "config_common.hpp"
 #define FASTLED_INTERNAL
 #define FASTLED_ESP8266_NODEMCU_PIN_ORDER

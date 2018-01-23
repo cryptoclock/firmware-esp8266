@@ -1,3 +1,4 @@
+#pragma once
 #include "config_common.hpp"
 #include <Arduino.h>
 #include "display_action.hpp"

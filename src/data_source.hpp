@@ -1,3 +1,4 @@
+#pragma once
 #include "config_common.hpp"
 #include "parameter_store.hpp"
 #include <WebSocketsClient.h>
