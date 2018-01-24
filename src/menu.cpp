@@ -11,7 +11,7 @@ using std::shared_ptr;
 void Menu::start(DisplayT *display, button_callback_t changeMode)
 {
   m_finished = false;
-  display->prependAction(std::make_shared<Display::Action::MenuWrapper>(this, Coords{0,0}));
+  display->prependAction(std::make_shared<Display::Action::MenuWrapper>(this, Coords{1,-1}));
   m_end_of_menu_callback = changeMode;
 
   // load item values from parameters

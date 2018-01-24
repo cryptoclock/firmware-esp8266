@@ -35,6 +35,8 @@ void MenuItemNumericRange::onLongPress()
   deactivate();
 }
 
+// ----
+
 void MenuItemBoolean::draw(DisplayT *display, const Coords& coords)
 {
   if (isActive()) {
@@ -69,6 +71,44 @@ void MenuItemBoolean::setValue(const String& value)
   m_current = (value == "1");
 }
 
+// ----
+
+void MenuItemEnum::draw(DisplayT *display, const Coords& coords)
+{
+  if (isActive()) {
+    const String text = m_display_name_short + " " + String(m_values.at(m_current));
+    display->displayText(text, coords);
+  } else {
+    display->displayText(m_display_name, coords);
+  }
+}
+
+const String MenuItemEnum::getValue() const
+{
+  String s = String(m_current);
+  return s;
+}
+
+void MenuItemEnum::setValue(const String& value)
+{
+  m_current = value.toInt();
+}
+
+void MenuItemEnum::onShortPress()
+{
+  if (++m_current>=m_values.size())
+    m_current = 0;
+
+  if (m_onchange_cb)
+    m_onchange_cb(getValue());
+}
+
+void MenuItemEnum::onLongPress()
+{
+  deactivate();
+}
+
+// ----
 
 void MenuItemAction::draw(DisplayT *display, const Coords& coords)
 {

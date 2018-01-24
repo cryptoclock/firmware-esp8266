@@ -14,7 +14,7 @@ void DataSource::connect()
   Utils::parseURL(ticker_url, host, port, path);
   path += "?uuid=" + g_parameters["__device_uuid"];
 
-  DEBUG_SERIAL.printf_P(PSTR("[Wsc] Connecting to host %s port %i url '%s'\n"),host.c_str(), port, path.c_str());
+  DEBUG_SERIAL.printf_P(PSTR("[Wsc] Connecting to host '%s' port '%i' url '%s'\n"),host.c_str(), port, path.c_str());
   m_websocket.beginSSL(host, port, path);
 }
 

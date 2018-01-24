@@ -72,10 +72,17 @@ void clock_callback()
   if (g_current_mode != MODE::TICKER)
     return;
 
-  if (g_parameters["clock_mode"].toInt() == 0)
+  if (g_parameters["clock_mode"].toInt() == 0) // Off
     return;
 
   auto time = NTP.getTimeDateString();
+
+  if (g_clock_action->isAlwaysOn()) {
+    g_clock_action->updateTime(time);
+    g_display->prependAction(g_clock_action);
+    return;
+  }
+
 #if !defined(X_CLOCK_ONLY_DISPLAY)
   if (time=="Time not set")
     return;
@@ -99,7 +106,7 @@ void setAnnouncement(const String& message, action_callback_t onfinished_cb)
   auto current_action = g_display->getTopAction();
   g_announcement_action = make_shared<Display::Action::RotatingTextOnce>(message,20,Coords{0,0},onfinished_cb);
   g_display->prependAction(
-    make_shared<Display::Action::SlideTransition>(nullptr, g_price_action, 0.5, Coords{-1,0})
+    make_shared<Display::Action::SlideTransition>(nullptr, current_action, 0.5, Coords{-1,0})
   );
   g_display->prependAction(g_announcement_action);
   g_display->prependAction(
@@ -155,6 +162,14 @@ void setupDisplay()
   g_display->setupTickCallback([&]() { g_display->tick(); }); // can't be moved to class declaration because of lambda capture
 }
 
+void setupClock()
+{
+#if !defined(X_CLOCK_ONLY_DISPLAY)
+  g_clock_action = make_shared<Display::Action::Clock>(3.0, Coords{0,0}); // display clock for 3 secs
+  g_ticker_clock.attach(30.0, clock_callback);
+#endif
+}
+
 void setupParameters()
 {
   g_parameters.addItem({"__LEGACY_ticker_server_host","","", 0, nullptr});
@@ -189,10 +204,14 @@ void setupParameters()
     item.value = String(rotate);
     g_display->setRotation(rotate);
   }});
-  g_parameters.addItem({"clock_mode","Show Clock (0-1)","1", 5, [](ParameterItem& item, bool init, bool final_change)
+  g_parameters.addItem({"clock_mode","Show Clock (0-2)","1", 5, [](ParameterItem& item, bool init, bool final_change)
   {
-    int clock_mode = std::min(std::max(item.value.toInt(),0L),1L);
+    int clock_mode = std::min(std::max(item.value.toInt(),0L),2L);
     item.value = String(clock_mode);
+    if (clock_mode == 2)
+      g_clock_action->setAlwaysOn(true);
+    else
+      g_clock_action->setAlwaysOn(false);
 //    g_clock_mode
   }});
   g_parameters.addItem({"timezone","Timezone (-11..+13)","1", 5, [](ParameterItem& item, bool init, bool final_change)
@@ -293,10 +312,8 @@ void setupNTP()
   NTP.begin(NTP_SERVER, timezone, true);
   NTP.setInterval(1800);
 
-#if !defined(X_CLOCK_ONLY_DISPLAY)
-  g_clock_action = make_shared<Display::Action::Clock>(3.0, Coords{0,0}); // display clock for 3 secs
-  g_ticker_clock.attach(30.0, clock_callback);
-#endif
+  if (g_clock_action->isAlwaysOn())
+    clock_callback();
 }
 
 void factoryReset()
@@ -338,6 +355,9 @@ void switchMenu()
     g_menu->start(g_display, [=](){ // set callback when menu is finished
       g_current_mode = last_mode;
       setupDefaultButtons();
+      if (g_clock_action->isAlwaysOn()) {
+        clock_callback();
+      }
     });
 
     g_flash_button->onLongPress([](){ g_menu->onLongPress(); });
@@ -355,7 +375,11 @@ void forceSetTickerMode()
 {
   g_current_mode = MODE::TICKER;
   g_display->cleanQueue();
-  g_display->prependAction(g_price_action);
+  if (g_clock_action->isAlwaysOn()) {
+    clock_callback();
+  } else {
+    g_display->prependAction(g_price_action);
+  }
   setupDefaultButtons();
 }
 
@@ -410,7 +434,7 @@ void setupMenu()
     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, nullptr),
     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, nullptr),
     std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, "^^^","^^^", nullptr),
-    std::make_shared<MenuItemBoolean>("clock_mode","Clock", "Cl", false, "On","Off", nullptr),
+    std::make_shared<MenuItemEnum>("clock_mode","Clock", "C", false, vector<String>{"Off","On","Only"}, nullptr),
     std::make_shared<MenuItemNumericRange>("timezone","Tzone", "Tz",-11,+13, 0, nullptr)
   });
   g_menu = std::make_shared<Menu>(&g_parameters, items);
@@ -428,6 +452,8 @@ void setup() {
   setupSerial();
   setupHW();
   setupDisplay();
+  setupClock();
+
   setupParameters();
   loadParameters();
   setupMenu();
@@ -450,6 +476,7 @@ void setup() {
   setupButton();
   setupNTP();
   setupDataSource();
+
 }
 
 void loop() {

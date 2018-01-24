@@ -7,6 +7,9 @@ void Clock::tick(DisplayT *display, double elapsed_time)
 {
   m_elapsed_time += elapsed_time;
 
+  if (m_always_on)
+    return;
+
   if (m_duration <= 0.0) return;
   if (m_time=="" || m_elapsed_time > m_duration) {
     setFinished();
@@ -35,5 +38,16 @@ void Clock::updateTime(const String& time)
     m_time = time.substring(0,5);
 
 }
+
+void Clock::setAlwaysOn(bool always_on)
+{
+  m_always_on = always_on;
 }
+
+bool Clock::isAlwaysOn()
+{
+  return m_always_on;
 }
+
+
+}}

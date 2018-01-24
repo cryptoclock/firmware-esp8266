@@ -80,6 +80,27 @@ private:
   String m_on_text, m_off_text;
 };
 
+class MenuItemEnum : public MenuItem
+{
+public:
+  MenuItemEnum(const String& name, const String& display_name, const String& display_name_short,
+    const unsigned int current_value, const vector<String>& values, menuitem_onchange_callback_t onchange_cb)
+    : MenuItem(name, display_name, display_name_short, onchange_cb), m_values(values), m_current(current_value)
+  {}
+
+  void onLongPress();
+  void onShortPress();
+  const String getValue() const;
+  void setValue(const String& value);
+
+  void draw(DisplayT *display, const Coords& coords) override;
+
+private:
+  const vector<String> m_values;
+  unsigned int m_current;
+};
+
+
 class MenuItemAction : public MenuItem
 {
 public:
