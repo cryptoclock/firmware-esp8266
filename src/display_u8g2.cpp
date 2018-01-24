@@ -43,10 +43,12 @@ void U8G2Matrix::drawGlyph(const uint16_t glyph, const Coords& coords)
   m_display->drawGlyph(u_coords.x, u_coords.y + m_height, glyph);
 }
 
-void U8G2Matrix::fill(const Coords& coords)
+void U8G2Matrix::fill(const Coords& coords, const int color)
 {
+  setDrawColor(color);
   auto u_coords = correctOffsetForRotation(coords);
   m_display->drawBox(u_coords.x, u_coords.y, m_width, m_height);
+  setDrawColor(1);
 }
 
 void U8G2Matrix::drawLine(const Coords& start, const Coords& end)

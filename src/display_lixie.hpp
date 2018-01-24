@@ -21,7 +21,7 @@ public:
   void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h) {}
   void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h) {}
 
-  void fill(const Coords& coords) {}
+  void fill(const Coords& coords, const int color) {}
 
   void drawGlyph(const uint16_t glyph, const Coords& coords) {}
   void drawLine(const Coords& start, const Coords& end) {}

@@ -41,8 +41,11 @@ namespace Action {
 class SlideTransition : public ActionT
 {
 public:
-  SlideTransition(shared_ptr<ActionT> actionA, shared_ptr<ActionT> actionB, double duration, const Coords& direction, const Coords& coords=Coords{0,0})
-    : ActionT(duration, coords), m_actionA(actionA), m_actionB(actionB), m_direction(direction)
+  SlideTransition(shared_ptr<ActionT> actionA, const int draw_priorityA,
+    shared_ptr<ActionT> actionB, const int draw_priorityB, double duration,
+    const Coords& direction, const Coords& coords=Coords{0,0})
+    : ActionT(duration, coords), m_actionA(actionA), m_actionB(actionB),
+    m_draw_priorityA(draw_priorityA), m_draw_priorityB(draw_priorityB), m_direction(direction)
     {}
 
   void tick(DisplayT *display, double elapsed_time);
@@ -51,6 +54,8 @@ private:
 
   shared_ptr<ActionT> m_actionA;
   shared_ptr<ActionT> m_actionB;
+  const int m_draw_priorityA;
+  const int m_draw_priorityB;
   const Coords m_direction;
 };
 }

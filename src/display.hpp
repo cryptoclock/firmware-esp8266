@@ -28,7 +28,7 @@ public:
 
   void displayTextHCentered(const String& value, const Coords& coords);
 
-  virtual void fill(const Coords& coords) = 0;
+  virtual void fill(const Coords& coords, const int color=1) = 0;
 
   virtual void drawGlyph(const uint16_t glyph, const Coords& coords) = 0;
   virtual void drawLine(const Coords& start, const Coords& end) = 0;

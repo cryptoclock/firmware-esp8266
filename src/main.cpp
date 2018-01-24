@@ -91,11 +91,11 @@ void clock_callback()
   DEBUG_SERIAL.printf_P(PSTR("[NTP] Displaying time %s\n"),  time.c_str());
   g_clock_action->updateTime(time);
   g_display->prependAction(
-    make_shared<Display::Action::SlideTransition>(g_clock_action, g_price_action, 0.5, Coords{0,+1})
+    make_shared<Display::Action::SlideTransition>(g_clock_action, 1, g_price_action, 2, 0.5, Coords{0,+1})
   );
   g_display->prependAction(g_clock_action);
   g_display->prependAction(
-    make_shared<Display::Action::SlideTransition>(g_price_action, g_clock_action, 0.5, Coords{0,-1})
+    make_shared<Display::Action::SlideTransition>(g_price_action, 2, g_clock_action, 1, 0.5, Coords{0,-1})
   );
 }
 
@@ -106,11 +106,11 @@ void setAnnouncement(const String& message, action_callback_t onfinished_cb)
   auto current_action = g_display->getTopAction();
   g_announcement_action = make_shared<Display::Action::RotatingTextOnce>(message,20,Coords{0,0},onfinished_cb);
   g_display->prependAction(
-    make_shared<Display::Action::SlideTransition>(nullptr, current_action, 0.5, Coords{-1,0})
+    make_shared<Display::Action::SlideTransition>(nullptr, 1, current_action, 1, 0.5, Coords{-1,0})
   );
   g_display->prependAction(g_announcement_action);
   g_display->prependAction(
-    make_shared<Display::Action::SlideTransition>(current_action, nullptr, 0.5, Coords{-1,0})
+    make_shared<Display::Action::SlideTransition>(current_action, 1, nullptr, 1, 0.5, Coords{-1,0})
   );
 }
 
@@ -292,7 +292,7 @@ void setupLogo()
   auto logo_top = make_shared<Display::Action::StaticBitmap>(s_crypto2_bits, 32, 8, 1.5);
   auto logo_bottom = make_shared<Display::Action::StaticBitmap>(s_clock_inverted_bits, 32, 8, 3.5);
   g_display->queueAction(logo_top);
-  g_display->queueAction(make_shared<Display::Action::SlideTransition>(logo_top, logo_bottom, 0.5, Coords{0,-1}));
+  g_display->queueAction(make_shared<Display::Action::SlideTransition>(logo_top, 1, logo_bottom, 1, 0.5, Coords{0,-1}));
   g_display->queueAction(logo_bottom);
 }
 

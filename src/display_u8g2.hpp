@@ -36,7 +36,7 @@ public:
   void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h);
   void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h);
 
-  void fill(const Coords& coords);
+  void fill(const Coords& coords, const int color=1);
   void drawLine(const Coords& start, const Coords& end);
   void drawGlyph(const uint16_t glyph, const Coords& coords);
   void drawPixel(const Coords& coords);

@@ -33,9 +33,9 @@ ActionPtr_t createRepeatedSlide(const Coords &direction, const double duration, 
 {
   queue<ActionPtr_t> q;
   q.push(action_a);
-  q.push(make_shared<SlideTransition>(action_a, action_b, slide_duration, direction));
+  q.push(make_shared<SlideTransition>(action_a, 1, action_b, 1, slide_duration, direction));
   q.push(action_b);
-  q.push(make_shared<SlideTransition>(action_b, action_a, slide_duration, direction));
+  q.push(make_shared<SlideTransition>(action_b, 1, action_a, 1, slide_duration, direction));
 
   return make_shared<MultiRepeat>(q, duration, onfinished_cb);
 }

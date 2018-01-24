@@ -54,7 +54,14 @@ void Action::SlideTransition::draw(DisplayT *display, Coords coords)
   const int offset_y_a = round(slide_function(elapsedTime() / m_duration) * height);
   const int offset_y_b = offset_y_a - height;
 
-  if (m_actionA) m_actionA->draw(display, coords+Coords{offset_x_a, offset_y_a});
-  if (m_actionB) m_actionB->draw(display, coords+Coords{offset_x_b, offset_y_b});
+  if (m_draw_priorityA>=m_draw_priorityB) {
+    if (m_actionA) m_actionA->draw(display, coords+Coords{offset_x_a, offset_y_a});
+    display->fill(coords+Coords{offset_x_b, offset_y_b}, 0);
+    if (m_actionB) m_actionB->draw(display, coords+Coords{offset_x_b, offset_y_b});
+  } else {
+    if (m_actionB) m_actionB->draw(display, coords+Coords{offset_x_b, offset_y_b});
+    display->fill(coords+Coords{offset_x_a, offset_y_a}, 0);
+    if (m_actionA) m_actionA->draw(display, coords+Coords{offset_x_a, offset_y_a});
+  }
 }
 }
