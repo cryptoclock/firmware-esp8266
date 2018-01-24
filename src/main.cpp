@@ -420,8 +420,8 @@ void displayDeviceInfo()
 {
   String info= "v" FIRMWARE_VERSION;
   info += " " __DATE__ " " __TIME__;
-  info += " MD5: " + Utils::shortenText(ESP.getSketchMD5(),3);
-  info += " UUID: " + Utils::shortenText(g_parameters["__device_uuid"],3);
+  info += " MD5: " + ESP.getSketchMD5().substring(0,6);
+  info += " UUID: " + g_parameters["__device_uuid"].substring(0,6);
   info += " SDK: " + String(ESP.getSdkVersion());
   setAnnouncement(info, [](){g_menu->end();});
 }
