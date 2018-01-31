@@ -449,6 +449,7 @@ void setupMenu()
 #else
 
 void setup() {
+  setupButton();
   setupSerial();
   setupHW();
   setupDisplay();
@@ -473,7 +474,6 @@ void setup() {
   g_price_action = make_shared<Display::PriceAction>(10.0); // animation speed, in digits per second
   g_display->replaceAction(g_price_action);
 
-  setupButton();
   setupNTP();
   setupDataSource();
 
