@@ -58,6 +58,7 @@ shared_ptr<Button> g_flash_button;
 
 bool g_start_ondemand_ap = false;
 bool g_force_wipe = false;
+bool g_entered_ap_mode = false;
 
 enum class MODE { TICKER, MENU, ANNOUNCEMENT, OTP};
 MODE g_current_mode(MODE::TICKER);
@@ -116,6 +117,7 @@ void setAnnouncement(const String& message, action_callback_t onfinished_cb)
 
 void configModeCallback (WiFiManager *myWiFiManager)
 {
+  g_entered_ap_mode = true;
   DEBUG_SERIAL.println(F("Entered config mode"));
   DEBUG_SERIAL.println(WiFi.softAPIP());
   String ap_ssid = myWiFiManager->getConfigPortalSSID();
@@ -262,7 +264,7 @@ void setupDataSource()
 
   g_data_source->setOnUpdateRequest([&]() {
     DEBUG_SERIAL.println(F("Update request received, updating"));
-    g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
+    g_display->prependAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
     Firmware::update(g_parameters["update_url"]);
     ESP.restart();
   });
@@ -302,7 +304,11 @@ void connectToWiFi()
   g_wifi->setAPCallback(configModeCallback);
   g_wifi->connectToWiFiOrFallbackToAP();
 
-  DEBUG_SERIAL.println(F("connected...yeey :)"));
+  DEBUG_SERIAL.println(F("[WiFi] connected to WiFi"));
+  if (g_entered_ap_mode) {
+    DEBUG_SERIAL.println(F("[WiFi] AP mode ended, restarting"));
+    ESP.restart();
+  }
 }
 
 void setupNTP()
@@ -334,7 +340,9 @@ void startOnDemandAP()
   DEBUG_SERIAL.println(F("ODA"));
   g_data_source->disconnect();
   DEBUG_SERIAL.println(F("Starting portal"));
+  g_wifi->resetSettings();
   g_wifi->startAP("OnDemandAP_"+String(ESP.getChipId()), 120);
+  g_wifi->resetSettings();
   ESP.restart();
 }
 
@@ -464,7 +472,7 @@ void setup() {
   /* WiFi */
   g_display->queueAction(make_shared<Display::Action::RotatingText>("--> WiFi ", -1, 20));
   connectToWiFi();
-  g_display->removeBottomAction();
+  g_display->cleanQueue();
   g_display->queueAction(make_shared<Display::Action::StaticText>(WiFi.SSID(), 1.0));
 
   /* Update */

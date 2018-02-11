@@ -1,5 +1,6 @@
 #include "aplist.hpp"
 #include <EEPROM.h>
+#include "utils.hpp"
 
 const int AP_SSID_MAX_LENGTH = 32+1;
 const int AP_PASSWORD_MAX_LENGTH = 64+1;
@@ -42,6 +43,9 @@ void AP_list::saveAPsToEEPROM(WiFiManager *manager)
   DEBUG_SERIAL.println(F("[APs] Storing APs to EEPROM"));
 
   int offset = AP_EEPROM_OFFSET;
+
+  Utils::eeprom_Erase(offset, (AP_MAX_STORED_APS+1) * sizeof(AP));
+
   EEPROM.put(offset, "APs");
   offset += 3;
 
@@ -53,7 +57,7 @@ void AP_list::saveAPsToEEPROM(WiFiManager *manager)
     strncpy(ap.ssid, credentials->ssid.c_str(), AP_SSID_MAX_LENGTH-1);
     strncpy(ap.password, credentials->pass.c_str(), AP_PASSWORD_MAX_LENGTH-1);
 
-    DEBUG_SERIAL.printf_P(PSTR("[APs] Writing SSID: %s Password: %s\n"), ap.ssid, ap.password);
+    DEBUG_SERIAL.printf_P(PSTR("[APs] Writing SSID: %s Password: [redacted]\n"), ap.ssid);
     EEPROM.put(offset, ap);
     offset += sizeof(ap);
   }
