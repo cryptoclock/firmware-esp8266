@@ -254,8 +254,8 @@ void loadParameters()
 void setupHW()
 {
   //set led pin as output
-  pinMode(BUILTIN_LED, OUTPUT);
-  digitalWrite(BUILTIN_LED, true); // high = off
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, true); // high = off
 }
 
 void setupDataSource()
