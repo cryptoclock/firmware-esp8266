@@ -48,6 +48,7 @@ private:
   void sendText(const String& text);
   void queueText(const String& text);
   void sendHello();
+  void sendDiagnostics();
   void sendAllParameters();
 
   void callback(WStype_t type, uint8_t * payload, size_t length);

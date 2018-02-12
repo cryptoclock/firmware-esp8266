@@ -80,6 +80,12 @@ void DataSource::sendHello()
   queueText(text);
 }
 
+void DataSource::sendDiagnostics()
+{
+  queueText(";DIAG last_reset_reason " + ESP.getResetReason());
+  queueText(";DIAG last_reset_info " + ESP.getResetInfo());
+}
+
 void DataSource::sendParameter(const ParameterItem *item)
 {
   if (item->name.startsWith("__")) return;
@@ -189,6 +195,7 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
       m_hello_sent = true;
       sendHello();
       sendAllParameters();
+      sendDiagnostics();
     }
 
     if (payload==nullptr) {
