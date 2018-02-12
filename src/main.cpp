@@ -216,6 +216,14 @@ void setupParameters()
       g_clock_action->setAlwaysOn(false);
 //    g_clock_mode
   }});
+  g_parameters.addItem({"clock_interval","Clock display interval (secs)","30", 5, [](ParameterItem& item, bool init, bool final_change)
+  {
+    if (init || final_change) {
+      int interval = std::max(item.value.toInt(),5L);
+      item.value = String(interval);
+      g_ticker_clock.attach(interval, clock_callback);
+    }
+  }});
   g_parameters.addItem({"timezone","Timezone (-11..+13)","1", 5, [](ParameterItem& item, bool init, bool final_change)
   {
     if (final_change) {
