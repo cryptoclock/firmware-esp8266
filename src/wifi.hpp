@@ -24,6 +24,8 @@ public:
 
   void updateParametersFromAP(WiFiManager *manager); // reads parameters from AP config page and updates g_parameters
 private:
+  void addParametersFromGlobal();
+
   WiFiManager m_wifimanager;
   DisplayT *m_display;
   std::vector<WiFiManagerParameter*> m_parameters;

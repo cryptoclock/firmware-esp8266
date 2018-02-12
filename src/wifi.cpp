@@ -8,16 +8,6 @@ extern WiFiCore *g_wifi;
 WiFiCore::WiFiCore(DisplayT *display) :
   m_wifimanager(WiFiManager()), m_display(display)
 {
-  m_parameters.reserve(g_parameters.all_items().size());
-
-  g_parameters.iterateAllParameters([this](const ParameterItem* item) {
-    if (!item->name.startsWith("__")) {// reserved parameter, don't display
-      auto *wifi_param = new WiFiManagerParameter(item->name.c_str(), item->description.c_str(), item->value.c_str(), item->field_length);
-      m_parameters.push_back(wifi_param);
-      m_wifimanager.addParameter(wifi_param);
-    }
-  });
-
   m_wifimanager.setSaveConfigCallback(&saveCallback);
 
   AP_list::addAPsToWiFiManager(&m_wifimanager);
@@ -42,8 +32,24 @@ void WiFiCore::connectToWiFiOrFallbackToAP(void)
   }
 }
 
+void WiFiCore::addParametersFromGlobal()
+{
+  m_parameters.clear();
+  m_parameters.reserve(g_parameters.all_items().size());
+
+  g_parameters.iterateAllParameters([this](const ParameterItem* item) {
+    if (!item->name.startsWith("__")) {// reserved parameter, don't display
+      auto *wifi_param = new WiFiManagerParameter(item->name.c_str(), item->description.c_str(), item->value.c_str(), item->field_length);
+      m_parameters.push_back(wifi_param);
+      m_wifimanager.addParameter(wifi_param);
+    }
+  });
+}
+
 void WiFiCore::startAP(const String& ssid_name, unsigned long timeout)
 {
+  addParametersFromGlobal();
+
   m_wifimanager.setTimeout(timeout);
   if (!m_wifimanager.startConfigPortal(ssid_name.c_str())) {
     DEBUG_SERIAL.println(F("[WiFiCore] Failed to start AP and hit timeout"));
