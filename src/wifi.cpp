@@ -11,6 +11,7 @@ WiFiCore::WiFiCore(DisplayT *display) :
   m_wifimanager.setSaveConfigCallback(&saveCallback);
 
   AP_list::addAPsToWiFiManager(&m_wifimanager);
+  addParametersFromGlobal();
 
   m_ev_conn = WiFi.onStationModeConnected(onConnect);
   m_ev_disconn = WiFi.onStationModeDisconnected(onDisconnect);
@@ -48,8 +49,6 @@ void WiFiCore::addParametersFromGlobal()
 
 void WiFiCore::startAP(const String& ssid_name, unsigned long timeout)
 {
-  addParametersFromGlobal();
-
   m_wifimanager.setTimeout(timeout);
   if (!m_wifimanager.startConfigPortal(ssid_name.c_str())) {
     DEBUG_SERIAL.println(F("[WiFiCore] Failed to start AP and hit timeout"));
