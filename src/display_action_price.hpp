@@ -5,13 +5,16 @@
 #include "price.hpp"
 #include <limits>
 
+typedef std::function<void(void)> on_price_timeout_t;
+
 namespace Display {
 class PriceAction : public ActionT
 {
 public:
   PriceAction(const double animation_speed, const Coords& coords=Coords{0,0})
     : ActionT(-1, coords), m_animation_speed(animation_speed), m_price(""), m_last_price(""),
-      m_displayed_price(""), m_ath_price(""), m_display_float_part(false)
+      m_displayed_price(""), m_ath_price(""), m_price_timeout(300.0), m_display_float_part(false),
+      m_price_timeout_reported(false), m_on_price_timeout(nullptr)
     {}
 
   void tick(DisplayT *display, double elapsed_time);
@@ -19,6 +22,9 @@ public:
   void updatePrice(const String &price);
   void setATHPrice(const String &ath_price);
   void reset();
+
+  void setOnPriceTimeout(on_price_timeout_t func) { m_on_price_timeout = func; }
+  void setPriceTimeout(double timeout);
 private:
   void blinkIfATH(DisplayT *display);
   void blinkPixelIfReceivedPriceUpdate(DisplayT *display);
@@ -30,8 +36,10 @@ private:
   Price m_ath_price;
   double m_price_last_changed_at;
   double m_price_last_updated_at;
-  const double m_price_timeout = 300.0; // after X seconds without receiving price updates, stop displaying it
+  double m_price_timeout; // after X seconds without receiving price updates, stop displaying it
   static constexpr double c_ath_animation_length = 4.0;
   bool m_display_float_part;
+  bool m_price_timeout_reported;
+  on_price_timeout_t m_on_price_timeout;
 };
 }

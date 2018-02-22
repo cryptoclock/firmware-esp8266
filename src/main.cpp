@@ -287,11 +287,19 @@ void setupDataSource()
     g_price_action->setATHPrice(price);
   });
 
+  g_data_source->setOnPriceTimeoutSet([&](const String& timeout){
+    g_price_action->setPriceTimeout(timeout.toFloat());
+  });
+
   g_data_source->setOnPriceChange([&](const String& price){
     auto currentPrice = Price(price);
     currentPrice.debug_print();
     g_price_action->updatePrice(price);
     DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free Heap: %i\n"), ESP.getFreeHeap());
+  });
+
+  g_price_action->setOnPriceTimeout([&]() {
+    g_data_source->queueText(";WARN Data timeout");
   });
 
   g_data_source->connect();

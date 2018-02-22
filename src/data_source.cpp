@@ -136,6 +136,10 @@ void DataSource::textCallback(const String& str)
   } else if (str.startsWith(";OTP_ACK")) { // OTP acknowledge
     if (m_on_otp_ack)
       m_on_otp_ack();
+  } else if (str.startsWith(";DATA_TIMEOUT")) {
+    if (m_on_price_timeout_set)
+      m_on_price_timeout_set(str.substring(13));
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] Data timeout set to '%s' secs\n"),str.substring(13).c_str());
   } else if (str.startsWith(";")){
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown message '%s'\n"),str.c_str());
   } else {

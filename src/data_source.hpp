@@ -14,6 +14,7 @@ typedef std::function<void(void)> on_update_request_t;
 typedef std::function<void(const String&)> on_announcement_t;
 typedef std::function<void(const String&)> on_otp_t;
 typedef std::function<void(void)> on_otp_ack_t;
+typedef std::function<void(const String&)> on_price_timeout_set_t;
 
 class DataSource
 {
@@ -23,7 +24,7 @@ public:
     m_should_send_hello(false), m_hello_sent(true), m_last_heartbeat_sent_at(0),
     m_last_data_received_at(0), m_text_last_sent_at(0),
     m_on_price_change(nullptr), m_on_price_ath(nullptr), m_on_update_request(nullptr),  m_on_announcement(nullptr),
-    m_on_otp(nullptr), m_on_otp_ack(nullptr)
+    m_on_otp(nullptr), m_on_otp_ack(nullptr), m_on_price_timeout_set(nullptr)
   {
     m_websocket.onEvent(DataSource::s_callback);
   }
@@ -39,14 +40,15 @@ public:
   void setOnAnnouncement(on_announcement_t func) { m_on_announcement = func; }
   void setOnOTP(on_otp_t func) { m_on_otp = func; }
   void setOnOTPack(on_otp_ack_t func) { m_on_otp_ack = func; }
+  void setOnPriceTimeoutSet(on_price_timeout_set_t func) { m_on_price_timeout_set = func; }
   bool sendOTPRequest();
 
   void sendParameter(const ParameterItem *item);
 
   static void s_callback(WStype_t type, uint8_t * payload, size_t length);
+  void queueText(const String& text);
 private:
   void sendText(const String& text);
-  void queueText(const String& text);
   void sendHello();
   void sendDiagnostics();
   void sendAllParameters();
@@ -73,6 +75,7 @@ private:
   on_announcement_t m_on_announcement;
   on_otp_t m_on_otp;
   on_otp_ack_t m_on_otp_ack;
+  on_price_timeout_set_t m_on_price_timeout_set;
   WebSocketsClient m_websocket;
   std::queue<String> m_send_queue;
 };

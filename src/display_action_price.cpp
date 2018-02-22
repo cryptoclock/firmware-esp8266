@@ -7,6 +7,13 @@ void PriceAction::tick(DisplayT *display, double elapsed_time)
 {
   m_elapsed_time += elapsed_time;
 
+  if (m_price_timeout > 0 && (m_elapsed_time - m_price_last_updated_at) > m_price_timeout) {
+    if (!m_price_timeout_reported && m_on_price_timeout) {
+      m_on_price_timeout();
+      m_price_timeout_reported = true;
+    }
+  }
+
   if (m_price == m_last_price)
     return;
 
@@ -76,7 +83,7 @@ void PriceAction::draw(DisplayT *display, Coords orig_coords)
 
   String price_top = m_displayed_price.toString();
   String price_bottom = m_displayed_price.nextPrice().toString();
-  if (!m_price.isInitialized() || (m_elapsed_time - m_price_last_updated_at) > m_price_timeout)
+  if (!m_price.isInitialized() || (m_price_timeout > 0 && (m_elapsed_time - m_price_last_updated_at) > m_price_timeout))
   {
     String text = "-----";
     display->displayText(text, coords + display->centerTextOffset(text));
@@ -142,6 +149,7 @@ void PriceAction::updatePrice(const String& n_price)
   new_price.setDisplayFloatPart(m_display_float_part); // once we receive price with floating point part, it's always enabled
 
   m_price_last_updated_at = m_elapsed_time;
+  m_price_timeout_reported = false;
   if (m_price == new_price)
     return;
 
@@ -169,6 +177,11 @@ void PriceAction::reset()
   m_last_price = Price("");
   m_displayed_price = Price("");
   m_display_float_part = false;
+}
+
+void PriceAction::setPriceTimeout(double timeout)
+{
+  m_price_timeout = timeout;
 }
 
 }
