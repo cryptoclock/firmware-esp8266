@@ -22,7 +22,7 @@ void TestDisplay::draw(DisplayT *display, Coords coords)
   int brightness = (int) (m_elapsed_time*8) % 16;
 
   // modes
-  switch(m_current_mode % 5) {
+  switch(m_current_mode % 6) {
     case 0:
       display->setDisplayBrightness(255);
       display->fill({0,0});
@@ -48,6 +48,16 @@ void TestDisplay::draw(DisplayT *display, Coords coords)
         display->setDisplayBrightness(brightness*16);
         Coords coords{1,-2};
         String text("Bright " + String(brightness));
+        display->displayText(text, coords);
+      }
+      break;
+    case 5: // numbers
+      {
+        display->setDisplayBrightness(255);
+        Coords coords{4,-1};
+        int n = ((int)(m_elapsed_time) % 50) / 5;
+
+        String text(String(n) + String(n) + String(n) + String(n) + String(n));
         display->displayText(text, coords);
       }
       break;
