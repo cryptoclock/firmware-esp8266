@@ -7,3 +7,6 @@ assets/
 firmware.map
 dump.txt
 dump.out.txt
+.vscode/*.db
+.vscode/c_cpp_properties.json
+.vscode/launch.json
