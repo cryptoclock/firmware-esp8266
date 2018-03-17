@@ -35,7 +35,8 @@ void DataSource::loop()
 {
   // force reconnect
   if (!m_connected && (millis() - m_last_connected_at > c_force_reconnect_interval)) {
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Couldn't autoconnect for %i secs, forcing reconnect\n"), c_force_reconnect_interval / 1000);
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] Couldn't autoconnect for %i secs, forcing WiFi reconnect\n"), c_force_reconnect_interval / 1000);
+    WiFi.reconnect();
     reconnect();
   }
 
@@ -140,6 +141,10 @@ void DataSource::textCallback(const String& str)
     if (m_on_price_timeout_set)
       m_on_price_timeout_set(str.substring(13));
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Data timeout set to '%s' secs\n"),str.substring(13).c_str());
+  } else if (str.startsWith(";HB")) {
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] Heartbeat received\n"));
+  } else if (str.startsWith("; Welcome")) {
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] Welcome message received\n"));
   } else if (str.startsWith(";")){
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown message '%s'\n"),str.c_str());
   } else {
