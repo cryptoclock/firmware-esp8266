@@ -54,13 +54,23 @@ void parseHostname(const String& hostname, String& server, int& port)
     server = hostname;
   } else {
     server = hostname.substring(0,colon_pos);
-    port = hostname.substring(colon_pos+1).toInt();
+    int p = hostname.substring(colon_pos+1).toInt();
+    if (p>0)
+      port = p;
   }
 }
-void parseURL(String url, String &server, int &port, String& path)
+void parseURL(String url, String &server, int &port, String& path, String& protocol)
 {
-  port = 0;
+  if (url.startsWith("http://") || url.startsWith("ws://")) {
+    protocol = "ws";
+    port = 80;
+  } else {
+    protocol = "wss";
+    port = 443;
+  }
+
   if (url.startsWith("https://") || url.startsWith("http://") || url.startsWith("wss://") || url.startsWith("ws://")) {
+
     url = url.substring(url.indexOf('/')+2);
   }
 
@@ -79,10 +89,10 @@ void parseURL(String url, String &server, int &port, String& path)
 
 String urlChangePath(String url, const String& new_path)
 {
-  String host, path;
+  String host, path, protocol;
   int port=0;
-  parseURL(url, host, port, path);
-  return String("wss://" + host + ":" + port + new_path);
+  parseURL(url, host, port, path, protocol);
+  return String(protocol + "://" + host + ":" + port + new_path);
 }
 
 String shortenText(const String& text, const int lead)

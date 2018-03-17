@@ -7,15 +7,18 @@ extern ParameterStore g_parameters;
 
 void DataSource::connect()
 {
-  String host, path;
+  String host, path, protocol;
   int port;
 
   String ticker_url = g_parameters["ticker_url"];
-  Utils::parseURL(ticker_url, host, port, path);
+  Utils::parseURL(ticker_url, host, port, path, protocol);
   path += "?uuid=" + g_parameters["__device_uuid"];
 
-  DEBUG_SERIAL.printf_P(PSTR("[Wsc] Connecting to host '%s' port '%i' url '%s'\n"),host.c_str(), port, path.c_str());
-  m_websocket.beginSSL(host, port, path);
+  DEBUG_SERIAL.printf_P(PSTR("[Wsc] Connecting to protocol '%s' host '%s' port '%i' url '%s'\n"),protocol.c_str(),host.c_str(), port, path.c_str());
+  if (protocol=="ws")
+    m_websocket.begin(host, port, path);
+  else
+    m_websocket.beginSSL(host, port, path);
 }
 
 void DataSource::disconnect()
