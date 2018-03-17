@@ -459,7 +459,8 @@ void setupMenu()
     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, nullptr),
     std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, "^^^","^^^", nullptr),
     std::make_shared<MenuItemEnum>("clock_mode","Clock", "C", false, vector<String>{"Off","On","Only"}, nullptr),
-    std::make_shared<MenuItemNumericRange>("timezone","Tzone", "Tz",-11,+13, 0, nullptr)
+    std::make_shared<MenuItemNumericRange>("timezone","Tzone", "Tz",-11,+13, 0, nullptr),
+    std::make_shared<MenuItemAction>("__erase","ERASE","ERASE", factoryReset)
   });
   g_menu = std::make_shared<Menu>(&g_parameters, items);
 }
