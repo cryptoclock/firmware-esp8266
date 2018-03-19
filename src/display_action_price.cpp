@@ -7,7 +7,14 @@ void PriceAction::tick(DisplayT *display, double elapsed_time)
 {
   m_elapsed_time += elapsed_time;
 
-  if (m_price_timeout > 0 && (m_elapsed_time - m_price_last_updated_at) > m_price_timeout) {
+  /* send warning about receiving no price updates at 90% of set timeout,
+     so that the server can send us repeated price in case of very slowly
+     updating data sources */
+  const float timeout_pre_warning = 0.90f;
+
+  if (m_price_timeout > 0 &&
+    (m_elapsed_time - m_price_last_updated_at) > (m_price_timeout * timeout_pre_warning))
+  {
     if (!m_price_timeout_reported && m_on_price_timeout) {
       m_on_price_timeout();
       m_price_timeout_reported = true;

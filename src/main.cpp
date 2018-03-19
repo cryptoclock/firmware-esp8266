@@ -299,7 +299,7 @@ void setupDataSource()
   });
 
   g_price_action->setOnPriceTimeout([&]() {
-    g_data_source->queueText(";WARN Data timeout");
+    g_data_source->queueText(";WARN Data timeout imminent");
   });
 
   g_data_source->connect();
