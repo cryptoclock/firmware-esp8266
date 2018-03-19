@@ -48,11 +48,11 @@ ParameterStore g_parameters;
 
 Ticker g_ticker_clock;
 
-DisplayT *g_display;
+DisplayT *g_display = nullptr;
 shared_ptr<Display::PriceAction> g_price_action;
 shared_ptr<Display::Action::Clock> g_clock_action;
-WiFiCore *g_wifi;
-DataSource *g_data_source;
+WiFiCore *g_wifi = nullptr;
+DataSource *g_data_source = nullptr;
 
 shared_ptr<Button> g_flash_button;
 
@@ -296,10 +296,6 @@ void setupDataSource()
     currentPrice.debug_print();
     g_price_action->updatePrice(price);
     DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free Heap: %i\n"), ESP.getFreeHeap());
-  });
-
-  g_price_action->setOnPriceTimeout([&]() {
-    g_data_source->queueText(";WARN Data timeout imminent");
   });
 
   g_data_source->connect();
