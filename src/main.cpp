@@ -65,7 +65,10 @@ MODE g_current_mode(MODE::TICKER);
 
 shared_ptr<Menu> g_menu = nullptr;
 
+// FIXME: class/struct
 String g_announcement="";
+bool g_announcement_static = false;
+int g_announcement_time = 0;
 shared_ptr<Display::ActionT> g_announcement_action;
 
 void clock_callback()
@@ -100,12 +103,16 @@ void clock_callback()
   );
 }
 
-void setAnnouncement(const String& message, action_callback_t onfinished_cb)
+void setAnnouncement(const String& message, const bool static_msg, const int display_time, action_callback_t onfinished_cb)
 {
   g_current_mode = MODE::ANNOUNCEMENT;
 
   auto current_action = g_display->getTopAction();
-  g_announcement_action = make_shared<Display::Action::RotatingTextOnce>(message,20,Coords{0,0},onfinished_cb);
+  if (static_msg) {
+    g_announcement_action = make_shared<Display::Action::StaticText>(message,display_time,Coords{0,0},onfinished_cb);
+  } else {
+    g_announcement_action = make_shared<Display::Action::RotatingTextOnce>(message,20,Coords{0,0},onfinished_cb);
+  }
   g_display->prependAction(
     make_shared<Display::Action::SlideTransition>(nullptr, 1, current_action, 1, 0.5, Coords{-1,0})
   );
@@ -277,8 +284,10 @@ void setupDataSource()
     ESP.restart();
   });
 
-  g_data_source->setOnAnnouncement([&](const String& msg){
+  g_data_source->setOnAnnouncement([&](const String& msg, bool static_msg, int display_time){
     if (g_announcement=="") {
+      g_announcement_static = static_msg;
+      g_announcement_time = display_time;
       g_announcement = msg;
     } // ignore otherwise
   });
@@ -295,7 +304,7 @@ void setupDataSource()
     auto currentPrice = Price(price);
     currentPrice.debug_print();
     g_price_action->updatePrice(price);
-    DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free Heap: %i\n"), ESP.getFreeHeap());
+//    DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free Heap: %i\n"), ESP.getFreeHeap());
   });
 
   g_data_source->connect();
@@ -443,7 +452,7 @@ void displayDeviceInfo()
   info += " MD5: " + ESP.getSketchMD5().substring(0,6);
   info += " UUID: " + g_parameters["__device_uuid"].substring(0,6);
   info += " SDK: " + String(ESP.getSdkVersion());
-  setAnnouncement(info, [](){g_menu->end();});
+  setAnnouncement(info, false, 0, [](){g_menu->end();});
 }
 
 void setupMenu()
@@ -509,7 +518,7 @@ void loop() {
 
   if (g_announcement!="") {
     if (g_current_mode==MODE::TICKER) {
-      setAnnouncement(g_announcement, [](){ g_current_mode = MODE::TICKER; });
+      setAnnouncement(g_announcement, g_announcement_static, g_announcement_time, [](){ g_current_mode = MODE::TICKER; });
       g_announcement = "";
     }
   }

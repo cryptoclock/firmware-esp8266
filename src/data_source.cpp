@@ -126,7 +126,20 @@ void DataSource::textCallback(const String& str)
       m_on_price_ath(str.substring(5));
   } else if (str.startsWith(";MSG ") || str.startsWith(";MSG=")) { // Announcement
     if (m_on_announcement)
-      m_on_announcement(str.substring(5));
+      m_on_announcement(str.substring(5), false, 0);
+  } else if (str.startsWith(";STATICMSG ") || str.startsWith(";MSGSTATIC ")) { // Announcement
+    if (m_on_announcement) {
+      int time_idx = str.indexOf(' ');
+      if (time_idx==-1)
+        return;
+      int msg_idx = str.indexOf(' ', time_idx+1);
+      if (msg_idx==-1)
+        return;
+
+      int display_time = str.substring(time_idx).toInt();
+      String msg = str.substring(msg_idx);
+      m_on_announcement(msg, true, display_time);
+    }
   } else if (str.startsWith(";PARAM ")) { // parameter update
     String pair = str.substring(7);
     int index = pair.indexOf(" ");

@@ -11,7 +11,7 @@
 typedef std::function<void(const String&)> on_price_change_t;
 typedef std::function<void(const String&)> on_price_ath_t;
 typedef std::function<void(void)> on_update_request_t;
-typedef std::function<void(const String&)> on_announcement_t;
+typedef std::function<void(const String&, const bool, const int)> on_announcement_t;
 typedef std::function<void(const String&)> on_otp_t;
 typedef std::function<void(void)> on_otp_ack_t;
 typedef std::function<void(const String&)> on_price_timeout_set_t;

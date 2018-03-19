@@ -159,7 +159,7 @@ void PriceAction::updatePrice(const String& n_price)
   new_price.setDisplayFloatPart(m_display_float_part); // once we receive price with floating point part, it's always enabled
 
   if (m_price_timeout_reported) { // recovering from price timeout
-    g_data_source->queueText(";DIAG Recovered from data timeout");
+    g_data_source->queueText(";DIAG data_timeout_recovered");
   }
 
   m_price_last_updated_at = m_elapsed_time;
