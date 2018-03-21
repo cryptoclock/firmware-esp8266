@@ -7,16 +7,23 @@ namespace Display { namespace Action {
 void MultiRepeat::tick(DisplayT *display, double elapsed_time)
 {
   m_elapsed_time += elapsed_time;
-  if (m_duration >= 0 && m_elapsed_time > m_duration)
+  if (m_duration > 0 && m_elapsed_time > m_duration)
     setFinished(true);
 
-  if (m_actions.empty())
+  if (m_actions.empty()) {
+    setFinished(true);
     return;
+  }
 
   auto action = m_actions.front();
   if (action->isFinished()) {
     m_actions.pop();
-    m_actions.push(action); // requeue
+    if (m_repeat)
+      m_actions.push(action); // requeue
+    else if (m_actions.empty()) {
+      setFinished(true);
+      return;
+    }
     action = m_actions.front();
     action->reset();
   }
@@ -25,6 +32,8 @@ void MultiRepeat::tick(DisplayT *display, double elapsed_time)
 
 void MultiRepeat::draw(DisplayT *display, Coords coords)
 {
+  if (m_actions.empty())
+    return;
   m_actions.front()->draw(display,coords);
 }
 
@@ -37,7 +46,7 @@ ActionPtr_t createRepeatedSlide(const Coords &direction, const double duration, 
   q.push(action_b);
   q.push(make_shared<SlideTransition>(action_b, 1, action_a, 1, slide_duration, direction));
 
-  return make_shared<MultiRepeat>(q, duration, onfinished_cb);
+  return make_shared<MultiRepeat>(q, duration, true, onfinished_cb);
 }
 
 }}

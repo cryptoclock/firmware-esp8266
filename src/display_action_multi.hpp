@@ -11,11 +11,12 @@ namespace Action {
 
 typedef shared_ptr<ActionT> ActionPtr_t;
 
+
 class MultiRepeat : public ActionT
 {
 public:
-  MultiRepeat(const std::queue<ActionPtr_t> &actions, const double duration=-1, action_callback_t onfinished_cb = nullptr)
-    : ActionT(duration, Coords{0,0}, onfinished_cb), m_actions(actions)
+  MultiRepeat(const std::queue<ActionPtr_t> &actions, const double duration=-1, bool repeat=true, action_callback_t onfinished_cb = nullptr)
+    : ActionT(duration, Coords{0,0}, onfinished_cb), m_actions(actions), m_repeat(repeat)
   {
   }
 
@@ -31,6 +32,7 @@ public:
 
 protected:
   std::queue<ActionPtr_t> m_actions;
+  bool m_repeat;
 };
 
 ActionPtr_t createRepeatedSlide(const Coords &direction, const double duration, const double slide_duration,

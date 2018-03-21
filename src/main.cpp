@@ -21,6 +21,7 @@
 #include "display_action_menu.hpp"
 #include "display_action_multi.hpp"
 using Display::Coords;
+using Display::Action::ActionPtr_t;
 
 #include "config.hpp"
 
@@ -107,19 +108,36 @@ void setAnnouncement(const String& message, const bool static_msg, const int dis
 {
   g_current_mode = MODE::ANNOUNCEMENT;
 
+  queue<ActionPtr_t> q;
+
   auto current_action = g_display->getTopAction();
   if (static_msg) {
     g_announcement_action = make_shared<Display::Action::StaticText>(message,display_time,Coords{0,0},onfinished_cb);
   } else {
     g_announcement_action = make_shared<Display::Action::RotatingTextOnce>(message,20,Coords{0,0},onfinished_cb);
   }
-  g_display->prependAction(
-    make_shared<Display::Action::SlideTransition>(nullptr, 1, current_action, 1, 0.5, Coords{-1,0})
-  );
-  g_display->prependAction(g_announcement_action);
-  g_display->prependAction(
-    make_shared<Display::Action::SlideTransition>(current_action, 1, nullptr, 1, 0.5, Coords{-1,0})
-  );
+  q.push(make_shared<Display::Action::SlideTransition>(current_action, 1, nullptr, 1, 0.5, Coords{-1,0}));
+  q.push(g_announcement_action);
+  q.push(make_shared<Display::Action::SlideTransition>(nullptr, 1, current_action, 1, 0.5, Coords{-1,0}));
+
+  g_display->prependAction(make_shared<Display::Action::MultiRepeat>(q, 0, false, nullptr));
+}
+
+void replaceAnnouncement(const String& message, const bool static_msg, const int display_time, action_callback_t onfinished_cb)
+{
+  queue<ActionPtr_t> q;
+
+  g_display->removeTopAction();
+
+  if (static_msg)
+    g_announcement_action = make_shared<Display::Action::StaticText>(message,display_time,Coords{0,0},onfinished_cb);
+  else
+    g_announcement_action = make_shared<Display::Action::RotatingTextOnce>(message,20,Coords{0,0},onfinished_cb);
+
+  q.push(g_announcement_action);
+  q.push(make_shared<Display::Action::SlideTransition>(nullptr, 1, g_display->getTopAction(), 1, 0.5, Coords{-1,0}));
+
+  g_display->prependAction(make_shared<Display::Action::MultiRepeat>(q, 0, false, nullptr));
 }
 
 void configModeCallback (WiFiManager *myWiFiManager)
@@ -519,6 +537,9 @@ void loop() {
   if (g_announcement!="") {
     if (g_current_mode==MODE::TICKER) {
       setAnnouncement(g_announcement, g_announcement_static, g_announcement_time, [](){ g_current_mode = MODE::TICKER; });
+      g_announcement = "";
+    } else if (g_current_mode==MODE::ANNOUNCEMENT) {
+      replaceAnnouncement(g_announcement, g_announcement_static, g_announcement_time, [](){ g_current_mode = MODE::TICKER; });
       g_announcement = "";
     }
   }

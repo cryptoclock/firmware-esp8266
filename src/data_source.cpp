@@ -136,8 +136,8 @@ void DataSource::textCallback(const String& str)
       if (msg_idx==-1)
         return;
 
-      int display_time = str.substring(time_idx).toInt();
-      String msg = str.substring(msg_idx);
+      int display_time = str.substring(time_idx+1).toInt();
+      String msg = str.substring(msg_idx+1);
       m_on_announcement(msg, true, display_time);
     }
   } else if (str.startsWith(";PARAM ")) { // parameter update
