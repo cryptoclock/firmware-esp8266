@@ -213,11 +213,19 @@ void setupParameters()
       g_announcement = " ";
     }
   }});
-  g_parameters.addItem({"brightness","Brightness (0-15)","15", 5, [](ParameterItem& item, bool init, bool final_change)
+  g_parameters.addItem({"brightness","Brightness (1-5)","3", 5, [](ParameterItem& item, bool init, bool final_change)
   {
-    int brightness = std::min(std::max(item.value.toInt(),0L),15L); // sanitize
+    int brightness = std::min(std::max(item.value.toInt(),1L),5L); // sanitize
     item.value = String(brightness);
-    g_display->setDisplayBrightness(brightness * 16);
+    int actual_brightness = 0;
+    switch (brightness) {
+      case 1: actual_brightness = 0; break;
+      case 2: actual_brightness = 16; break;
+      case 3: actual_brightness = 32; break;
+      case 4: actual_brightness = 64; break;
+      case 5: default: actual_brightness = 128; break;
+    }
+    g_display->setDisplayBrightness(actual_brightness);
   }});
   g_parameters.addItem({"font","Font (0-2)","0", 5, [](ParameterItem& item, bool init, bool final_change)
   {
@@ -479,7 +487,7 @@ void setupMenu()
     std::make_shared<MenuItemAction>("__otp","OTP","OTP", sendOTPRequest),
     std::make_shared<MenuItemAction>("__info","Info","Info", displayDeviceInfo),
     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, nullptr),
-    std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",0,15, 0, nullptr),
+    std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",1,5, 0, nullptr),
     std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, "^^^","^^^", nullptr),
     std::make_shared<MenuItemEnum>("clock_mode","Clock", "C", false, vector<String>{"Off","On","Only"}, nullptr),
     std::make_shared<MenuItemNumericRange>("timezone","Tzone", "Tz",-11,+13, 0, nullptr),
