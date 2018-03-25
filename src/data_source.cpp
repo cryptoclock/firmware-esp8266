@@ -157,6 +157,9 @@ void DataSource::textCallback(const String& str)
     if (m_on_price_timeout_set)
       m_on_price_timeout_set(str.substring(13));
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Data timeout set to '%s' secs\n"),str.substring(13).c_str());
+  } else if (str.startsWith(";GET_PARAMS")) {
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] Parameters requested, sending\n"));
+    sendAllParameters();
   } else if (str.startsWith(";HB")) {
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Heartbeat received\n"));
   } else if (str.startsWith("; Welcome")) {
