@@ -547,7 +547,10 @@ void loop() {
       setAnnouncement(g_announcement, g_announcement_static, g_announcement_time, [](){ g_current_mode = MODE::TICKER; });
       g_announcement = "";
     } else if (g_current_mode==MODE::ANNOUNCEMENT) {
-      replaceAnnouncement(g_announcement, g_announcement_static, g_announcement_time, [](){ g_current_mode = MODE::TICKER; });
+      if (g_announcement_static)
+        replaceAnnouncement(g_announcement, g_announcement_static, g_announcement_time, [](){ g_current_mode = MODE::TICKER; });
+
+      // ignore another message if current (non-static) message is in progress
       g_announcement = "";
     }
   }
