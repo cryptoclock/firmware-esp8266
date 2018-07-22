@@ -160,6 +160,10 @@ void DataSource::textCallback(const String& str)
   } else if (str.startsWith(";GET_PARAMS")) {
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Parameters requested, sending\n"));
     sendAllParameters();
+  } else if (str.startsWith(";NEW_SETTINGS_LOADED")) {
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] New settings loaded\n"));
+    if (m_on_new_settings)
+      m_on_new_settings();
   } else if (str.startsWith(";HB")) {
     DEBUG_SERIAL.printf_P(PSTR("[WSc] Heartbeat received\n"));
   } else if (str.startsWith("; Welcome")) {

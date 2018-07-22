@@ -60,6 +60,7 @@ shared_ptr<Button> g_flash_button;
 bool g_start_ondemand_ap = false;
 bool g_force_wipe = false;
 bool g_entered_ap_mode = false;
+bool g_reset_price_on_next_tick = false;
 
 enum class MODE { TICKER, MENU, ANNOUNCEMENT, OTP};
 MODE g_current_mode(MODE::TICKER);
@@ -329,9 +330,21 @@ void setupDataSource()
   g_data_source->setOnPriceChange([&](const String& price){
     auto currentPrice = Price(price);
     currentPrice.debug_print();
+
+    if (g_reset_price_on_next_tick) {
+      g_price_action->reset();
+      g_reset_price_on_next_tick = false;
+    }
+
     g_price_action->updatePrice(price);
 //    DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free Heap: %i\n"), ESP.getFreeHeap());
   });
+
+  g_data_source->setOnNewSettings([&](){
+    g_reset_price_on_next_tick = true;
+//    g_price_action->reset();
+  });
+
 
   g_data_source->connect();
 }
