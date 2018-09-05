@@ -22,10 +22,10 @@ void Clock::draw(DisplayT *display, Coords coords)
   if (m_time=="") return;
 
   String text;
-  if (int(m_elapsed_time) % 2 == 0)
-    text = m_time;
-  else
-    text = m_time.substring(0,2) + " " + m_time.substring(3,5);
+  // if (int(m_elapsed_time) % 2 == 0)
+  text = m_time;
+  // else
+  //   text = m_time.substring(0,2) + " " + m_time.substring(3,5);
 
   display->displayText(text, m_coords + coords + display->centerTextOffset(text));
 }
