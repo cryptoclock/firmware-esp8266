@@ -546,6 +546,7 @@ void setup() {
   setupNTP();
   setupDataSource();
 
+//  tone(D2, 1000);
 }
 
 void loop() {
