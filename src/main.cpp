@@ -32,6 +32,7 @@ using Display::Action::ActionPtr_t;
 #include "menu.hpp"
 #include "data_source.hpp"
 #include "bitmaps.hpp"
+#include "gyro.hpp"
 
 #include <EEPROM.h>
 
@@ -187,7 +188,7 @@ void setupDisplay()
 #else
   #error error
 #endif
-  g_display->setupTickCallback([&]() { g_display->tick(); }); // can't be moved to class declaration because of lambda capture
+  g_display->setupTickCallback([&]() { g_display->tick(); MPUtick(); }); // can't be moved to class declaration because of lambda capture
 }
 
 void setupClock()
@@ -234,11 +235,12 @@ void setupParameters()
     item.value = String(font);
     g_display->setFont(font);
   }});
-  g_parameters.addItem({"rotate_display","Rotate Display (0,1)","0", 5, [](ParameterItem& item, bool init, bool final_change)
+  g_parameters.addItem({"rotate_display","Rotate Display (0,1, 2=auto)","0", 5, [](ParameterItem& item, bool init, bool final_change)
   {
-    int rotate = std::min(std::max(item.value.toInt(),0L),1L);
+    int rotate = std::min(std::max(item.value.toInt(),0L),2L);
     item.value = String(rotate);
-    g_display->setRotation(rotate);
+    if (rotate==0 || rotate==1)
+      g_display->setRotation(rotate);
   }});
   g_parameters.addItem({"clock_mode","Show Clock (0-2)","1", 5, [](ParameterItem& item, bool init, bool final_change)
   {
@@ -298,6 +300,8 @@ void setupHW()
   //set led pin as output
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, true); // high = off
+
+  MPUsetup();
 }
 
 void setupDataSource()
@@ -501,7 +505,7 @@ void setupMenu()
     std::make_shared<MenuItemAction>("__info","Info","Info", displayDeviceInfo),
     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, nullptr),
     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",1,5, 0, nullptr),
-    std::make_shared<MenuItemBoolean>("rotate_display","Rotate", "Rot", false, "^^^","^^^", nullptr),
+    std::make_shared<MenuItemEnum>("rotate_display","Rotate", "R", false, vector<String>{"Off","On","auto"}, nullptr),
     std::make_shared<MenuItemEnum>("clock_mode","Clock", "C", false, vector<String>{"Off","On","Only"}, nullptr),
     std::make_shared<MenuItemNumericRange>("timezone","Tzone", "Tz",-11,+13, 0, nullptr),
     std::make_shared<MenuItemAction>("__erase","ERASE","ERASE", factoryReset)
@@ -546,7 +550,7 @@ void setup() {
   setupNTP();
   setupDataSource();
 
-//  tone(D2, 1000);
+//  tone(D8, 1000);
 }
 
 void loop() {
