@@ -1,14 +1,33 @@
+/* 
+  Cryptoclock ESP8266
+  Copyright (C) 2018 www.cryptoclock.net <info@cryptoclock.net>
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along
+  with this program; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
 #include "config_common.hpp"
 
 #include <Arduino.h>
 #include <Hash.h>
 #include <Wire.h>
 
-#include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
+#include <ESP8266WiFi.h>
 
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
-#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
+#include <WiFiManager.h>
 
 #include <vector>
 
@@ -68,7 +87,7 @@ MODE g_current_mode(MODE::TICKER);
 
 shared_ptr<Menu> g_menu = nullptr;
 
-// FIXME: class/struct
+// FIXME: class
 String g_announcement="";
 bool g_announcement_static = false;
 int g_announcement_time = 0;
