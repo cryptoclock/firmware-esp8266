@@ -34,7 +34,7 @@ void WiFiManagerParameter::init(const char *id, const char *placeholder, const c
   _placeholder = placeholder;
   _length = length;
   _value = new char[length + 1];
-  for (int i = 0; i < length; i++) {
+  for (int i = 0; i < length + 1; i++) {
     _value[i] = 0;
   }
   if (defaultValue != NULL) {
@@ -42,6 +42,12 @@ void WiFiManagerParameter::init(const char *id, const char *placeholder, const c
   }
 
   _customHTML = custom;
+}
+
+WiFiManagerParameter::~WiFiManagerParameter() {
+  if (_value != NULL) {
+    delete[] _value;
+  }
 }
 
 const char* WiFiManagerParameter::getValue() {
@@ -205,7 +211,12 @@ boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPasswo
 
       // using user-provided  _ssid, _pass in place of system-stored ssid and pass
       if (connectWifi(_ssid, _pass) != WL_CONNECTED) {
-        DEBUG_WM(F("Failed to connect."));
+        DEBUG_WM(F("Failed to connect to new AP, restarting"));
+        if ( _savecallback != NULL)
+          _savecallback();
+
+        resetSettings();
+        ESP.restart();
       } else {
         //connected
         WiFi.mode(WIFI_STA);
@@ -268,7 +279,7 @@ int WiFiManager::connectWifi(String ssid, String pass) {
     }
 
     //not connected, test known APs
-    if (waitForConnectResult(_connectTimeout ? 10000 : _connectTimeout) != WL_CONNECTED && _apList_size) {
+    if (waitForConnectResult(_connectTimeout ? _connectTimeout : 10000) != WL_CONNECTED && _apList_size) {
       DEBUG_WM(F("Scan for known APs"));
       int n = WiFi.scanNetworks();
       if (n == 0) {
@@ -450,10 +461,10 @@ void WiFiManager::handleRoot() {
   page += FPSTR(HTTP_STYLE);
   page += _customHeadElement;
   page += FPSTR(HTTP_HEAD_END);
-  page += "<h1>";
+  page += F("<h1>Cryptoclock</h1>");
+  page += "<h3>";
   page += _apName;
-  page += "</h1>";
-  page += F("<h3>WiFiManager</h3>");
+  page += "</h3>";
   page += FPSTR(HTTP_PORTAL_OPTIONS);
   page += FPSTR(HTTP_END);
 
@@ -528,6 +539,7 @@ void WiFiManager::handleWifi(boolean scan) {
           String item = FPSTR(HTTP_ITEM);
           String rssiQ;
           rssiQ += quality;
+          rssiQ += "%";
           item.replace("{v}", WiFi.SSID(indices[i]));
           item.replace("{r}", rssiQ);
           if (WiFi.encryptionType(indices[i]) != ENC_TYPE_NONE) {
@@ -543,7 +555,9 @@ void WiFiManager::handleWifi(boolean scan) {
         }
 
       }
-	  // show saved networks
+
+      // show saved networks
+      page += FPSTR(HTTP_SAVED_APS);
       for (int j = 0; j < _apList_size; j++) {
         String item = FPSTR(HTTP_ITEM);
         item.replace("{v}", _apList[j].ssid);
@@ -648,7 +662,7 @@ void WiFiManager::handleWifiSave() {
     //read parameter
     String value = server->arg(_params[i]->getID()).c_str();
     //store it in array
-    value.toCharArray(_params[i]->_value, _params[i]->_length);
+    value.toCharArray(_params[i]->_value, _params[i]->_length + 1);
     DEBUG_WM(F("Parameter"));
     DEBUG_WM(_params[i]->getID());
     DEBUG_WM(value);
@@ -702,6 +716,9 @@ void WiFiManager::handleInfo() {
   page += _customHeadElement;
   page += FPSTR(HTTP_HEAD_END);
   page += F("<dl>");
+  page += F("<dt>Firmware ID</dt><dd>");
+  page += ESP.getSketchMD5();
+  page += F("</dd>");
   page += F("<dt>Chip ID</dt><dd>");
   page += ESP.getChipId();
   page += F("</dd>");
@@ -774,7 +791,10 @@ void WiFiManager::handleDelete() {
       _apList[j].pass = _apList[j+1].pass;
     }
   }
-  
+
+  if ( _savecallback != NULL)
+    _savecallback();
+
   handleWifi(true);
 }
 
