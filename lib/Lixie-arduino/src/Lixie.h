@@ -15,6 +15,7 @@ Released under the GPLv3 license.
 	#define FASTLED_INTERRUPT_RETRY_COUNT 0
 #endif
 
+#define FASTLED_INTERNAL
 #include "FastLED.h"
 
 #ifndef LED_TYPE
@@ -27,7 +28,9 @@ Released under the GPLv3 license.
 
 class Lixie{
 	public:
-		Lixie(const uint8_t pin, uint8_t nDigits);
+		template<const uint8_t pin, uint8_t nDigits>
+		void initialize();
+
 		void begin();
    
 		void clear(bool show_change = true);
@@ -89,8 +92,8 @@ class Lixie{
 	private:
 		static constexpr byte Addresses[10] = {3, 4, 2, 0, 8, 6, 5, 7, 9, 1};
 		const static uint8_t LEDsPerDigit = 20;
-		const uint8_t NumDigits;
-		const uint16_t NumLEDs;
+		uint8_t NumDigits;
+		uint16_t NumLEDs;
 		CRGB *leds;
 		CRGB *colors;
 		CRGB *colors_off;
@@ -116,5 +119,19 @@ class Lixie{
 		CRGB nixie_col_ion = CRGB(255,70,7);
 		CRGB nixie_col_aura = CRGB(0,100,255);
 };
+
+template<const uint8_t pin, uint8_t nDigits>
+void Lixie::initialize()
+{
+	NumDigits = nDigits;
+	NumLEDs = nDigits * LEDsPerDigit;
+	leds = new CRGB[NumLEDs];
+	led_states = new byte[NumDigits * 3]; // 24 bits for 20 LED states
+	colors = new CRGB[NumDigits];
+	colors_off = new CRGB[NumDigits];
+	digit_brightness = new byte[NumDigits];
+
+	controller = &FastLED.addLeds<LED_TYPE, pin, COLOR_ORDER>(leds, NumLEDs);
+}
 
 #endif

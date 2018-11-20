@@ -14,16 +14,6 @@
 constexpr byte Lixie::Addresses[];
 float bright = 1.0;
 
-Lixie::Lixie(const uint8_t pin, uint8_t nDigits):NumDigits(nDigits), NumLEDs(nDigits * LEDsPerDigit){
-	leds = new CRGB[NumLEDs];
-	led_states = new byte[NumDigits * 3]; // 24 bits for 20 LED states
-	colors = new CRGB[NumDigits];
-	colors_off = new CRGB[NumDigits];
-	digit_brightness = new byte[NumDigits];
-	
-	build_controller(pin);
-}
-
 CRGB enforce_brightness(CRGB input){
 	/*
 	 *	FastLED.setBrightness() does not work with CLEDControllers, so brightness
@@ -739,48 +729,6 @@ bool Lixie::maxed_out(uint32_t input) const{
 
 CRGB* Lixie::get_leds() const{
 	return leds;
-}
-
-void Lixie::build_controller(const uint8_t pin){
-	#ifdef __AVR__
-		if (pin == 0)
-			controller = &FastLED.addLeds<LED_TYPE, 0, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 1)
-			controller = &FastLED.addLeds<LED_TYPE, 1, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 2)
-			controller = &FastLED.addLeds<LED_TYPE, 2, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 3)
-			controller = &FastLED.addLeds<LED_TYPE, 3, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 4)
-			controller = &FastLED.addLeds<LED_TYPE, 4, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 5)
-			controller = &FastLED.addLeds<LED_TYPE, 5, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 6)
-			controller = &FastLED.addLeds<LED_TYPE, 6, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 7)
-			controller = &FastLED.addLeds<LED_TYPE, 7, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 8)
-			controller = &FastLED.addLeds<LED_TYPE, 8, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 9)
-			controller = &FastLED.addLeds<LED_TYPE, 9, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 10)
-			controller = &FastLED.addLeds<LED_TYPE, 10, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 11)
-			controller = &FastLED.addLeds<LED_TYPE, 11, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 12)
-			controller = &FastLED.addLeds<LED_TYPE, 12, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 13)
-			controller = &FastLED.addLeds<LED_TYPE, 13, COLOR_ORDER>(leds, NumLEDs);
-	#elif ESP8266
-		if (pin == 0)
-			controller = &FastLED.addLeds<LED_TYPE, 0, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 2)
-			controller = &FastLED.addLeds<LED_TYPE, 2, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 4)
-			controller = &FastLED.addLeds<LED_TYPE, 4, COLOR_ORDER>(leds, NumLEDs);
-		else if (pin == 5)
-			controller = &FastLED.addLeds<LED_TYPE, 5, COLOR_ORDER>(leds, NumLEDs);
-	#endif
 }
 
 void Lixie::max_power(byte volts, uint16_t milliamps){
