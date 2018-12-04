@@ -207,7 +207,12 @@ void setupDisplay()
 #else
   #error error
 #endif
-  g_display->setupTickCallback([&]() { g_display->tick(); MPUtick(); }); // can't be moved to class declaration because of lambda capture
+  g_display->setupTickCallback([&]() { 
+    g_display->tick(); 
+#ifdef HAS_GYROSCOPE
+    MPUtick(); 
+#endif
+  }); // can't be moved to class declaration because of lambda capture
 }
 
 void setupClock()
@@ -254,7 +259,14 @@ void setupParameters()
     item.value = String(font);
     g_display->setFont(font);
   }});
-  g_parameters.addItem({"rotate_display","Rotate Display (0,1, 2=auto)","0", 5, [](ParameterItem& item, bool init, bool final_change)
+
+  g_parameters.addItem({"rotate_display",
+#ifdef HAS_GYROSCOPE
+    "Rotate Display (0,1, 2=auto)",
+#else
+    "Rotate Display (0,1)",
+#endif
+  "0", 5, [](ParameterItem& item, bool init, bool final_change)
   {
     int rotate = std::min(std::max(item.value.toInt(),0L),2L);
     item.value = String(rotate);
@@ -320,7 +332,9 @@ void setupHW()
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, true); // high = off
 
+#ifdef HAS_GYROSCOPE
   MPUsetup();
+#endif
 }
 
 void setupDataSource()
@@ -524,7 +538,11 @@ void setupMenu()
     std::make_shared<MenuItemAction>("__info","Info","Info", displayDeviceInfo),
     std::make_shared<MenuItemNumericRange>("font","Font", "Font",0,2, 0, nullptr),
     std::make_shared<MenuItemNumericRange>("brightness","Bright", "Bri",1,5, 0, nullptr),
+#ifdef HAS_GYROSCOPE
     std::make_shared<MenuItemEnum>("rotate_display","Rotate", "R", false, vector<String>{"Off","On","auto"}, nullptr),
+#else
+    std::make_shared<MenuItemEnum>("rotate_display","Rotate", "R", false, vector<String>{"Off","On"}, nullptr),
+#endif
     std::make_shared<MenuItemEnum>("clock_mode","Clock", "C", false, vector<String>{"Off","On","Only"}, nullptr),
     std::make_shared<MenuItemNumericRange>("timezone","Tzone", "Tz",-11,+13, 0, nullptr),
     std::make_shared<MenuItemAction>("__erase","ERASE","ERASE", factoryReset)

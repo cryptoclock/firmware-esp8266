@@ -25,7 +25,10 @@
 
 #define X_DISPLAY_MILIS_PER_TICK 33
 
-#if defined(X_MODEL_3DA0100) // default model, 4 max7219 8x8 led modules for total of 32x8 display
+#if defined(X_MODEL_3DA0100) || defined(X_MODEL_3DA0105) // default model, 4 max7219 8x8 led modules for total of 32x8 display
+  #if defined(X_MODEL_3DA0105) // model with gyroscope module for automatic display orientation
+    #define HAS_GYROSCOPE
+  #endif
   #define X_DISPLAY_U8G2
   #define X_DISPLAY_WIDTH 32
   #define X_DISPLAY_HEIGHT 8
