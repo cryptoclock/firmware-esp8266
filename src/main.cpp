@@ -82,7 +82,7 @@ bool g_force_wipe = false;
 bool g_entered_ap_mode = false;
 bool g_reset_price_on_next_tick = false;
 
-enum class MODE { TICKER, MENU, ANNOUNCEMENT, OTP};
+enum class MODE { TICKER, MENU, ANNOUNCEMENT, OTP, AP, UPDATE};
 MODE g_current_mode(MODE::TICKER);
 
 shared_ptr<Menu> g_menu = nullptr;
@@ -163,6 +163,8 @@ void replaceAnnouncement(const String& message, const bool static_msg, const int
 
 void configModeCallback (WiFiManager *myWiFiManager)
 {
+  g_current_mode = MODE::AP;
+  
   g_entered_ap_mode = true;
   DEBUG_SERIAL.println(F("Entered config mode"));
   DEBUG_SERIAL.println(WiFi.softAPIP());
@@ -344,7 +346,9 @@ void setupDataSource()
   g_data_source->setOnUpdateRequest([&]() {
     DEBUG_SERIAL.println(F("Update request received, updating"));
     g_display->prependAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
+    g_current_mode = MODE::UPDATE;
     Firmware::update(g_parameters["update_url"]);
+    g_current_mode = MODE::TICKER;
     ESP.restart();
   });
 
@@ -579,7 +583,9 @@ void setup() {
 
   /* Update */
   g_display->queueAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
+  g_current_mode = MODE::UPDATE;
   Firmware::update(g_parameters["update_url"]);
+  g_current_mode = MODE::TICKER;
 
   g_price_action = make_shared<Display::PriceAction>(10.0); // animation speed, in digits per second
   g_display->replaceAction(g_price_action);
