@@ -11,16 +11,22 @@ By default, 32x8 LED matrix with MAX7219 driver chips is used, along with option
 
 Currently supported displays:
 -----------------------------
-Any graphical display configuration supported by U8g2 library (see https://github.com/olikraus/u8g2/wiki/u8g2setupcpp for details)
-TM1637 7-segment driver
-Lixie
-Neopixel (Work in Progress)
+* Any graphical display configuration supported by U8g2 library (see https://github.com/olikraus/u8g2/wiki/u8g2setupcpp for details)
+* TM1637 7-segment driver
+* Lixie
+* Neopixel (Work in Progress)
 
 Peripherials
 -------------
-MPU6050 gyroscope/accelerometer module via I2C interface (default pins: SDA - D2(GPIO4), SCL - D1(GPIO5))
-Piezoelectric buzzer (default pin D8(GPIO15))
-MAX7219 chainable led matrix (default pins: DATA - D5(GPIO14), CS - D6(GPIO12), CLK - D7(GPIO13))
+* MPU6050 gyroscope/accelerometer module via I2C interface
+  * SDA - D2(GPIO4)
+  * SCL - D1(GPIO5)
+* Piezoelectric buzzer
+  * D8(GPIO15)
+* MAX7219 chainable led matrix
+  * DATA - D5(GPIO14)
+  * CS - D6(GPIO12)
+  * CLK - D7(GPIO13))
 
 Mode of Operation
 ------------------
