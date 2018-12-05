@@ -29,7 +29,7 @@ void Firmware::update(const String &update_url)
     return;
   }
 
-  String url = "http://" + update_url + "/esp/update?md5=" + ESP.getSketchMD5() + "&model=" + String(X_MODEL_NUMBER);
+  String url = "http://" + update_url + "/esp/update?md5=" + ESP.getSketchMD5() + "&model=" + String(X_MODEL_NUMBER) + "&version=" + String(FIRMWARE_VERSION);
   //t_httpUpdate_return ret = ESPhttpUpdate.update(url,"","AF B9 78 3B E6 1D 70 AE E7 97 0A 50 D8 7B 1C 89 83 90 32 30");
   DEBUG_SERIAL.printf_P(PSTR("Update URL: '%s'\n"),url.c_str());
   t_httpUpdate_return ret = ESPhttpUpdate.update(url);
