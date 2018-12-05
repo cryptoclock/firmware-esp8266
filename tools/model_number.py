@@ -7,10 +7,13 @@
 import os
 import sys
 
-model = os.getenv("X_MODEL_NUMBER","3DA0100");
+#model = os.getenv("X_MODEL_NUMBER","3DA0100");
+model = sys.argv[1]
+version = os.getenv("X_VERSION","0.0.1")
 
-print("-DX_MODEL_" + model);
-print("-DX_MODEL_NUMBER=\\\""+ model + "\\\"");
+print("-DX_MODEL_" + model)
+print("-DX_MODEL_NUMBER=\\\"" + model + "\\\"")
+print("-DFIRMWARE_VERSION=\\\"" + version + "\\\"")
 
-for arg in sys.argv[1:] :
+for arg in sys.argv[2:] :
     print(arg)
