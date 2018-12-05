@@ -2,6 +2,9 @@ language: python
 python:
     - "2.7"
 
+env:
+  - X_VERSION=$TRAVIS_TAG
+  
 sudo: false
 cache:
     directories:
@@ -15,13 +18,16 @@ script:
     - platformio run
 
 before_deploy:
-  - find .pioenvs -name "firmware.elf" | xargs -n1 dirname | xargs -n1 basename | xargs -n1 -I{} mv .pioenvs/{}/firmware.elf ./{}.bin
+  - find .pioenvs -name "firmware.bin" | xargs -n1 dirname | xargs -n1 basename | xargs -n1 -I{} mv .pioenvs/{}/firmware.bin ./{}.bin
+  - find .pioenvs -name "firmware.elf" | xargs -n1 dirname | xargs -n1 basename | xargs -n1 -I{} mv .pioenvs/{}/firmware.elf ./{}.elf
 
 deploy:
   provider: releases
   api_key: $GITHUB_OAUTH
   file_glob: true
-  file: "*.bin"
+  file:
+    - "*.bin"
+    - "*.elf"
   skip_cleanup: true
   on:
     tags: true
