@@ -10,6 +10,8 @@ import sys
 #model = os.getenv("X_MODEL_NUMBER","3DA0100");
 model = sys.argv[1]
 version = os.getenv("X_VERSION","0.0.1")
+if version[0]=="v":
+  version = version[1:]
 
 print("-DX_MODEL_" + model)
 print("-DX_MODEL_NUMBER=\\\"" + model + "\\\"")
