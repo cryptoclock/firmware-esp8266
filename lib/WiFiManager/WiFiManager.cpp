@@ -73,14 +73,14 @@ void WiFiManager::addParameter(WiFiManagerParameter *p) {
   if(_paramsCount + 1 > WIFI_MANAGER_MAX_PARAMS)
   {
     //Max parameters exceeded!
-	DEBUG_WM("WIFI_MANAGER_MAX_PARAMS exceeded, increase number (in WiFiManager.h) before adding more parameters!");
-	DEBUG_WM("Skipping parameter with ID:");
+	DEBUG_WM(F("WIFI_MANAGER_MAX_PARAMS exceeded, increase number (in WiFiManager.h) before adding more parameters!"));
+	DEBUG_WM(F("Skipping parameter with ID:"));
 	DEBUG_WM(p->getID());
 	return;
   }
   _params[_paramsCount] = p;
   _paramsCount++;
-  DEBUG_WM("Adding parameter");
+  DEBUG_WM(F("Adding parameter"));
   DEBUG_WM(p->getID());
 }
 
@@ -147,10 +147,6 @@ boolean WiFiManager::autoConnect(char const *apName, char const *apPassword) {
   DEBUG_WM(F(""));
   DEBUG_WM(F("AutoConnect"));
 
-  // read eeprom for ssid and pass
-  //String ssid = getSSID();
-  //String pass = getPassword();
-
   // attempt to connect; should it fail, fall back to AP
   WiFi.mode(WIFI_STA);
 
@@ -180,7 +176,7 @@ boolean WiFiManager::startConfigPortal() {
 boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPassword) {
   //setup AP
   WiFi.mode(WIFI_AP_STA);
-  DEBUG_WM("SET AP STA");
+  DEBUG_WM(F("SET AP STA"));
 
   _apName = apName;
   _apPassword = apPassword;
@@ -247,6 +243,26 @@ boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPasswo
   return  WiFi.status() == WL_CONNECTED;
 }
 
+void WiFiManager::printAPList(void) 
+{
+  DEBUG_WM(F("Saved APs:"));
+  DEBUG_WM(F("----------"));
+  if (_apList_size<=0)
+    DEBUG_WM(F("---None---"));
+  else 
+    for (int i=0;i<_apList_size;++i) {
+      DEBUG_WM(_apList[i].ssid);
+    }
+  DEBUG_WM(F("----------"));
+}
+
+//trying to fix connection in progress hanging
+void WiFiManager::fixHangingConnection()
+{
+  ETS_UART_INTR_DISABLE();
+  wifi_station_disconnect();
+  ETS_UART_INTR_ENABLE();
+}
 
 int WiFiManager::connectWifi(String ssid, String pass) {
   DEBUG_WM(F("Connecting as wifi client..."));
@@ -259,66 +275,75 @@ int WiFiManager::connectWifi(String ssid, String pass) {
   }
   //fix for auto connect racing issue
   if (WiFi.status() == WL_CONNECTED) {
-    DEBUG_WM("Already connected. Bailing out.");
+    DEBUG_WM(F("Already connected. Bailing out."));
     return WL_CONNECTED;
   }
-  //check if we have ssid and pass and force those, if not, try with last saved values
-  if (ssid != "") {
-    WiFi.begin(ssid.c_str(), pass.c_str());
-  } else {
-    if (WiFi.SSID()) {
-      DEBUG_WM("Using last saved values, should be faster");
-      //trying to fix connection in progress hanging
-      ETS_UART_INTR_DISABLE();
-      wifi_station_disconnect();
-      ETS_UART_INTR_ENABLE();
 
-      WiFi.begin();
-    } else {
-      DEBUG_WM("No saved credentials");
-    }
-
-    //not connected, test known APs
-    if (waitForConnectResult(_connectTimeout ? _connectTimeout : 10000) != WL_CONNECTED && _apList_size) {
-      DEBUG_WM(F("Scan for known APs"));
-      int n = WiFi.scanNetworks();
-      if (n == 0) {
-        DEBUG_WM(F("No networks found"));
-      } else {
-        // search for strongest networks
-        int8_t best = -1;
-        int32_t best_rssi = -100000;
-        for (int i = 0; i < n; i++) {
-          for (int j = 0; j < _apList_size; j++) {
-            if (WiFi.SSID(i) == _apList[j].ssid && WiFi.RSSI(i) > best_rssi) {
-              best = j;
-              best_rssi = WiFi.RSSI(i);
-            }
-          }
-        }
-        // connect to known AP
-        if (best >= 0) {
-          DEBUG_WM ("Connecting to: ");
-          DEBUG_WM (_apList[best].ssid);
-          WiFi.begin(_apList[best].ssid.c_str(), _apList[best].pass.c_str());
-        }
-      }
-    }
-  }				
-				
-  int connRes = waitForConnectResult();
-  DEBUG_WM ("Connection result: ");
-  DEBUG_WM ( connRes );
-  if (ssid != "" && connRes == WL_CONNECTED ) {
-    // add to known APs
+  fixHangingConnection();
+  int connRes = WL_CONNECT_FAILED;
+  if (ssid != "") { // called after setting ssid/pass through web interface
     addAP(ssid.c_str(), pass.c_str());
     // notify application about adding a new network
-    if ( _savecallback != NULL) {
-       _savecallback();
-    }
-
+    if ( _savecallback != NULL)
+      _savecallback();
+    WiFi.begin(ssid.c_str(), pass.c_str());
+  } else if (WiFi.SSID()) { // saved credentials from previous connection ?
+    DEBUG_WM(F("Using last saved values, should be faster"));
+    WiFi.begin();
+  } else {
+    DEBUG_WM(F("No saved credentials"));
   }
 
+  printAPList();
+  //not connected, test known APs
+  int tries = 0;
+  const int max_tries = 10;
+  while (++tries<=max_tries) {
+    String s = String("Try ") + String(tries) + "/" + String(max_tries);
+    DEBUG_WM(s);
+
+    connRes = waitForConnectResult(_connectTimeout ? _connectTimeout : 10000);
+    DEBUG_WM ("Connection result: ");
+    DEBUG_WM ( connRes );
+    if (connRes == WL_CONNECTED)
+      break;
+
+    // no saved APs
+    if (!_apList_size) {
+      connRes = WL_CONNECT_FAILED;
+      break;
+    }
+
+    // scan APs
+    DEBUG_WM(F("Scan for known APs"));
+    int n = WiFi.scanNetworks();
+    if (n == 0) {
+      DEBUG_WM(F("No networks found"));
+    } else {
+      // search for strongest networks
+      int8_t best = -1;
+      int32_t best_rssi = -100000;
+      for (int i = 0; i < n; i++) {
+        for (int j = 0; j < _apList_size; j++) {
+          if (WiFi.SSID(i) == _apList[j].ssid && WiFi.RSSI(i) > best_rssi) {
+            best = j;
+            best_rssi = WiFi.RSSI(i);
+          }
+        }
+      }
+      // connect to known AP
+      if (best < 0)
+        best = 0;
+
+      fixHangingConnection();
+
+      DEBUG_WM ("Connecting to: ");
+      DEBUG_WM (_apList[best].ssid);
+      WiFi.begin(_apList[best].ssid.c_str(), _apList[best].pass.c_str());
+    }
+    delay(1000);
+  } // end loop
+			
   //not connected, WPS enabled, no pass - first attempt
   if (_tryWPS && connRes != WL_CONNECTED && pass == "") {
     startWPS();
@@ -358,27 +383,7 @@ void WiFiManager::startWPS() {
   WiFi.beginWPSConfig();
   DEBUG_WM("END WPS");
 }
-/*
-  String WiFiManager::getSSID() {
-  if (_ssid == "") {
-    DEBUG_WM(F("Reading SSID"));
-    _ssid = WiFi.SSID();
-    DEBUG_WM(F("SSID: "));
-    DEBUG_WM(_ssid);
-  }
-  return _ssid;
-  }
 
-  String WiFiManager::getPassword() {
-  if (_pass == "") {
-    DEBUG_WM(F("Reading Password"));
-    _pass = WiFi.psk();
-    DEBUG_WM("Password: " + _pass);
-    //DEBUG_WM(_pass);
-  }
-  return _pass;
-  }
-*/
 String WiFiManager::getConfigPortalSSID() {
   return _apName;
 }
@@ -391,6 +396,14 @@ void WiFiManager::resetSettings() {
 }
 
 boolean WiFiManager::addAP(char const *ssid, char const *password) {
+  // just updating password?
+  for (int i=0;i<_apList_size;++i) {
+    if (_apList[i].ssid == ssid) {
+      _apList[i].pass = password;
+      return true;
+    }
+  }
+
   if ( _apList_size < WIFI_MANAGER_MAX_NETWORKS ) {
     _apList[_apList_size].ssid = ssid;
     if ( password )
@@ -398,6 +411,7 @@ boolean WiFiManager::addAP(char const *ssid, char const *password) {
     else
       _apList[_apList_size].pass = "";
     _apList_size++;
+    return true;
   } else {
     return false;
   }
@@ -879,7 +893,7 @@ int WiFiManager::getRSSIasQuality(int RSSI) {
 
 /** Is this an IP? */
 boolean WiFiManager::isIp(String str) {
-  for (int i = 0; i < str.length(); i++) {
+  for (int i = 0; i < (int) str.length(); i++) {
     int c = str.charAt(i);
     if (c != '.' && (c < '0' || c > '9')) {
       return false;

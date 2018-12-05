@@ -57,9 +57,8 @@ void DataSource::loop()
 {
   // force reconnect
   if (!m_connected && (millis() - m_last_connected_at > c_force_reconnect_interval)) {
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Couldn't autoconnect for %i secs, forcing WiFi reconnect\n"), c_force_reconnect_interval / 1000);
-    WiFi.reconnect();
-    reconnect();
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] Couldn't autoconnect for %i secs, forcing restart\n"), c_force_reconnect_interval / 1000);
+    ESP.restart();
   }
 
   if (m_connected && (millis() - m_last_data_received_at > c_no_data_reconnect_interval)) {

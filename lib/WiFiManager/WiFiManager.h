@@ -124,6 +124,8 @@ class WiFiManager
     //if this is true, remove duplicated Access Points - defaut true
     void          setRemoveDuplicateAPs(boolean removeDuplicates);
 
+    void          fixHangingConnection();
+
   private:
     std::unique_ptr<DNSServer>        dnsServer;
     std::unique_ptr<ESP8266WebServer> server;
@@ -184,6 +186,8 @@ class WiFiManager
     int           getRSSIasQuality(int RSSI);
     boolean       isIp(String str);
     String        toStringIp(IPAddress ip);
+    void          printAPList();
+
 
     boolean       connect;
     boolean       _debug = true;
