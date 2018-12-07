@@ -53,7 +53,5 @@ void loop()
   if (g_force_wipe==true)
     factoryReset();
 
-  auto time = NTP.getTimeDateString();
-  g_clock_action->updateTime(time);
   delay(100);
 }

@@ -101,21 +101,22 @@ void clock_callback()
   if (g_parameters["clock_mode"].toInt() == 0) // Off
     return;
 
-  auto time = NTP.getTimeDateString();
-
   if (g_clock_action->isAlwaysOn()) {
-    g_clock_action->updateTime(time);
+    if (g_display->getTopAction() == g_clock_action) // clock is already top action
+      return;
+
+    g_display->cleanQueue();
     g_display->prependAction(g_clock_action);
     return;
   }
 
-#if !defined(X_CLOCK_ONLY_DISPLAY)
-  if (time=="Time not set")
+// don't switch display to clock if time wasn't yet set by NTP
+#if !defined(X_CLOCK_ONLY_DISPLAY) 
+  if (!g_clock_action->isTimeSet())
     return;
 #endif
 
-  DEBUG_SERIAL.printf_P(PSTR("[NTP] Displaying time %s\n"),  time.c_str());
-  g_clock_action->updateTime(time);
+  DEBUG_SERIAL.println(F("[NTP] Displaying clock"));
   g_display->prependAction(
     make_shared<Display::Action::SlideTransition>(g_clock_action, 1, g_price_action, 2, 0.5, Coords{0,+1})
   );
@@ -378,7 +379,7 @@ void setupDataSource()
     }
 
     g_price_action->updatePrice(price);
-//    DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free Heap: %i\n"), ESP.getFreeHeap());
+    DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free heap: %i\n"),ESP.getFreeHeap());
   });
 
   g_data_source->setOnNewSettings([&](){

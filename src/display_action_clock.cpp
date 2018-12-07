@@ -17,6 +17,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
+#include <TimeLib.h>
+#include <Time.h>
+#include <NtpClientLib.h>
 #include "config_common.hpp"
 #include "display_action_clock.hpp"
 
@@ -24,6 +27,7 @@ namespace Display {
 namespace Action {
 void Clock::tick(DisplayT *display, double elapsed_time)
 {
+  updateTime();
   m_elapsed_time += elapsed_time;
 
   if (m_always_on)
@@ -38,24 +42,23 @@ void Clock::tick(DisplayT *display, double elapsed_time)
 
 void Clock::draw(DisplayT *display, Coords coords)
 {
-  if (m_time=="") return;
+  if (m_time=="")
+    return;
 
-  String text;
-  // if (int(m_elapsed_time) % 2 == 0)
-  text = m_time;
-  // else
-  //   text = m_time.substring(0,2) + " " + m_time.substring(3,5);
-
-  display->displayText(text, m_coords + coords + display->centerTextOffset(text));
+  display->displayText(m_time, m_coords + coords + display->centerTextOffset(m_time));
 }
 
-void Clock::updateTime(const String& time)
+void Clock::updateTime()
 {
-  if (time=="Time not set")
-    m_time = "--:--";
-  else
-    m_time = time.substring(0,5);
+  auto time = NTP.getTimeDateString();
 
+  if (time=="Time not set") {
+    m_time = "--:--";
+    m_is_time_set = false;
+  } else {
+    m_time = time.substring(0,5);
+    m_is_time_set = true;
+  }
 }
 
 void Clock::setAlwaysOn(bool always_on)
