@@ -82,8 +82,8 @@ bool g_force_wipe = false;
 bool g_entered_ap_mode = false;
 bool g_reset_price_on_next_tick = false;
 
-enum class MODE { TICKER, MENU, ANNOUNCEMENT, OTP, AP, UPDATE};
-MODE g_current_mode(MODE::TICKER);
+enum class MODE { TICKER, MENU, ANNOUNCEMENT, OTP, AP, UPDATE, CONNECTING};
+MODE g_current_mode(MODE::CONNECTING);
 
 shared_ptr<Menu> g_menu = nullptr;
 
@@ -452,7 +452,16 @@ void switchMenu();
 void setupDefaultButtons()
 {
   g_flash_button->onShortPress(switchMenu);
-  g_flash_button->onLongPress([]() { g_start_ondemand_ap = true; });
+  g_flash_button->onLongPress([]() { 
+    if (g_current_mode != MODE::AP) {
+      g_start_ondemand_ap = true; 
+      g_wifi->abortConnectionAttempt(); 
+      g_display->prependAction(
+        make_shared<Display::Action::StaticText>("APmode",5.0)
+      );
+    }
+  });
+
   g_flash_button->onSuperLongPress([]() { g_force_wipe = true;} );
   g_flash_button->setupTickCallback([]() { g_flash_button->tick(); });
 }
@@ -579,6 +588,8 @@ void setup() {
   /* WiFi */
   g_display->queueAction(make_shared<Display::Action::RotatingText>("--> WiFi ", -1, 20));
   connectToWiFi();
+  g_current_mode = MODE::TICKER;
+
   g_display->cleanQueue();
   g_display->queueAction(make_shared<Display::Action::StaticText>(WiFi.SSID(), 1.0));
 
@@ -593,8 +604,6 @@ void setup() {
 
   setupNTP();
   setupDataSource();
-
-//  tone(D8, 1000);
 }
 
 void loop() {

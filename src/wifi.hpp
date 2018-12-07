@@ -37,6 +37,7 @@ public:
   void startAP(const String& ssid_name, unsigned long timeout = 120);
   void connectToWiFiOrFallbackToAP(void);
   void resetSettings(void);
+  void abortConnectionAttempt(void) { m_wifimanager.abortConnectionAttempt(); }
 
   WiFiManager* getWiFiManager(void) { return &m_wifimanager; }
 

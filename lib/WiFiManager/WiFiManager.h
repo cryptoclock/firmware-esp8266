@@ -126,6 +126,8 @@ class WiFiManager
 
     void          fixHangingConnection();
 
+    void          abortConnectionAttempt();
+
   private:
     std::unique_ptr<DNSServer>        dnsServer;
     std::unique_ptr<ESP8266WebServer> server;
@@ -191,6 +193,8 @@ class WiFiManager
 
     boolean       connect;
     boolean       _debug = true;
+
+    boolean       _abort_connection = false;
 
     void (*_apcallback)(WiFiManager*) = NULL;
     void (*_savecallback)(void) = NULL;

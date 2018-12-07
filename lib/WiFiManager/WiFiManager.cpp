@@ -146,6 +146,7 @@ boolean WiFiManager::autoConnect() {
 boolean WiFiManager::autoConnect(char const *apName, char const *apPassword) {
   DEBUG_WM(F(""));
   DEBUG_WM(F("AutoConnect"));
+  _abort_connection = false;
 
   // attempt to connect; should it fail, fall back to AP
   WiFi.mode(WIFI_STA);
@@ -174,6 +175,7 @@ boolean WiFiManager::startConfigPortal() {
 }
 
 boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPassword) {
+  _abort_connection = false;
   //setup AP
   if(!WiFi.isConnected()){
     WiFi.persistent(false);
@@ -274,6 +276,12 @@ void WiFiManager::fixHangingConnection()
   ETS_UART_INTR_ENABLE();
 }
 
+void WiFiManager::abortConnectionAttempt()
+{
+  _abort_connection = true;
+  DEBUG_WM(F("Aborting STA connection attempts..."));
+}
+
 int WiFiManager::connectWifi(String ssid, String pass) {
   DEBUG_WM(F("Connecting as wifi client..."));
 
@@ -308,7 +316,7 @@ int WiFiManager::connectWifi(String ssid, String pass) {
   //not connected, test known APs
   int tries = 0;
   const int max_tries = 10;
-  while (++tries<=max_tries) {
+  while (++tries<=max_tries && !_abort_connection) {
     String s = String("Try ") + String(tries) + "/" + String(max_tries);
     DEBUG_WM(s);
 
@@ -374,8 +382,8 @@ uint8_t WiFiManager::waitForConnectResult(unsigned long timeout) {
     DEBUG_WM (F("Waiting for connection result with time out"));
     unsigned long start = millis();
     boolean keepConnecting = true;
-    uint8_t status;
-    while (keepConnecting) {
+    uint8_t status = WL_CONNECT_FAILED;
+    while (keepConnecting && !_abort_connection) {
       status = WiFi.status();
       if (millis() > start + timeout) {
         keepConnecting = false;
