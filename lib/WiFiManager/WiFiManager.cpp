@@ -355,11 +355,13 @@ int WiFiManager::connectWifi(String ssid, String pass) {
   } // end loop
 			
   //not connected, WPS enabled, no pass - first attempt
+#ifdef NO_EXTRA_4K_HEAP
   if (_tryWPS && connRes != WL_CONNECTED && pass == "") {
     startWPS();
     //should be connected at the end of WPS
     connRes = waitForConnectResult();
   }
+#endif
   return connRes;
 }
 
