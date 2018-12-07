@@ -175,8 +175,18 @@ boolean WiFiManager::startConfigPortal() {
 
 boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPassword) {
   //setup AP
-  WiFi.mode(WIFI_AP_STA);
-  DEBUG_WM(F("SET AP STA"));
+  if(!WiFi.isConnected()){
+    WiFi.persistent(false);
+    // disconnect sta, start ap
+    WiFi.disconnect(); //  this alone is not enough to stop the autoconnecter
+    WiFi.mode(WIFI_AP);
+    WiFi.persistent(true);
+    DEBUG_WM(F("SET AP mode"));
+  } else {
+    //setup AP
+    WiFi.mode(WIFI_AP_STA);
+    DEBUG_WM(F("SET AP STA"));
+  }
 
   _apName = apName;
   _apPassword = apPassword;
@@ -379,9 +389,9 @@ uint8_t WiFiManager::waitForConnectResult(unsigned long timeout) {
 }
 
 void WiFiManager::startWPS() {
-  DEBUG_WM("START WPS");
+  DEBUG_WM(F("START WPS"));
   WiFi.beginWPSConfig();
-  DEBUG_WM("END WPS");
+  DEBUG_WM(F("END WPS"));
 }
 
 String WiFiManager::getConfigPortalSSID() {
@@ -396,6 +406,9 @@ void WiFiManager::resetSettings() {
 }
 
 boolean WiFiManager::addAP(char const *ssid, char const *password) {
+  DEBUG_WM(F("Adding AP"));
+  DEBUG_WM(ssid);
+
   // just updating password?
   for (int i=0;i<_apList_size;++i) {
     if (_apList[i].ssid == ssid) {
