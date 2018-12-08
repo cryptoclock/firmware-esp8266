@@ -81,6 +81,7 @@ bool g_start_ondemand_ap = false;
 bool g_force_wipe = false;
 bool g_entered_ap_mode = false;
 bool g_reset_price_on_next_tick = false;
+bool g_ntp_started = false;
 
 enum class MODE { TICKER, MENU, ANNOUNCEMENT, OTP, AP, UPDATE, CONNECTING};
 MODE g_current_mode(MODE::CONNECTING);
@@ -106,6 +107,7 @@ void clock_callback()
       return;
 
     g_display->cleanQueue();
+    g_display->prependAction(g_price_action);
     g_display->prependAction(g_clock_action);
     return;
   }
@@ -299,8 +301,10 @@ void setupParameters()
     if (final_change) {
       int timezone = std::min(std::max(item.value.toInt(),-11L),13L);
       item.value = String(timezone);
-      NTP.stop();
-      NTP.begin(NTP_SERVER, timezone, true);
+      if (g_ntp_started) {
+        NTP.stop();
+        NTP.begin(NTP_SERVER, timezone, true);
+      }
     }
   }});
 }
@@ -419,6 +423,7 @@ void setupNTP()
   int timezone = g_parameters["timezone"].toInt();
   NTP.begin(NTP_SERVER, timezone, true);
   NTP.setInterval(1800);
+  g_ntp_started = true;
 
   if (g_clock_action->isAlwaysOn())
     clock_callback();

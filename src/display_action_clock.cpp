@@ -50,13 +50,13 @@ void Clock::draw(DisplayT *display, Coords coords)
 
 void Clock::updateTime()
 {
-  auto time = NTP.getTimeDateString();
+  auto t = NTP.getTimeDateString();
 
-  if (time=="Time not set") {
+  if (t=="Time not set" || (NTP.getLastNTPSync() <=0)) {
     m_time = "--:--";
     m_is_time_set = false;
   } else {
-    m_time = time.substring(0,5);
+    m_time = t.substring(0,5);
     m_is_time_set = true;
   }
 }
