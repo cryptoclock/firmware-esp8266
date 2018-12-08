@@ -109,9 +109,9 @@ void WiFiManager::setupConfigPortal() {
   }
 
   if (_apPassword != NULL) {
-    WiFi.softAP(_apName, _apPassword);//password option
+    WiFi.softAP(_apName, _apPassword, _apChannel);//password option
   } else {
-    WiFi.softAP(_apName);
+    WiFi.softAP(_apName, NULL, _apChannel);
   }
 
   delay(500); // Without delay I've seen the IP address blank
@@ -175,6 +175,8 @@ boolean WiFiManager::startConfigPortal() {
 }
 
 boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPassword) {
+  _apChannel = guessBestAPChannel();
+
   _abort_connection = false;
   //setup AP
   if(!WiFi.isConnected()){
@@ -280,6 +282,30 @@ void WiFiManager::abortConnectionAttempt()
 {
   _abort_connection = true;
   DEBUG_WM(F("Aborting STA connection attempts..."));
+}
+
+int WiFiManager::guessBestAPChannel() 
+{
+  int n = WiFi.scanNetworks();
+  if (n == 0)
+    return 1;
+  
+  std::array<int,15> rssis;
+  rssis.fill(-1000);
+  for (int i = 0; i < n; i++) {
+
+    int rssi = WiFi.RSSI(i);
+    int ch = WiFi.channel(i);
+    if (ch<1 || ch>(int)rssis.size()-1)
+      continue;
+
+    if (rssi > rssis[ch])
+      rssis[ch] = rssi;
+  }
+  
+  if (rssis[1] <= rssis[6] && rssis[1] <= rssis[11]) return 1;
+  if (rssis[6] <= rssis[11]) return 6;
+  return 11;
 }
 
 int WiFiManager::connectWifi(String ssid, String pass) {

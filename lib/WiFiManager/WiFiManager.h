@@ -123,10 +123,12 @@ class WiFiManager
     void          setCustomHeadElement(const char* element);
     //if this is true, remove duplicated Access Points - defaut true
     void          setRemoveDuplicateAPs(boolean removeDuplicates);
-
+    //try to fix hanging connection after soft-reset
     void          fixHangingConnection();
-
+    //abort connection attempt in progress and switch to AP mode
     void          abortConnectionAttempt();
+    // out of non-overlapping WiFi channels 1,6,11 pick the one with worst rssi (empty, or distant signal AP)
+    int           guessBestAPChannel(); 
 
   private:
     std::unique_ptr<DNSServer>        dnsServer;
@@ -144,6 +146,7 @@ class WiFiManager
     const char*   _apPassword             = NULL;
     String        _ssid                   = "";
     String        _pass                   = "";
+    int           _apChannel              = 1;
     unsigned long _configPortalTimeout    = 0;
     unsigned long _connectTimeout         = 0;
     unsigned long _configPortalStart      = 0;
