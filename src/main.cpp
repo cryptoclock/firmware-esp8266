@@ -52,18 +52,17 @@ using Display::Action::ActionPtr_t;
 #include "data_source.hpp"
 #include "bitmaps.hpp"
 #include "gyro.hpp"
+#include "ntp.hpp"
 
 #include <EEPROM.h>
 
-// NTP
-#include <TimeLib.h>
-#include <Time.h>
-#include <NtpClientLib.h>
 
 #include <Ticker.h>
 
 #include <ESP8266TrueRandom.h>
 
+using std::make_shared;
+using std::queue;
 
 ParameterStore g_parameters;
 
@@ -81,7 +80,6 @@ bool g_start_ondemand_ap = false;
 bool g_force_wipe = false;
 bool g_entered_ap_mode = false;
 bool g_reset_price_on_next_tick = false;
-bool g_ntp_started = false;
 
 enum class MODE { TICKER, MENU, ANNOUNCEMENT, OTP, AP, UPDATE, CONNECTING};
 MODE g_current_mode(MODE::CONNECTING);
@@ -93,6 +91,8 @@ String g_announcement="";
 bool g_announcement_static = false;
 int g_announcement_time = 0;
 shared_ptr<Display::ActionT> g_announcement_action;
+
+NTP g_NTP;
 
 void clock_callback()
 {
@@ -301,10 +301,8 @@ void setupParameters()
     if (final_change) {
       int timezone = std::min(std::max(item.value.toInt(),-11L),13L);
       item.value = String(timezone);
-      if (g_ntp_started) {
-        NTP.stop();
-        NTP.begin(NTP_SERVER, timezone, true);
-      }
+      g_NTP.setTimezone(timezone);
+      g_NTP.init();
     }
   }});
 }
@@ -421,9 +419,9 @@ void setupNTP()
 {
   DEBUG_SERIAL.println(F("Starting NTP.."));
   int timezone = g_parameters["timezone"].toInt();
-  NTP.begin(NTP_SERVER, timezone, true);
-  NTP.setInterval(1800);
-  g_ntp_started = true;
+  g_NTP.setServer(NTP_SERVER);
+  g_NTP.setTimezone(timezone);
+  g_NTP.init();
 
   if (g_clock_action->isAlwaysOn())
     clock_callback();

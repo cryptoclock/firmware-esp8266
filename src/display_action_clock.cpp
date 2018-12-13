@@ -17,11 +17,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include <TimeLib.h>
-#include <Time.h>
-#include <NtpClientLib.h>
 #include "config_common.hpp"
 #include "display_action_clock.hpp"
+#include "ntp.hpp"
+
+extern NTP g_NTP;
 
 namespace Display {
 namespace Action {
@@ -50,13 +50,14 @@ void Clock::draw(DisplayT *display, Coords coords)
 
 void Clock::updateTime()
 {
-  auto t = NTP.getTimeDateString();
+  String t = g_NTP.getTime();
 
-  if (t=="Time not set" || (NTP.getLastNTPSync() <=0)) {
+  if (t=="" || t.length()<16) {
     m_time = "--:--";
     m_is_time_set = false;
   } else {
-    m_time = t.substring(0,5);
+    //"Thu Dec 13 01:46:24 2018"
+    m_time = t.substring(11,16);
     m_is_time_set = true;
   }
 }
