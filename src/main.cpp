@@ -342,6 +342,8 @@ void setupHW()
 #endif
 }
 
+void forceSetTickerMode();
+
 void setupDataSource()
 {
   g_data_source = new DataSource;
@@ -389,6 +391,22 @@ void setupDataSource()
 //    g_price_action->reset();
   });
 
+  static const double otp_timeout = 180.0;
+  g_data_source->setOnOTP([](const String& otp){
+    auto multi = Display::Action::createRepeatedSlide({-1,0}, otp_timeout, 1.0,
+      make_shared<Display::Action::StaticText>("OTP:", 0.8),
+      make_shared<Display::Action::StaticText>(otp, 5.0),
+      []() { forceSetTickerMode(); }
+    );
+    g_display->prependAction(multi);
+    g_current_mode = MODE::OTP;
+  });
+
+  // on receiving OTP web confirmation
+  g_data_source->setOnOTPack([](){
+    if (g_current_mode == MODE::OTP)
+      forceSetTickerMode();
+  });
 
   g_data_source->connect();
 }
@@ -507,28 +525,11 @@ void forceSetTickerMode()
 
 void sendOTPRequest()
 {
-  static const double otp_timeout = 180.0;
   bool result = g_data_source->sendOTPRequest();
   g_display->prependAction(
     make_shared<Display::Action::StaticText>((result ? "-OK-" : "Failed"),2.0)
   );
   g_menu->end();
-
-  g_data_source->setOnOTP([](const String& otp){
-    auto multi = Display::Action::createRepeatedSlide({-1,0}, otp_timeout, 1.0,
-      make_shared<Display::Action::StaticText>("OTP:", 0.8),
-      make_shared<Display::Action::StaticText>(otp, 5.0),
-      []() { forceSetTickerMode(); }
-    );
-    g_display->prependAction(multi);
-    g_current_mode = MODE::OTP;
-  });
-
-  // on receiving OTP web confirmation
-  g_data_source->setOnOTPack([](){
-    if (g_current_mode == MODE::OTP)
-      forceSetTickerMode();
-  });
 
   g_flash_button->onShortPress([](){
     if (g_current_mode == MODE::OTP)
