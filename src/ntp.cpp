@@ -34,10 +34,22 @@ void NTP::setTimezone(const int offset)
 
 String NTP::getTime()
 {
-  uint32 now = sntp_get_current_timestamp();
-  if (now<1514764800L) // < 2018-01-01 = system time not yet set
-    return String("");
+  if (!m_initialized)
+    return "";
+
+  auto now = getTimestamp();
+  if (now==0)
+    return "";
 
   const char *stime = sntp_get_real_time(now);
   return String(stime);
+}
+
+uint32 NTP::getTimestamp()
+{
+  uint32 now = sntp_get_current_timestamp();
+  if (now<1514764800L) // < 2018-01-01 = system time not yet set
+    return 0;
+
+  return now;
 }

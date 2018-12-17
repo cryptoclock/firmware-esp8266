@@ -99,6 +99,9 @@ __MSGSTATIC X some message__
   display the message specified as a static text on the display, for X amount of seconds
   (or indefinitely, if X is 0)
 
+__COUNTDOWN X__
+  displays ticking countdown from X seconds to zero
+
 __PARAM name value__
   sent by server to set the device parameter 'name' to 'value'
 

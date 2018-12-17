@@ -17,26 +17,40 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-/*
-  NTP class
-*/
-
-#pragma once
 #include "config_common.hpp"
-#include <Arduino.h>
+#include "display_action_countdown.hpp"
+#include "ntp.hpp"
 
-class NTP 
+extern NTP g_NTP;
+
+namespace Display {
+namespace Action {
+void CountDown::tick(DisplayT *display, double elapsed_time)
 {
-public:
-  NTP() : m_initialized(false), m_server("") {}
-  String getTime();
-  uint32 getTimestamp();
-  void setServer(const String& server);
-  void setTimezone(const int offset);
-  void init(); 
-private:
-  void connectToServer();
+  m_elapsed_time += elapsed_time;
 
-  bool m_initialized;
-  String m_server;
-};
+  if (m_elapsed_time>(m_countdown_secs + m_post_countdown_secs)) {
+    setFinished();
+    m_elapsed_time = 0;
+  }
+}
+
+void CountDown::draw(DisplayT *display, Coords coords)
+{
+  char text[16] = {};
+  if (isFinished()) {
+    strncpy(text,"00:00",sizeof(text));
+  } else {
+    int secs = m_countdown_secs - m_elapsed_time;
+    if (secs<0)
+      secs = 0;
+    int mins = secs / 60;
+    secs = secs % 60;
+
+    snprintf(text, sizeof(text), "%02i:%02i", mins, secs);
+  }
+
+  display->displayText(text, m_coords + coords + display->centerTextOffset(text));
+}
+
+}}

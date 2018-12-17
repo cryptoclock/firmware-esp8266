@@ -18,25 +18,28 @@
 */
 
 /*
-  NTP class
+  Action for displaying countdown timer
 */
 
 #pragma once
 #include "config_common.hpp"
 #include <Arduino.h>
+#include "display_action.hpp"
+#include "display.hpp"
 
-class NTP 
+namespace Display {
+namespace Action {
+class CountDown : public ActionT
 {
 public:
-  NTP() : m_initialized(false), m_server("") {}
-  String getTime();
-  uint32 getTimestamp();
-  void setServer(const String& server);
-  void setTimezone(const int offset);
-  void init(); 
+  CountDown(int countdown_secs, int post_countdown_secs, const Coords& coords=Coords{0,0}, action_callback_t onfinished_cb = nullptr)
+     : ActionT(0, coords, onfinished_cb), m_countdown_secs(countdown_secs), m_post_countdown_secs(post_countdown_secs)
+  {}
+  void tick(DisplayT *display, double elapsed_time) override;
+  void draw(DisplayT *display, Coords coords) override;
 private:
-  void connectToServer();
-
-  bool m_initialized;
-  String m_server;
+  int m_countdown_secs;
+  int m_post_countdown_secs;
 };
+}
+}

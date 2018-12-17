@@ -39,6 +39,7 @@
 #include "display_action_testdisplay.hpp"
 #include "display_action_menu.hpp"
 #include "display_action_multi.hpp"
+#include "display_action_countdown.hpp"
 using Display::Coords;
 using Display::Action::ActionPtr_t;
 
@@ -81,7 +82,7 @@ bool g_force_wipe = false;
 bool g_entered_ap_mode = false;
 bool g_reset_price_on_next_tick = false;
 
-enum class MODE { TICKER, MENU, ANNOUNCEMENT, OTP, AP, UPDATE, CONNECTING};
+enum class MODE { TICKER, MENU, ANNOUNCEMENT, OTP, AP, UPDATE, CONNECTING, COUNTDOWN};
 MODE g_current_mode(MODE::CONNECTING);
 
 shared_ptr<Menu> g_menu = nullptr;
@@ -162,6 +163,27 @@ void replaceAnnouncement(const String& message, const bool static_msg, const int
   q.push(make_shared<Display::Action::SlideTransition>(nullptr, 1, g_display->getTopAction(), 1, 0.5, Coords{-1,0}));
 
   g_display->prependAction(make_shared<Display::Action::MultiRepeat>(q, 0, false, nullptr));
+}
+
+void setupDefaultButtons();
+
+void setCountDown(int countdown, int post)
+{
+  g_current_mode = MODE::COUNTDOWN;
+
+  auto current_action = g_display->getTopAction();
+  auto countdown_action = make_shared<Display::Action::CountDown>(countdown,post,Coords{0,0},[&](){ 
+    setupDefaultButtons();
+    g_current_mode = MODE::TICKER; 
+  });
+
+  g_flash_button->onShortPress([&]() {
+    countdown_action->setFinished();
+  });
+
+  g_display->prependAction(make_shared<Display::Action::SlideTransition>(countdown_action, 1, current_action, 1, 0.5, Coords{-1,0}));
+  g_display->prependAction(countdown_action);
+  g_display->prependAction(make_shared<Display::Action::SlideTransition>(current_action, 1, countdown_action, 1, 0.5, Coords{-1,0}));
 }
 
 void configModeCallback (WiFiManager *myWiFiManager)
@@ -364,6 +386,13 @@ void setupDataSource()
       g_announcement = msg;
     } // ignore otherwise
   });
+
+  g_data_source->setOnCountdown([&](const String& data) {
+    DEBUG_SERIAL.printf_P(PSTR("Countdown received: '%s'"),data.c_str());
+    int t = data.toInt();
+    setCountDown(t, 5);
+  });
+
 
   g_data_source->setOnPriceATH([&](const String& price){
     g_price_action->setATHPrice(price);

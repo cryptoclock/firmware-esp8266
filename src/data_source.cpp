@@ -145,6 +145,9 @@ void DataSource::textCallback(const String& str)
   } else if (str.startsWith(";MSG ") || str.startsWith(";MSG=")) { // Announcement
     if (m_on_announcement)
       m_on_announcement(str.substring(5), false, 0);
+  } else if (str.startsWith(";COUNTDOWN ") || str.startsWith(";COUNTDOWN=")) { // Announcement
+    if (m_on_countdown)
+      m_on_countdown(str.substring(11));
   } else if (str.startsWith(";STATICMSG ") || str.startsWith(";MSGSTATIC ")) { // Announcement
     if (m_on_announcement) {
       int time_idx = str.indexOf(' ');
