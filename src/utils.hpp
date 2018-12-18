@@ -36,4 +36,5 @@ void eeprom_Erase(const int offset, const int size);
 void parseURL(String url, String &server, int &port, String& path, String& protocol);
 String urlChangePath(String url, const String& new_path);
 String shortenText(const String& text, const int lead);
+String uint64ToString(uint64_t input); 
 }

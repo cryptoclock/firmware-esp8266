@@ -41,8 +41,10 @@ public:
 
   Price& operator+=(const double rhs);
   Price& operator-=(const double rhs);
+  Price& operator/=(const double rhs);
   Price operator+(const double rhs);
   Price operator-(const double rhs);
+  Price operator/(const double rhs);
   String toString();
 
   double getIncrement();

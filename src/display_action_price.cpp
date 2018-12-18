@@ -108,10 +108,25 @@ void PriceAction::draw(DisplayT *display, Coords orig_coords)
     return;
   }
 
+  String postfix = "";
+  auto draw_price = m_displayed_price;
+  // FIXME: adjust number of digits displayed by display width
+  if (draw_price.get() >= pow(10,6)-1) {
+    if (draw_price.get() >= pow(10,10)-1) {
+      draw_price /= pow(10,9);
+      postfix = 'G';
+    } else {
+      draw_price /= pow(10,6);
+      postfix = 'M';
+    }
+    draw_price.setDisplayFloatPart(true);
+    draw_price.fromString(draw_price.toString());
+  }
+  
   Coords coords = orig_coords + m_coords;
 
-  String price_top = m_displayed_price.toString();
-  String price_bottom = m_displayed_price.nextPrice().toString();
+  String price_top = draw_price.toString() + postfix;
+  String price_bottom = draw_price.nextPrice().toString() + postfix;
   if (!m_price.isInitialized() || (m_price_timeout > 0 && (m_elapsed_time - m_price_last_updated_at) > m_price_timeout))
   {
     String text = "-----";
@@ -121,15 +136,15 @@ void PriceAction::draw(DisplayT *display, Coords orig_coords)
 
   // fractional part = vertical position of animated glyph(s)
   double tmp;
-  double fract = (double) std::modf(m_displayed_price.get(),&tmp);
-  fract = (double) std::modf(fract*m_displayed_price.getIncrExponent(),&tmp);
+  double fract = (double) std::modf(draw_price.get(),&tmp);
+  fract = (double) std::modf(fract*draw_price.getIncrExponent(),&tmp);
   if (fract>0.999)
     fract = 0.0;
   if (fract<0.001)
     fract = 0.1;
 
   // FIXME:
-  // if (fract<(0.01*m_displayed_price.getIncrement()))
+  // if (fract<(0.01*draw_price.getIncrement()))
   //   price_bottom = price_top; // for horizontal shift during rollovers
 
   int offset_top = (int) (-fract * display->getDisplayHeight());

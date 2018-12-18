@@ -119,4 +119,20 @@ String shortenText(const String& text, const int lead)
   return (text.substring(0,lead) + ".." + text.substring(text.length()-lead-1,text.length()-1));
 }
 
+String uint64ToString(uint64_t input) 
+{
+  String result = "";
+  do {
+    char c = input % 10;
+    input /= 10;
+
+    if (c < 10)
+      c +='0';
+    else
+      c += 'A' - 10;
+    result = c + result;
+  } while (input);
+  return result;
+}
+
 }

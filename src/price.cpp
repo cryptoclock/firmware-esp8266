@@ -18,6 +18,7 @@
 */
 
 #include "price.hpp"
+#include "utils.hpp"
 
 Price::Price(const String& price) :
   m_price(0.0), m_display_decimals(6), m_display_float_part(false)
@@ -73,6 +74,11 @@ Price& Price::operator-=(const double rhs)
   m_price -= rhs;
   return *this;
 }
+Price& Price::operator/=(const double rhs)
+{
+  m_price /= rhs;
+  return *this;
+}
 Price Price::operator+(const double rhs)
 {
   Price res = *this;
@@ -83,11 +89,19 @@ Price Price::operator-(const double rhs)
   Price res = *this;
   return (res -= rhs);
 }
+Price Price::operator/(const double rhs)
+{
+  Price res = *this;
+  return (res /= rhs);
+}
+
 
 String Price::toString()
 {
   uint8_t l_digits = String((int) m_price).length();
-  uint8_t r_digits = m_display_decimals - l_digits - 1;
+  int display_decimals = std::max(m_display_decimals, l_digits);
+  
+  uint8_t r_digits = display_decimals - l_digits - 1;
 
   if (m_display_float_part && m_price >= 1.0)
     r_digits = 3;
@@ -103,14 +117,14 @@ String Price::toString()
     r_digits = 0;
   }
 
-  if (m_display_float_part && (l_digits+1<m_display_decimals)) {
+  if (m_display_float_part && (l_digits+1<display_decimals)) {
     String str =  String(m_price, r_digits+5);
     if (m_price<1.0)
       return str.substring(1,1 + 2 + r_digits);
     else
       return str.substring(0,l_digits+1+r_digits);
   } else {
-    return String((int)m_price).substring(0,m_display_decimals);
+    return Utils::uint64ToString(m_price).substring(0,display_decimals);
   }
 }
 
