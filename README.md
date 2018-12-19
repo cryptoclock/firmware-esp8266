@@ -93,6 +93,8 @@ __ATH=X__
 
 __MSG some message__
   display the message specified as a rolling text on the display
+  * Special commands that can be inserted into a message:
+  * '\sxxx$' -> plays 'xxx' sound/melody in RTTTL format (see command SOUND for details)
 
 __STATICMSG X some message__
 __MSGSTATIC X some message__
@@ -102,6 +104,12 @@ __MSGSTATIC X some message__
 __COUNTDOWN X__
   displays ticking countdown from X seconds to zero
 
+__SOUND rtttl__
+  on devices with attached buzzer plays sound or melody in RTTTL format 
+```
+example of melody: 
+SOUND StarwarsI:d=16,o=5,b=100:4e,4e,4e,8c,p,g,4e,8c,p,g,4e,4p,4b,4b,4b,8c6,p,g,4d#,8c,p,g,4e,8p
+```
 __PARAM name value__
   sent by server to set the device parameter 'name' to 'value'
 

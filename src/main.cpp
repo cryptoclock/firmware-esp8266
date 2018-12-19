@@ -54,6 +54,7 @@ using Display::Action::ActionPtr_t;
 #include "bitmaps.hpp"
 #include "gyro.hpp"
 #include "ntp.hpp"
+#include "sound.hpp"
 
 #include <EEPROM.h>
 
@@ -74,6 +75,7 @@ shared_ptr<Display::PriceAction> g_price_action;
 shared_ptr<Display::Action::Clock> g_clock_action;
 WiFiCore *g_wifi = nullptr;
 DataSource *g_data_source = nullptr;
+Sound *g_sound = nullptr;
 
 shared_ptr<Button> g_flash_button;
 
@@ -129,9 +131,45 @@ void clock_callback()
   );
 }
 
-void setAnnouncement(const String& message, const bool static_msg, const int display_time, action_callback_t onfinished_cb)
+// filter out special commands from announcement message
+String parseAnnouncment(const String &message, /* out */ String& sound_message)
+{
+  String filtered_msg;
+  for (int i=0;i<(int)message.length();++i) {
+    char c = message[i];
+    if (c=='\\' && ++i < (int)message.length()) {
+      switch (message[i]) {
+        case '\\': filtered_msg += '\\'; break;
+        case 's': // "\s....$" plays music in RTTTL format
+        {
+          int begin = i+1;
+          int end = message.indexOf('$',begin);
+          if (end==-1 || begin >= (int)message.length() || end >= (int)message.length()) {
+            DEBUG_SERIAL.printf("Malformed sound message: '%s'\n",message.c_str());
+            return filtered_msg;
+          }
+          sound_message = message.substring(begin,end);
+          i = end;
+        }
+        break;
+        default: break;
+      }
+    } else {
+      filtered_msg += c;
+    }
+  }
+  return filtered_msg;
+}
+
+void setAnnouncement(const String& announcement, const bool static_msg, const int display_time, action_callback_t onfinished_cb)
 {
   g_current_mode = MODE::ANNOUNCEMENT;
+
+  String sound = "";
+  String message = parseAnnouncment(announcement, sound);
+
+  if(sound!="" && g_sound)
+    g_sound->playMusicRTTTL(sound);
 
   queue<ActionPtr_t> q;
 
@@ -353,6 +391,7 @@ void loadParameters()
   Utils::eeprom_END();
 }
 
+
 void setupHW()
 {
   //set led pin as output
@@ -361,6 +400,9 @@ void setupHW()
 
 #ifdef HAS_GYROSCOPE
   MPUsetup();
+#endif
+#ifdef HAS_SOUND
+  g_sound = new Sound(SOUND_PIN);
 #endif
 }
 
@@ -393,6 +435,10 @@ void setupDataSource()
     setCountDown(t, 5);
   });
 
+  g_data_source->setOnSound([&](const String& data) {
+    DEBUG_SERIAL.printf_P(PSTR("Sound received: '%s'"),data.c_str());
+    g_sound->playMusicRTTTL(data);
+  });
 
   g_data_source->setOnPriceATH([&](const String& price){
     g_price_action->setATHPrice(price);
@@ -660,6 +706,9 @@ void loop() {
   }
 
   g_data_source->loop();
+#ifdef HAS_SOUND
+  g_sound->tick();
+#endif
   delay(10);
 }
 

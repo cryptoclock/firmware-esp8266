@@ -145,9 +145,12 @@ void DataSource::textCallback(const String& str)
   } else if (str.startsWith(";MSG ") || str.startsWith(";MSG=")) { // Announcement
     if (m_on_announcement)
       m_on_announcement(str.substring(5), false, 0);
-  } else if (str.startsWith(";COUNTDOWN ") || str.startsWith(";COUNTDOWN=")) { // Announcement
+  } else if (str.startsWith(";COUNTDOWN ") || str.startsWith(";COUNTDOWN=")) { // Countdown
     if (m_on_countdown)
       m_on_countdown(str.substring(11));
+  } else if (str.startsWith(";SOUND ") || str.startsWith(";SOUND=")) { // Sound
+    if (m_on_sound)
+      m_on_sound(str.substring(7));
   } else if (str.startsWith(";STATICMSG ") || str.startsWith(";MSGSTATIC ")) { // Announcement
     if (m_on_announcement) {
       int time_idx = str.indexOf(' ');
