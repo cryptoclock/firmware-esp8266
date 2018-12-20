@@ -80,7 +80,8 @@ void PriceAction::tick(DisplayT *display, double elapsed_time)
 
 void PriceAction::blinkIfATH(DisplayT *display)
 {
-  if (m_displayed_price >= m_ath_price &&
+  if (m_ath && 
+     m_displayed_price >= m_ath_price &&
     (m_elapsed_time - m_price_last_changed_at < c_ath_animation_length)) {
     if ((int)((m_elapsed_time - m_price_last_changed_at) * 10) % 4 < 2 ) {
       display->useBrightness(0);
@@ -216,7 +217,10 @@ void PriceAction::updatePrice(const String& n_price)
 
 void PriceAction::setATHPrice(const String& ath_price)
 {
-  m_ath_price = Price(ath_price);
+  if (ath_price=="off")
+    m_ath = false;
+  else
+    m_ath_price = Price(ath_price);
 }
 
 void PriceAction::reset()

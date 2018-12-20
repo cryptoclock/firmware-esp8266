@@ -35,7 +35,7 @@ public:
   PriceAction(const double animation_speed, const Coords& coords=Coords{0,0})
     : ActionT(-1, coords), m_animation_speed(animation_speed), m_price(""), m_last_price(""),
       m_displayed_price(""), m_ath_price(""), m_price_timeout(300.0), m_display_float_part(false),
-      m_price_timeout_reported(false)
+      m_price_timeout_reported(false), m_ath(true)
     {}
 
   void tick(DisplayT *display, double elapsed_time);
@@ -60,5 +60,6 @@ private:
   static constexpr double c_ath_animation_length = 4.0;
   bool m_display_float_part;
   bool m_price_timeout_reported;
+  bool m_ath;
 };
 }

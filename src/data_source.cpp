@@ -142,6 +142,9 @@ void DataSource::textCallback(const String& str)
   } else if (str.startsWith(";ATH=")) { // All-Time-High
     if (m_on_price_ath)
       m_on_price_ath(str.substring(5));
+  } else if (str.startsWith(";NOATH")) {
+    if (m_on_price_ath)
+      m_on_price_ath("off");
   } else if (str.startsWith(";MSG ") || str.startsWith(";MSG=")) { // Announcement
     if (m_on_announcement)
       m_on_announcement(str.substring(5), false, 0);
