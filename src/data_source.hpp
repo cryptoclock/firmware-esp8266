@@ -50,7 +50,9 @@ public:
     m_should_send_hello(false), m_hello_sent(true), m_last_heartbeat_sent_at(0),
     m_last_data_received_at(0), m_text_last_sent_at(0),
     m_on_price_change(nullptr), m_on_price_ath(nullptr), m_on_update_request(nullptr),  m_on_announcement(nullptr), 
-    m_on_countdown(nullptr), m_on_sound(nullptr), m_on_otp(nullptr), m_on_otp_ack(nullptr), m_on_price_timeout_set(nullptr), m_on_new_settings(nullptr)
+    m_on_countdown(nullptr), m_on_sound(nullptr), m_on_otp(nullptr), m_on_otp_ack(nullptr), m_on_price_timeout_set(nullptr), 
+    m_on_new_settings(nullptr), m_num_connection_tries(0)
+
   {
     m_websocket.onEvent(DataSource::s_callback);
   }
@@ -110,4 +112,5 @@ private:
   on_new_settings_t m_on_new_settings;
   WebSocketsClient m_websocket;
   std::queue<String> m_send_queue;
+  int m_num_connection_tries;
 };

@@ -62,8 +62,14 @@ void DataSource::loop()
   }
 
   if (m_connected && (millis() - m_last_data_received_at > c_no_data_reconnect_interval)) {
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] No data received for %i secs, forcing reconnect\n"), c_no_data_reconnect_interval / 1000);
-    reconnect();
+    if (++m_num_connection_tries < 2) {
+      DEBUG_SERIAL.printf_P(PSTR("[WSc] No data received for %i secs, forcing reconnect\n"), c_no_data_reconnect_interval / 1000);
+      reconnect();
+    } else {
+      DEBUG_SERIAL.println(F("[WSc] Max reconnection attempts, forcing restart"));
+      ESP.restart();
+    } 
+
   }
 
   // send heartbeat
@@ -241,6 +247,7 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
     m_connected = true;
     m_last_connected_at = millis();
     m_last_data_received_at = millis();
+    m_num_connection_tries = 0;
     if (payload==nullptr)
       DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: <nullptr>\n"));
     else
