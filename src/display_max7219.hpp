@@ -18,21 +18,26 @@
 */
 
 /*
-  Display driver for TM1637 7-segment driver
+  Display driver for MAX7219 7-segment driver
 */
 
 #pragma once
 #include "config_common.hpp"
-#include <TM1637Display.h>
+#include "DigitLedDisplay.h"
 #include "display.hpp"
 
 namespace Display {
-class TM1637 : public DisplayT
+class MAX7219 : public DisplayT
 {
 public:
-  TM1637(TM1637Display* display, const int milis_per_tick, const int num_digits) :
+  MAX7219(DigitLedDisplay* display, const int milis_per_tick, const int num_digits) :
     DisplayT(milis_per_tick), m_display(display), m_num_digits(num_digits)
-    {}
+    {
+      m_display->setDigitLimit(num_digits);
+      m_display->off();
+      m_display->on();
+      m_display->clear();
+    }
 
   void displayText(const String& value, const Coords& coords) {}
   void displayNumber(const int number, const int length, const int position, const bool zero_fill);
@@ -59,7 +64,7 @@ public:
   bool isGraphic(void) { return false; }
 
 private:
-  TM1637Display* m_display;
+  DigitLedDisplay* m_display;
   const int m_num_digits;
 };
 }

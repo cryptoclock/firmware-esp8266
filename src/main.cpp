@@ -262,6 +262,8 @@ void setupDisplay()
   );
 #elif defined(X_DISPLAY_TM1637)
   g_display = new Display::TM1637(&g_display_hw, X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH);
+#elif defined(X_DISPLAY_MAX7219)
+  g_display = new Display::MAX7219(&g_display_hw, X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH);
 #elif defined(X_DISPLAY_LIXIE)
   g_display_hw.initialize<X_DISPLAY_DATA_PIN, X_DISPLAY_WIDTH>();
   g_display = new Display::LixieNumeric(&g_display_hw, X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH);

@@ -104,8 +104,14 @@ void PriceAction::draw(DisplayT *display, Coords orig_coords)
 {
   if (!display->isGraphic()) {
     // FIXME: for numeric-only displays
-    if (display->isNumeric())
-      display->displayNumber((int)m_displayed_price.get());
+    if (display->isNumeric()) {
+      int num = (int) m_displayed_price.get();
+      String snum(num);
+      auto offset = display->centerTextOffset(snum);
+      if (snum.length() % 2 == 1)
+        offset.x -= 1;
+      display->displayNumber(num,0, offset.x);
+    }
     return;
   }
 

@@ -93,6 +93,12 @@
   #define X_DISPLAY_HEIGHT 1
   #include "display_tm1637.hpp"
   TM1637Display g_display_hw(/* clock=*/ D4, /* data=*/ D5);
+#elif defined(X_MODEL_7LB0100) // model with 7-segment led display module with MAX7219 driver
+  #define X_DISPLAY_MAX7219
+  #define X_DISPLAY_WIDTH 8 // digits
+  #define X_DISPLAY_HEIGHT 1
+  #include "display_max7219.hpp"
+  DigitLedDisplay g_display_hw(/* data=*/ D5, /* cs=*/ D6, /* clock=*/ D7);
 #elif defined(X_MODEL_1LA0100) // model with lixie (LED plexiglass nixie) display
   #define X_DISPLAY_LIXIE
   #define X_DISPLAY_WIDTH 6 // digits
