@@ -40,8 +40,8 @@ public:
   void setAlwaysOn(bool always_on);
   bool isAlwaysOn();
   bool isTimeSet() { return m_is_time_set;}
-private:
   void updateTime();
+private:
   String m_time;
   bool m_always_on;
   bool m_is_time_set;

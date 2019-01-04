@@ -117,6 +117,7 @@ void clock_callback()
 
 // don't switch display to clock if time wasn't yet set by NTP
 #if !defined(X_CLOCK_ONLY_DISPLAY) 
+  g_clock_action->updateTime();
   if (!g_clock_action->isTimeSet())
     return;
 #endif
