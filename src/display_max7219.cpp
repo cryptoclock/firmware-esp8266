@@ -18,7 +18,7 @@
 */
 
 #include <Arduino.h>
-#include "display_MAX7219.hpp"
+#include "display_max7219.hpp"
 
 namespace Display {
 void MAX7219::setBrightness(const uint8_t brightness)
