@@ -73,7 +73,6 @@ public:
   void setBrightness(const uint8_t brightness);
   void setDrawColor(const uint8_t color);
   void setRotation(const bool rotation);
-  bool isNumeric(void) { return false; }
   bool isGraphic(void) { return true; }
 private:
   void useFont();

@@ -99,10 +99,6 @@ void Neopixel::displayNumber(const int number, const int length, const int posit
   FastLED.show();
 }
 
-void Neopixel::displayText(const String& value, const Coords& coords)
-{
-}
-
 void Neopixel::setBrightness(const uint8_t brightness)
 {
   FastLED.setBrightness(brightness);

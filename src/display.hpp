@@ -46,22 +46,22 @@ public:
   }
   virtual ~DisplayT() = 0;
 
-  virtual void displayNumber(const int number, const int length=0, const int position=0, const bool zero_fill=false) = 0;
-  virtual void displayText(const String& value, const Coords& coords) = 0;
-  virtual void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h) =0;
-  virtual void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h) = 0;
+  virtual void displayNumber(const int number, const int length=0, const int position=0, const bool zero_fill=false) {}
+  virtual void displayText(const String& value, const Coords& coords) {}
+  virtual void displayBitmap(const unsigned char *bitmap, const Coords& coords, const int w, const int h) {}
+  virtual void displayBitmapP(const unsigned char *bitmap, const Coords& coords, const int w, const int h) {}
 
   void displayTextHCentered(const String& value, const Coords& coords);
 
-  virtual void fill(const Coords& coords, const int color=1) = 0;
+  virtual void fill(const Coords& coords, const int color=1) {}
 
-  virtual void drawGlyph(const uint16_t glyph, const Coords& coords) = 0;
-  virtual void drawLine(const Coords& start, const Coords& end) = 0;
-  virtual void drawPixel(const Coords& coords) = 0;
+  virtual void drawGlyph(const uint16_t glyph, const Coords& coords) {}
+  virtual void drawLine(const Coords& start, const Coords& end) {}
+  virtual void drawPixel(const Coords& coords) {}
 
-  virtual void clearBuffer(void) = 0;
-  virtual void sendBuffer(void) = 0;
-  virtual int getTextWidth(const String& text) = 0;
+  virtual void clearBuffer(void) {}
+  virtual void sendBuffer(void) {}
+  virtual int getTextWidth(const String& text) { return text.length(); }
 
   void setDisplayBrightness(const uint8_t brightness)
   {
@@ -76,13 +76,13 @@ public:
     setBrightness(m_brightness);
   }
 
-  virtual void setDrawColor(const uint8_t color) = 0;
-  virtual void setRotation(const bool rotation) = 0;
+  virtual void setDrawColor(const uint8_t color) {}
+  virtual void setRotation(const bool rotation) {}
   virtual int getDisplayWidth() = 0;
   virtual int getDisplayHeight() = 0;
-  virtual int getCurrentFontHeight() = 0;
-  virtual bool isNumeric(void) = 0;
+  virtual int getCurrentFontHeight() { return 1; }
   virtual bool isGraphic(void) = 0;
+  bool isNumeric(void) { return !isGraphic(); }
   Coords centerTextOffset(const String& text);
 
   void setFont(const uint8_t font);
