@@ -265,12 +265,9 @@ void setupDisplay()
   g_display = new Display::TM1637(&g_display_hw, X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH);
 #elif defined(X_DISPLAY_MAX7219)
   g_display = new Display::MAX7219(&g_display_hw, X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH);
-#elif defined(X_DISPLAY_LIXIE)
-  g_display_hw.initialize<X_DISPLAY_DATA_PIN, X_DISPLAY_WIDTH>();
-  g_display = new Display::LixieNumeric(&g_display_hw, X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH);
-#elif defined(X_DISPLAY_NEOPIXEL)
-  auto display = new Display::Neopixel(X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH, X_DISPLAY_HEIGHT);
-  display->initialize<X_DISPLAY_DATA_PIN>();
+#elif defined(X_DISPLAY_SMARTLED)
+  auto display = new Display::SmartLED_Numeric(X_DISPLAY_MILIS_PER_TICK, X_DISPLAY_WIDTH, X_DISPLAY_LEDS, g_layout, X_DISPLAY_LIXIE);
+  FastLED.addLeds<X_DISPLAY_FASTLED_DRIVER, X_DISPLAY_DATA_PIN>(display->getLEDdata(), X_DISPLAY_LEDS);
   g_display = display;
 #else
   #error error

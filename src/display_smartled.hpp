@@ -18,36 +18,42 @@
 */
 
 /*
-  Lixie display driver
+  SmartLED display driver (WS281x, Neopixel etc.)
 */
 
 #pragma once
 #include "config_common.hpp"
 #define FASTLED_INTERNAL
 #define FASTLED_ESP8266_NODEMCU_PIN_ORDER
-#include <Lixie.h>
+#define FASTLED_ALLOW_INTERRUPTS 0
+#include "FastLED.h"
 #include "display.hpp"
+#include "LED.hpp"
 
 namespace Display {
-class LixieNumeric : public DisplayT
+class SmartLED_Numeric : public DisplayT
 {
 public:
-  LixieNumeric(Lixie* display, const int milis_per_tick, const int num_digits) :
-    DisplayT(milis_per_tick), m_display(display), m_num_digits(num_digits)
-  {
-    m_display->begin();
-    m_display->max_power(5,450); // 5V, 450mA
-  }
+  SmartLED_Numeric(const int milis_per_tick, const int width, const int nLEDs, LED *layout, bool is_lixie=false);
+  SmartLED_Numeric(const SmartLED_Numeric&) = delete;
+  SmartLED_Numeric& operator=(const SmartLED_Numeric&) = delete;
+  ~SmartLED_Numeric();
+
+  CRGB* getLEDdata() { return m_LEDs;}
 
   void displayNumber(const int number, const int length, const int position, const bool zero_fill);
 
   void setBrightness(const uint8_t brightness);
 
-  int getDisplayWidth() { return m_num_digits; }
+  int getDisplayWidth() { return m_width; }
   int getDisplayHeight() { return 1; }
   bool isGraphic(void) { return false; }
-private:
-  Lixie* m_display;
-  const int m_num_digits;
+protected:
+  const int m_width;
+  const int m_nLEDs;
+  LED *m_layout;
+  CRGB *m_LEDs;
+  uint8_t *m_segments;
+  bool m_is_lixie; // true if in Lixie configuration instead of 7-segment
 };
 }

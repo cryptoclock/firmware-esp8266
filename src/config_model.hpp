@@ -100,18 +100,42 @@
   #include "display_max7219.hpp"
   DigitLedDisplay g_display_hw(/* data=*/ D5, /* cs=*/ D6, /* clock=*/ D7);
 #elif defined(X_MODEL_1LA0100) // model with lixie (LED plexiglass nixie) display
-  #define X_DISPLAY_LIXIE
+  #define X_DISPLAY_SMARTLED
   #define X_DISPLAY_WIDTH 6 // digits
-  #define X_DISPLAY_HEIGHT 1
-  #define X_DISPLAY_DATA_PIN D5
-  #include "display_lixie.hpp"
-  Lixie g_display_hw;
-#elif defined(X_MODEL_1NA0100) // generic neopixel output
-  #define X_DISPLAY_NEOPIXEL
-  #define X_DISPLAY_WIDTH 8
-  #define X_DISPLAY_HEIGHT 8
-  #include "display_neopixel.hpp"
+  #define X_DISPLAY_LEDS 64
+  #define X_DISPLAY_FASTLED_DRIVER NEOPIXEL
   #define X_DISPLAY_DATA_PIN 5 // !! for neopixel just use 'X' instead of 'DX', eg. if it's connected to D5(GPIO14), just use 5
+  #define X_DISPLAY_LIXIE 1
+  #include "LED.hpp"
+  LED g_layout[] = { // for each led, which digit(0-width) and number(0-9) it lights up
+    {0,0},{0,1},{0,2},{0,3},{0,4},{0,5},{0,6},{0,7},{0,8},{0,9},
+    {1,0},{1,1},{1,2},{1,3},{1,4},{1,5},{1,6},{1,7},{1,8},{1,9},
+    {2,0},{2,1},{2,2},{2,3},{2,4},{2,5},{2,6},{2,7},{2,8},{2,9},
+    {3,0},{3,1},{3,2},{3,3},{3,4},{3,5},{3,6},{3,7},{3,8},{3,9},
+    {4,0},{4,1},{4,2},{4,3},{4,4},{4,5},{4,6},{4,7},{4,8},{4,9},
+    {5,0},{5,1},{5,2},{5,3},{5,4},{5,5},{5,6},{5,7},{5,8},{5,9},
+    {255,0},{255,1},{255,2},{255,3}
+  };
+  #include "display_smartled.hpp"
+#elif defined(X_MODEL_1NA0100) // generic smartled output
+  #define X_DISPLAY_SMARTLED
+  #define X_DISPLAY_WIDTH 6 // digits
+  #define X_DISPLAY_LEDS 64
+  #define X_DISPLAY_FASTLED_DRIVER NEOPIXEL
+  #define X_DISPLAY_DATA_PIN 5 // !! for neopixel just use 'X' instead of 'DX', eg. if it's connected to D5(GPIO14), just use 5
+  #define X_DISPLAY_LIXIE 0
+  #include "LED.hpp"
+  LED g_layout[] = { // for each led, which digit(0-width) and segment(A-G, DP) it lights up
+    {0, SEG_A}, {0, SEG_B}, {0, SEG_C}, {0, SEG_D}, {0, SEG_E}, {0, SEG_F}, {0, SEG_G}, {0, SEG_DP},
+    {1, SEG_A}, {1, SEG_B}, {1, SEG_C}, {1, SEG_D}, {1, SEG_E}, {1, SEG_F}, {1, SEG_G}, {1, SEG_DP},
+    {2, SEG_A}, {2, SEG_B}, {2, SEG_C}, {2, SEG_D}, {2, SEG_E}, {2, SEG_F}, {2, SEG_G}, {2, SEG_DP},
+    {3, SEG_A}, {3, SEG_B}, {3, SEG_C}, {3, SEG_D}, {3, SEG_E}, {3, SEG_F}, {3, SEG_G}, {3, SEG_DP},
+    {4, SEG_A}, {4, SEG_B}, {4, SEG_C}, {4, SEG_D}, {4, SEG_E}, {4, SEG_F}, {4, SEG_G}, {4, SEG_DP},
+    {5, SEG_A}, {5, SEG_B}, {5, SEG_C}, {5, SEG_D}, {5, SEG_E}, {5, SEG_F}, {5, SEG_G}, {5, SEG_DP},
+    {6, SEG_A}, {6, SEG_B}, {6, SEG_C}, {6, SEG_D}, {6, SEG_E}, {6, SEG_F}, {6, SEG_G}, {6, SEG_DP},
+    {7, SEG_A}, {7, SEG_B}, {7, SEG_C}, {7, SEG_D}, {7, SEG_E}, {7, SEG_F}, {7, SEG_G}, {7, SEG_DP},
+  };
+  #include "display_smartled.hpp"
 #else
   #error Hardware model not defined!
 #endif
