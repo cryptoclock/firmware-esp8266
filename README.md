@@ -70,110 +70,10 @@ Note that each device is identified to the server using an unique number (UUID),
 
 Protocol
 ---------
-The protocol is implemented using standard websocket messages (ws:// or wss://).
-Any received message not starting with a semicolon (';') is treated as a numeric value, and the display will show rolling number
-animation from previously received value.
+The protocol is implemented using JSON messages over standard websocket messages (ws:// or wss://).
+See file _protocol.md_ for details.
 
-Any message starting with a semicolon followed by space ('; xxx') is discarded
-
-Any message starting with a semicolon (';') is treated as a command:
-
-### Commands sent by server
-
-__UPDATE__
-  sent by server to trigger OTA firmware update. Firmware is also automatically updated on device startup.
-  Firmware update server url can be set in device settings, or set to empty ('') to disable firmware updates.
-
-__RESET__
-  sent by server to trigger device restart
-
-__ATH=X__
-  sent by server to set All-Time-High threshold. When the price/number displayed reaches this threshold,
-  the display will flash for a short time.
-
-__MSG some message__
-  display the message specified as a rolling text on the display
-  * Special commands that can be inserted into a message:
-  * '\sxxx$' -> plays 'xxx' sound/melody in RTTTL format (see command SOUND for details)
-
-__STATICMSG X some message__
-__MSGSTATIC X some message__
-  display the message specified as a static text on the display, for X amount of seconds
-  (or indefinitely, if X is 0)
-
-__COUNTDOWN X__
-  displays ticking countdown from X seconds to zero
-
-__SOUND rtttl__
-  on devices with attached buzzer plays sound or melody in RTTTL format 
-```
-example of melody: 
-SOUND StarwarsI:d=16,o=5,b=100:4e,4e,4e,8c,p,g,4e,8c,p,g,4e,4p,4b,4b,4b,8c6,p,g,4d#,8c,p,g,4e,8p
-```
-__PARAM name value__
-  sent by server to set the device parameter 'name' to 'value'
-
-__OTP password__
-  server sends pairing password to be shown on display (see section OTP for details)
-
-__OTP_ACK__
-  server notifies the device about successfull pairing
-
-__DATA_TIMEOUT X__
-  sets the timeout for not receiving an update, upon which reconnect is forced
-
-__GET_PARAMS__
-  server asks the device to send all the settings (excluding WiFi credentials)
-
-__NEW_SETTINGS_LOADED__
-  server notifies the device about device settings being changed (via web interface or other means)
-
-__HB__
-  heartbeat, periodically sent by server to keep the connection alive
-
-### Commands sent by client
-
-__HELLO modelnumber uuid version firmwareMD5__
-  greets the server and sends hardware model, uuid, firmware version and MD5 checksum
-
-__OTP_REQ__
-  client requests OTP pairing
-
-__PARAM name value__
-  sends to server 'value' of parameter 'name'
-
-__DIAG x y__
-  diagnostics data, currently sendiong 'last_reset_reason', 'last_reset_info', 'data_timeout_received'
-
-Example of typical communication ('S:' is server, 'C:' is client):
-(Device connected to url: wss://ticker.cryptoclock.net:443/?uuid=e589bc6c-41c5-49f1-935f-e05cf28a6103)
-
-```
-S: ; Welcome client e589bc6c-41c5-49f1-935f-e05cf28a6103
-C: ;HELLO 3DA0100 e589bc6c-41c5-49f1-935f-e05cf28a6103 1.0.0 831457cc7f8787cd9d1d1af8fe47a250
-S: ; Ticker subscribed to bitfinex/btc/usd
-S: ;ATH=11775.0
-S: 4554.4
-C: ;PARAM brightness 1
-C: ;PARAM clock_interval 30
-C: ;PARAM clock_mode 0
-C: ;PARAM font 0
-C: ;PARAM rotate_display 1
-C: ;PARAM ticker_url wss://ticker.cryptoclock.net:443/
-C: ;PARAM timezone 0
-C: ;PARAM update_url update.cryptoclock.net
-C: ;DIAG last_reset_reason External System
-C: ;DIAG last_reset_info Fatal exception:0 flag:6 (EXT_SYS_RST) epc1:0x00000000 epc2:0x00000000 epc3:0x00000000 excvaddr:0x00000000 depc:0x00000000
-S: 4567.1
-...
-S: 4565.0
-C: ;HB
-S: 4565.1
-S: ;HB
-S: ;MSG Greetings to all cryptoclock users!
-S: 4565.7
-...
-```
+For compatiblity with older protocol, any non-JSON numeric text received is treated like a tick value update.
 
 Firmware update
 ----------------
@@ -231,9 +131,11 @@ Used Libraries from repository
 * [NtpClientLib](https://github.com/gmag11/NtpClient)
 * [ESP8266TrueRandom](https://github.com/marvinroger/ESP8266TrueRandom) - UUID generation
 * [I2Cdevlib-MPU6050](https://github.com/jrowberg/i2cdevlib.git) - i2c library for controlling MPU6050 gyroscope/accelerometer
-* [TM1637](https://github.com/avishorp/TM1637) - driver for TM1637 7-segment LED displays
+* [TM1637](https://github.com/avishorp/TM1637) - driver for TM1637 7-segment LED displays (numeric)
 * [Time](http://playground.arduino.cc/code/time) - dependency of NtpClientLib
 * [FastLED](http://fastled.io) - dependency of Lixie-Arduino
+* [ArduinoJson](https://arduinojson.org) - JSON (de)serialization library
+* [DigitLedDisplay](https://github.com/ozhantr/DigitLedDisplay) - driver for MAX7219/7221 7-segment LED displays (numeric)
 
 Modified Libraries used
 ------------------------
@@ -242,9 +144,6 @@ Modified Libraries used
 
 * [WiFiManager](https://github.com/tzapu/WiFiManager) - AP captive portal to configure device over WiFi
     changes: customized html and css for captive portal, fixes to storing and deleting AP credentials
-
-* [Lixie-Arduino](https://github.com/connornishijima/Lixie-arduino) - driver for Lixie displays
-    changes: changed template instantiation of the underlying FastLED library so we don't run out of RAM
 
 Licence
 --------

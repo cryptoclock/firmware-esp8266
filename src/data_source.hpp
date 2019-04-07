@@ -25,11 +25,9 @@
 #include "config_common.hpp"
 #include "parameter_store.hpp"
 #include <WebSocketsClient.h>
-#undef NETWORK_W5100 // To fix WebSockets and NTPClientLib #define conflict
-#undef NETWORK_ENC28J60
-#undef NETWORK_ESP8266
-
 #include <queue>
+#include "ArduinoJson.h"
+
 
 typedef std::function<void(const String&)> on_price_change_t;
 typedef std::function<void(const String&)> on_price_ath_t;
@@ -78,6 +76,7 @@ public:
 
   static void s_callback(WStype_t type, uint8_t * payload, size_t length);
   void queueText(const String& text);
+  void queueJSON(const JsonDocument& doc);
 private:
   void sendText(const String& text);
   void sendHello();
@@ -86,6 +85,7 @@ private:
 
   void callback(WStype_t type, uint8_t * payload, size_t length);
   void textCallback(const String& text);
+  void JSONCallback(const JsonDocument& doc);
   void parameterCallback(const String& name, const String& value);
 
   bool m_connected;

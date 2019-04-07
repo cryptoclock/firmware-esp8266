@@ -18,8 +18,20 @@
 */
 
 #include "utils.hpp"
-
+#include <umm_malloc/umm_malloc.h>
 const int EEPROM_SIZE = 2048;
+
+const size_t block_size = 8;
+
+size_t getTotalAvailableMemory() {
+  umm_info(0, 0);
+  return ummHeapInfo.freeBlocks * block_size;
+}
+
+size_t getLargestAvailableBlock() {
+  umm_info(0, 0);
+  return ummHeapInfo.maxFreeContiguousBlocks * block_size;
+}
 
 namespace Utils {
 void eeprom_BEGIN()
@@ -135,4 +147,7 @@ String uint64ToString(uint64_t input)
   return result;
 }
 
+float getMemoryFragmentation() {
+  return 100 - getLargestAvailableBlock() * 100.0 / getTotalAvailableMemory();
+}
 }

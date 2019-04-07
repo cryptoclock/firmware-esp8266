@@ -37,4 +37,5 @@ void parseURL(String url, String &server, int &port, String& path, String& proto
 String urlChangePath(String url, const String& new_path);
 String shortenText(const String& text, const int lead);
 String uint64ToString(uint64_t input); 
+float getMemoryFragmentation();
 }

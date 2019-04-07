@@ -24,6 +24,9 @@
 extern DataSource *g_data_source;
 extern ParameterStore g_parameters;
 
+const int json_doc_max_out_size = 512;
+const int json_doc_max_in_size = 2048;
+
 void DataSource::connect()
 {
   String host, path, protocol;
@@ -31,7 +34,7 @@ void DataSource::connect()
 
   String ticker_url = g_parameters["ticker_url"];
   Utils::parseURL(ticker_url, host, port, path, protocol);
-  path += "?uuid=" + g_parameters["__device_uuid"];
+  path += "?uuid=" + g_parameters["__device_uuid"] + "&format=json";
 
   DEBUG_SERIAL.printf_P(PSTR("[Wsc] Connecting to protocol '%s' host '%s' port '%i' url '%s'\n"),protocol.c_str(),host.c_str(), port, path.c_str());
   if (protocol=="ws")
@@ -74,7 +77,7 @@ void DataSource::loop()
 
   // send heartbeat
   if (m_connected && millis() - m_last_heartbeat_sent_at > c_heartbeat_interval) {
-    queueText(";HB");
+    queueText("{\"type\":\"heartbeat\"}");
     m_last_heartbeat_sent_at = millis();
   }
 
@@ -101,24 +104,42 @@ void DataSource::queueText(const String& text)
   m_send_queue.push(text);
 }
 
+void DataSource::queueJSON(const JsonDocument& doc)
+{
+  String text;
+  serializeJson(doc,text);
+  queueText(text);
+}
+
 void DataSource::sendHello()
 {
-  String text = ";HELLO " + String(X_MODEL_NUMBER) + " " +
-    g_parameters["__device_uuid"] + " " + FIRMWARE_VERSION + " " + ESP.getSketchMD5();
-  queueText(text);
+  StaticJsonDocument<json_doc_max_out_size> doc;
+  doc["type"] = "hello";
+  doc["model"] = X_MODEL_NUMBER;
+  doc["uuid"] = g_parameters["__device_uuid"];
+  doc["version"] = FIRMWARE_VERSION;
+  doc["firmwareChecksum"] = ESP.getSketchMD5();
+  queueJSON(doc);
 }
 
 void DataSource::sendDiagnostics()
 {
-  queueText(";DIAG last_reset_reason " + ESP.getResetReason());
-  queueText(";DIAG last_reset_info " + ESP.getResetInfo());
+  StaticJsonDocument<json_doc_max_out_size> doc;
+  doc["type"] = "diagnostics";
+  JsonObject reason = doc.createNestedObject("lastResetReason");
+  reason["cpu0"] = ESP.getResetReason();
+  queueJSON(doc);
+//  queueText(";DIAG last_reset_info " + ESP.getResetInfo());
 }
 
 void DataSource::sendParameter(const ParameterItem *item)
 {
   if (item->name.startsWith("__")) return;
-  String text = ";PARAM " + item->name + " " + item->value;
-  queueText(text);
+  StaticJsonDocument<json_doc_max_out_size> doc;
+  doc["type"] = "parameter";
+  doc["name"] = item->name;
+  doc["value"] = item->value;
+  queueJSON(doc);
 }
 
 void DataSource::sendAllParameters()
@@ -129,80 +150,126 @@ void DataSource::sendAllParameters()
 bool DataSource::sendOTPRequest()
 {
   if (m_connected) {
-    queueText(";OTP_REQ");
+    queueText("{\"type\": \"OTPRequest\"}");
     return true;
   }
   return false;
 }
 
-void DataSource::textCallback(const String& str)
+void DataSource::JSONCallback(const JsonDocument& doc)
 {
-  if (str=="") return;
-  if (str==";UPDATE") {
+  const char* cmd = doc["type"];
+  if (cmd==nullptr) { // error
+    DEBUG_SERIAL.printf_P(PSTR("[DS] Invalid JSON message received, skipping\n"));
+    return;
+  }
+
+  // TODO: prepsat jako pole funktoru, podle esp32 
+  if (!strcmp(cmd,"heartbeat")) {
+    DEBUG_SERIAL.printf_P(PSTR("[DS] Heartbeat received\n"));
+  } else if (!strcmp(cmd,"triggerReset")) {
+    ESP.restart();
+  } else if (!strcmp(cmd,"welcome")) {
+    DEBUG_SERIAL.printf_P(PSTR("[DS] Welcome message received\n"));
+  } else if (!strcmp(cmd,"tick")) {
+    // FIXME: parse all
+    auto data = doc["data"];
+    auto tick = data[0]; 
+    const String value = tick["value"];
+    //[{"id":"(UUID)","value":"6456.9"},...]}
+    if (m_on_price_change)
+      m_on_price_change(value);
+  } else if (!strcmp(cmd,"allTimeHigh")) {
+    // FIXME: parse all
+    auto data = doc["data"];
+    auto tick = data[0]; 
+    const String value = tick["value"];
+    //{"type": "allTimeHigh", data: [{id: "(UUID)", "value": 99999.9},...] }
+
+    if (m_on_price_ath)
+      m_on_price_ath(value);
+  } else if (!strcmp(cmd,"message")) {
+    // {"type": "message", "text": "Hello there!", "target": "(UUID)"} // FIXME: use target
+    const String text = doc["text"];
+    if (m_on_announcement)
+      m_on_announcement(text, false, 0);
+  } else if (!strcmp(cmd,"staticMessage")) {
+    // {"type": "staticMessage", "text": "Hello there!", "durationSecs": 60.0, "target": "(UUID)"}
+    const String text = doc["text"];
+    int duration = doc["durationSecs"];
+    if (m_on_announcement)
+      m_on_announcement(text, true, duration);
+  } else if (!strcmp(cmd,"imageBegin")) { // not supported
+  } else if (!strcmp(cmd,"imageEnd")) { // not supported
+  } else if (!strcmp(cmd,"imageChunk")) { // not supported
+  } else if (!strcmp(cmd,"setTemplate")) { // not supported
+  } else if (!strcmp(cmd,"layout")) {
+    // TODO
+  } else if (!strcmp(cmd,"parameter")) {
+    // {"type": "parameter", "name": "timezone", "value": 3}
+    const String name = doc["name"];
+    const String value = doc["value"];
+    DEBUG_SERIAL.printf_P(PSTR("[DS] Parameter '%s' updated to '%s'\n"),name.c_str(), value.c_str());
+    parameterCallback(name, value);
+  } else if (!strcmp(cmd,"requestParameters")) {
+    DEBUG_SERIAL.printf_P(PSTR("[DS] Parameters requested, sending\n"));
+    sendAllParameters();
+  } else if (!strcmp(cmd,"setTimeout")) {
+    // {"type": "setTimeout", "dataReceivedTimeoutSecs": 180.0 }
+    const String timeout = doc["dataReceivedTimeoutSecs"];
+    DEBUG_SERIAL.printf_P(PSTR("[DS] Data timeout set to '%s' secs\n"),timeout.c_str());
+    if (m_on_price_timeout_set)
+      m_on_price_timeout_set(timeout);
+  } else if (!strcmp(cmd,"OTP")) {
+    // {"type": "OTP", "password": 123456}
+    const String password = doc["password"];
+    if (m_on_otp)
+      m_on_otp(password);
+  } else if (!strcmp(cmd,"OTP_ACK")) {
+    if (m_on_otp_ack)
+      m_on_otp_ack();
+  } else if (!strcmp(cmd,"triggerUpdate")) {
     if (m_on_update_request) {
       disconnect();
       m_on_update_request();
     }
-  } else if (str.startsWith(";RESET")) {
-    ESP.restart();
-  } else if (str.startsWith(";ATH=")) { // All-Time-High
-    if (m_on_price_ath)
-      m_on_price_ath(str.substring(5));
-  } else if (str.startsWith(";NOATH")) {
-    if (m_on_price_ath)
-      m_on_price_ath("off");
-  } else if (str.startsWith(";MSG ") || str.startsWith(";MSG=")) { // Announcement
-    if (m_on_announcement)
-      m_on_announcement(str.substring(5), false, 0);
-  } else if (str.startsWith(";COUNTDOWN ") || str.startsWith(";COUNTDOWN=")) { // Countdown
-    if (m_on_countdown)
-      m_on_countdown(str.substring(11));
-  } else if (str.startsWith(";SOUND ") || str.startsWith(";SOUND=")) { // Sound
-    if (m_on_sound)
-      m_on_sound(str.substring(7));
-  } else if (str.startsWith(";STATICMSG ") || str.startsWith(";MSGSTATIC ")) { // Announcement
-    if (m_on_announcement) {
-      int time_idx = str.indexOf(' ');
-      if (time_idx==-1)
-        return;
-      int msg_idx = str.indexOf(' ', time_idx+1);
-      if (msg_idx==-1)
-        return;
-
-      int display_time = str.substring(time_idx+1).toInt();
-      String msg = str.substring(msg_idx+1);
-      m_on_announcement(msg, true, display_time);
-    }
-  } else if (str.startsWith(";PARAM ")) { // parameter update
-    String pair = str.substring(7);
-    int index = pair.indexOf(" ");
-    String param_name = pair.substring(0,index);
-    String param_value = pair.substring(index+1);
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Parameter '%s' updated to '%s'\n"),param_name.c_str(), param_value.c_str());
-    parameterCallback(param_name, param_value);
-  } else if (str.startsWith(";OTP ")||str.startsWith(";OTP=")) { // OTP
-    if (m_on_otp)
-      m_on_otp(str.substring(5));
-  } else if (str.startsWith(";OTP_ACK")) { // OTP acknowledge
-    if (m_on_otp_ack)
-      m_on_otp_ack();
-  } else if (str.startsWith(";DATA_TIMEOUT")) {
-    if (m_on_price_timeout_set)
-      m_on_price_timeout_set(str.substring(13));
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Data timeout set to '%s' secs\n"),str.substring(13).c_str());
-  } else if (str.startsWith(";GET_PARAMS")) {
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Parameters requested, sending\n"));
-    sendAllParameters();
-  } else if (str.startsWith(";NEW_SETTINGS_LOADED")) {
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] New settings loaded\n"));
+  } else if (!strcmp(cmd,"newSettingsLoaded")) {
+    DEBUG_SERIAL.printf_P(PSTR("[DS] New settings loaded\n"));
     if (m_on_new_settings)
       m_on_new_settings();
-  } else if (str.startsWith(";HB")) {
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Heartbeat received\n"));
-  } else if (str.startsWith("; Welcome")) {
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Welcome message received\n"));
-  } else if (str.startsWith(";")){
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown message '%s'\n"),str.c_str());
+  } else if (!strcmp(cmd,"countdown")) {
+    // {"type": "countdown", "timeSecs": 60.0 }
+    const String duration = doc["timeSecs"];
+    if (m_on_countdown)
+      m_on_countdown(duration);
+  } else if (!strcmp(cmd,"sound")) {
+    // {"type": "sound", "melodyRTTL": "StarwarsI:d=16,o=5,b=100:4e,4e,4e,8c,p,g,4e,8c,p,g,4e,4p,4b,4b,4b,8c6,p,g,4d#,8c,p,g,4e,8p"}
+    const String melody = doc["melodyRTTL"];
+    if (m_on_sound)
+      m_on_sound(melody);
+  } else if (!strcmp(cmd,"noath")) {
+  // if (str.startsWith(";NOATH")) {
+  //   if (m_on_price_ath)
+  //     m_on_price_ath("off");
+  } else {
+    DEBUG_SERIAL.printf_P(PSTR("[DS] Unsupported command!\n"));
+  }
+
+}
+
+void DataSource::textCallback(const String& str)
+{
+  if (str=="") return;
+  if (str[0]=='{') {
+    // TODO: handle errors
+    StaticJsonDocument<json_doc_max_in_size> doc;
+    deserializeJson(doc, str);
+    JSONCallback(doc);
+    return;
+  }
+
+  if (str.startsWith(";")){
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] Ignoring comment '%s'\n"),str.c_str());
   } else {
     if (isdigit(str.charAt(0)) ||
       (str.charAt(0)=='-' && isdigit(str.charAt(1)))
