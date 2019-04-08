@@ -173,18 +173,23 @@ void DataSource::JSONCallback(const JsonDocument& doc)
     DEBUG_SERIAL.printf_P(PSTR("[DS] Welcome message received\n"));
   } else if (!strcmp(cmd,"tick")) {
     // FIXME: parse all
+    //[{"id":"(UUID)","value":"6456.9"},...]}
     auto data = doc["data"];
     auto tick = data[0]; 
     const String value = tick["value"];
-    //[{"id":"(UUID)","value":"6456.9"},...]}
+    if (value=="null")
+      return;
+
     if (m_on_price_change)
       m_on_price_change(value);
   } else if (!strcmp(cmd,"allTimeHigh")) {
     // FIXME: parse all
+    //{"type": "allTimeHigh", data: [{id: "(UUID)", "value": 99999.9},...] }
     auto data = doc["data"];
     auto tick = data[0]; 
     const String value = tick["value"];
-    //{"type": "allTimeHigh", data: [{id: "(UUID)", "value": 99999.9},...] }
+    if (value=="null")
+      return;
 
     if (m_on_price_ath)
       m_on_price_ath(value);
@@ -209,20 +214,30 @@ void DataSource::JSONCallback(const JsonDocument& doc)
     // {"type": "parameter", "name": "timezone", "value": 3}
     const String name = doc["name"];
     const String value = doc["value"];
-    DEBUG_SERIAL.printf_P(PSTR("[DS] Parameter '%s' updated to '%s'\n"),name.c_str(), value.c_str());
-    parameterCallback(name, value);
+    if (name == "null" || value == "null") {
+      DEBUG_SERIAL.printf_P(PSTR("[DS] Error, parameter or value missing\n"));
+    } else {
+      DEBUG_SERIAL.printf_P(PSTR("[DS] Parameter '%s' updated to '%s'\n"),name.c_str(), value.c_str());
+      parameterCallback(name, value);
+    }
   } else if (!strcmp(cmd,"requestParameters")) {
     DEBUG_SERIAL.printf_P(PSTR("[DS] Parameters requested, sending\n"));
     sendAllParameters();
   } else if (!strcmp(cmd,"setTimeout")) {
     // {"type": "setTimeout", "dataReceivedTimeoutSecs": 180.0 }
     const String timeout = doc["dataReceivedTimeoutSecs"];
+    if (timeout=="null")
+      return;
+
     DEBUG_SERIAL.printf_P(PSTR("[DS] Data timeout set to '%s' secs\n"),timeout.c_str());
     if (m_on_price_timeout_set)
       m_on_price_timeout_set(timeout);
   } else if (!strcmp(cmd,"OTP")) {
     // {"type": "OTP", "password": 123456}
     const String password = doc["password"];
+    if (password=="null")
+      return;
+
     if (m_on_otp)
       m_on_otp(password);
   } else if (!strcmp(cmd,"OTP_ACK")) {
@@ -240,11 +255,15 @@ void DataSource::JSONCallback(const JsonDocument& doc)
   } else if (!strcmp(cmd,"countdown")) {
     // {"type": "countdown", "timeSecs": 60.0 }
     const String duration = doc["timeSecs"];
+    if (duration=="null")
+      return;
     if (m_on_countdown)
       m_on_countdown(duration);
   } else if (!strcmp(cmd,"sound")) {
     // {"type": "sound", "melodyRTTL": "StarwarsI:d=16,o=5,b=100:4e,4e,4e,8c,p,g,4e,8c,p,g,4e,4p,4b,4b,4b,8c6,p,g,4d#,8c,p,g,4e,8p"}
     const String melody = doc["melodyRTTL"];
+    if (melody=="null")
+      return;
     if (m_on_sound)
       m_on_sound(melody);
   } else if (!strcmp(cmd,"noath")) {
@@ -254,16 +273,18 @@ void DataSource::JSONCallback(const JsonDocument& doc)
   } else {
     DEBUG_SERIAL.printf_P(PSTR("[DS] Unsupported command!\n"));
   }
-
 }
 
 void DataSource::textCallback(const String& str)
 {
   if (str=="") return;
   if (str[0]=='{') {
-    // TODO: handle errors
-    StaticJsonDocument<json_doc_max_in_size> doc;
-    deserializeJson(doc, str);
+    DynamicJsonDocument doc(json_doc_max_in_size);
+    DeserializationError err = deserializeJson(doc, str);
+    if (err) {
+      DEBUG_SERIAL.printf_P(PSTR("[DS] Error parsing JSON message received: %s\n"),err.c_str());
+      return;
+    }
     JSONCallback(doc);
     return;
   }
