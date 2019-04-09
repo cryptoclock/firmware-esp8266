@@ -28,6 +28,7 @@
 #include <WebSocketsClient.h>
 #include <queue>
 #include "ArduinoJson.h"
+#include "Ticker.h"
 
 
 typedef std::function<void(const String&, int)> on_price_change_t;
@@ -54,6 +55,7 @@ public:
 
   {
     m_websocket.onEvent(DataSource::s_callback);
+    m_timeout_ticker.attach(20.0, DataSource::s_timeoutCheckCallback);
   }
 
   void connect();
@@ -88,6 +90,8 @@ private:
   void textCallback(const String& text);
   void JSONCallback(const JsonDocument& doc);
   void parameterCallback(const String& name, const String& value);
+  void timeoutCheckCallback(void);
+  static void s_timeoutCheckCallback(void);
 
   bool m_connected;
   long m_last_connected_at;
@@ -100,6 +104,7 @@ private:
   static const int c_heartbeat_interval = 30 * 1000;
   static const int c_force_reconnect_interval = 120 * 1000;
   static const int c_no_data_reconnect_interval = 300 * 1000;
+  static const int c_no_data_restart_interval = 600 * 1000;
 
   on_price_change_t m_on_price_change;
   on_price_ath_t m_on_price_ath;
@@ -115,4 +120,6 @@ private:
   std::queue<String> m_send_queue;
   int m_num_connection_tries;
   Layout m_layout;
+
+  Ticker m_timeout_ticker;
 };

@@ -386,3 +386,16 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
     break;
   }
 }
+
+void DataSource::s_timeoutCheckCallback()
+{
+  g_data_source->timeoutCheckCallback();
+}
+
+void DataSource::timeoutCheckCallback()
+{
+  if (millis() - m_last_data_received_at > c_no_data_restart_interval) {
+    DEBUG_SERIAL.printf_P(PSTR("[WSc] No data received for %i secs, forcing reset\n"), c_no_data_restart_interval / 1000);
+    ESP.restart();
+  }
+}
