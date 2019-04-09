@@ -24,13 +24,14 @@
 #pragma once
 #include "config_common.hpp"
 #include "parameter_store.hpp"
+#include "layout.hpp"
 #include <WebSocketsClient.h>
 #include <queue>
 #include "ArduinoJson.h"
 
 
-typedef std::function<void(const String&)> on_price_change_t;
-typedef std::function<void(const String&)> on_price_ath_t;
+typedef std::function<void(const String&, int)> on_price_change_t;
+typedef std::function<void(const String&, int)> on_price_ath_t;
 typedef std::function<void(void)> on_update_request_t;
 typedef std::function<void(const String&, const bool, const int)> on_announcement_t;
 typedef std::function<void(const String&)> on_otp_t;
@@ -113,4 +114,5 @@ private:
   WebSocketsClient m_websocket;
   std::queue<String> m_send_queue;
   int m_num_connection_tries;
+  Layout m_layout;
 };

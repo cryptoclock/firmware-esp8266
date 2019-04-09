@@ -440,7 +440,10 @@ void setupDataSource()
     g_sound->playMusicRTTTL(data);
   });
 
-  g_data_source->setOnPriceATH([&](const String& price){
+  g_data_source->setOnPriceATH([&](const String& price, int screen_idx){
+    if (screen_idx!=0)
+      return;
+
     g_price_action->setATHPrice(price);
   });
 
@@ -448,7 +451,10 @@ void setupDataSource()
     g_price_action->setPriceTimeout(timeout.toFloat());
   });
 
-  g_data_source->setOnPriceChange([&](const String& price){
+  g_data_source->setOnPriceChange([&](const String& price, int screen_idx){
+    if (screen_idx!=0)
+      return;
+
     auto currentPrice = Price(price);
     currentPrice.debug_print();
 

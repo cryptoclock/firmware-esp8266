@@ -172,27 +172,35 @@ void DataSource::JSONCallback(const JsonDocument& doc)
   } else if (!strcmp(cmd,"welcome")) {
     DEBUG_SERIAL.printf_P(PSTR("[DS] Welcome message received\n"));
   } else if (!strcmp(cmd,"tick")) {
-    // FIXME: parse all
     //[{"id":"(UUID)","value":"6456.9"},...]}
     auto data = doc["data"];
-    auto tick = data[0]; 
-    const String value = tick["value"];
-    if (value=="null")
+    if (data.isNull())
       return;
 
-    if (m_on_price_change)
-      m_on_price_change(value);
+    for (JsonObjectConst tick: data.as<JsonArrayConst>()) {
+      const String value = tick["value"];
+      const String id = tick["id"];
+      if (value=="null")
+        continue;
+      int screen_idx = m_layout.findScreenIndexByUUID(id);
+      if (m_on_price_change)
+        m_on_price_change(value, screen_idx);
+    }
   } else if (!strcmp(cmd,"allTimeHigh")) {
-    // FIXME: parse all
-    //{"type": "allTimeHigh", data: [{id: "(UUID)", "value": 99999.9},...] }
+   // {"type": "allTimeHigh", data: [{id: "(UUID)", "value": 99999.9},...] }
     auto data = doc["data"];
-    auto tick = data[0]; 
-    const String value = tick["value"];
-    if (value=="null")
+    if (data.isNull())
       return;
 
-    if (m_on_price_ath)
-      m_on_price_ath(value);
+    for (JsonObjectConst tick: data.as<JsonArrayConst>()) {
+      const String value = tick["value"];
+      const String id = tick["id"];
+      if (value=="null")
+        continue;
+      int screen_idx = m_layout.findScreenIndexByUUID(id);
+      if (m_on_price_ath)
+        m_on_price_ath(value, screen_idx);
+    }
   } else if (!strcmp(cmd,"message")) {
     // {"type": "message", "text": "Hello there!", "target": "(UUID)"} // FIXME: use target
     const String text = doc["text"];
@@ -209,7 +217,12 @@ void DataSource::JSONCallback(const JsonDocument& doc)
   } else if (!strcmp(cmd,"imageChunk")) { // not supported
   } else if (!strcmp(cmd,"setTemplate")) { // not supported
   } else if (!strcmp(cmd,"layout")) {
-    // TODO
+    auto data = doc["data"];
+    if (data.isNull())
+      return;
+
+    JsonArrayConst array = data.as<JsonArrayConst>();
+    m_layout.fromJSON(array);
   } else if (!strcmp(cmd,"parameter")) {
     // {"type": "parameter", "name": "timezone", "value": 3}
     const String name = doc["name"];
@@ -296,7 +309,7 @@ void DataSource::textCallback(const String& str)
       (str.charAt(0)=='-' && isdigit(str.charAt(1)))
     ) {
       if (m_on_price_change)
-        m_on_price_change(str);
+        m_on_price_change(str, 0);
     } else {
       DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown text '%s'\n"),str.c_str());
     }
