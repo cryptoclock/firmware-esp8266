@@ -38,4 +38,5 @@ String urlChangePath(String url, const String& new_path);
 String shortenText(const String& text, const int lead);
 String uint64ToString(uint64_t input); 
 float getMemoryFragmentation();
+String getDeviceInfo(const String& sep=" ");
 }

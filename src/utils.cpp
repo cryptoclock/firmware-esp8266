@@ -19,6 +19,8 @@
 
 #include "utils.hpp"
 #include <umm_malloc/umm_malloc.h>
+#include "parameter_store.hpp"
+extern ParameterStore g_parameters;
 const int EEPROM_SIZE = 2048;
 
 const size_t block_size = 8;
@@ -149,5 +151,16 @@ String uint64ToString(uint64_t input)
 
 float getMemoryFragmentation() {
   return 100 - getLargestAvailableBlock() * 100.0 / getTotalAvailableMemory();
+}
+
+
+String getDeviceInfo(const String& sep)
+{
+  String info= "v" FIRMWARE_VERSION;
+  info += sep + __DATE__ " " __TIME__;
+  info += sep + "MD5: " + ESP.getSketchMD5().substring(0,6);
+  info += sep + "UUID: " + g_parameters["__device_uuid"].substring(0,6);
+  info += sep + "SDK: " + String(ESP.getSdkVersion());
+  return info;
 }
 }

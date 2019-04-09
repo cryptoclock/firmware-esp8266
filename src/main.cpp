@@ -458,7 +458,7 @@ void setupDataSource()
     }
 
     g_price_action->updatePrice(price);
-    DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free heap: %i\n"),ESP.getFreeHeap());
+    DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free heap: %i, fragmentation: %.2f%%\n"),ESP.getFreeHeap(), Utils::getMemoryFragmentation());
   });
 
   g_data_source->setOnNewSettings([&](){
@@ -489,10 +489,14 @@ void setupDataSource()
 void setupLogo()
 {
   auto logo_top = make_shared<Display::Action::StaticBitmap>(s_crypto2_bits, 32, 8, 1.5);
-  auto logo_bottom = make_shared<Display::Action::StaticBitmap>(s_clock_inverted_bits, 32, 8, 3.5);
+  auto logo_bottom = make_shared<Display::Action::StaticBitmap>(s_clock_inverted_bits, 32, 8, 1.5);
+  auto version = make_shared<Display::Action::StaticText>(String("v") + FIRMWARE_VERSION, 1.5);
+
   g_display->queueAction(logo_top);
   g_display->queueAction(make_shared<Display::Action::SlideTransition>(logo_top, 1, logo_bottom, 1, 0.5, Coords{0,-1}));
   g_display->queueAction(logo_bottom);
+  g_display->queueAction(make_shared<Display::Action::SlideTransition>(logo_bottom, 1, version, 1, 0.5, Coords{0,-1}));
+  g_display->queueAction(version);
 }
 
 void connectToWiFi()
@@ -616,12 +620,7 @@ void sendOTPRequest()
 
 void displayDeviceInfo()
 {
-  String info= "v" FIRMWARE_VERSION;
-  info += " " __DATE__ " " __TIME__;
-  info += " MD5: " + ESP.getSketchMD5().substring(0,6);
-  info += " UUID: " + g_parameters["__device_uuid"].substring(0,6);
-  info += " SDK: " + String(ESP.getSdkVersion());
-  setAnnouncement(info, false, 0, [](){g_menu->end();});
+  setAnnouncement(Utils::getDeviceInfo(), false, 0, [](){g_menu->end();});
 }
 
 void setupMenu()
@@ -663,6 +662,8 @@ void setup() {
   setupMenu();
 
   setupLogo();
+
+  DEBUG_SERIAL.printf("[Firmware] %s\n",Utils::getDeviceInfo("\n[Firmware] ").c_str());
 
   /* WiFi */
   g_display->queueAction(make_shared<Display::Action::RotatingText>("--> WiFi ", -1, 20));
