@@ -51,6 +51,7 @@ using Display::Action::ActionPtr_t;
 #include "button.hpp"
 #include "menu.hpp"
 #include "data_source.hpp"
+#include "protocol.hpp"
 #include "bitmaps.hpp"
 #include "gyro.hpp"
 #include "ntp.hpp"
@@ -75,6 +76,7 @@ shared_ptr<Display::PriceAction> g_price_action;
 shared_ptr<Display::Action::Clock> g_clock_action;
 WiFiCore *g_wifi = nullptr;
 DataSource *g_data_source = nullptr;
+Protocol *g_protocol = nullptr;
 Sound *g_sound = nullptr;
 
 shared_ptr<Button> g_flash_button;
@@ -412,89 +414,95 @@ void setupDataSource()
 {
   g_data_source = new DataSource;
 
-  g_data_source->setOnUpdateRequest([&]() {
-    DEBUG_SERIAL.println(F("Update request received, updating"));
-    g_display->prependAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
-    g_current_mode = MODE::UPDATE;
-    Firmware::update(g_parameters["update_url"]);
-    g_current_mode = MODE::TICKER;
-    ESP.restart();
-  });
+  CC_Protocol* prot = new CC_Protocol("protocol", true);
+  prot->setCommandCallback("welcome",[](const JsonDocument& j){ });
 
-  g_data_source->setOnAnnouncement([&](const String& msg, bool static_msg, int display_time){
-    if (g_announcement=="") {
-      g_announcement_static = static_msg;
-      g_announcement_time = display_time;
-      g_announcement = msg;
-    } // ignore otherwise
-  });
 
-  g_data_source->setOnCountdown([&](const String& data) {
-    DEBUG_SERIAL.printf_P(PSTR("Countdown received: '%s'"),data.c_str());
-    int t = data.toInt();
-    setCountDown(t, 5);
-  });
+  g_protocol = prot;
+//   g_data_source->setOnUpdateRequest([&]() {
+//     DEBUG_SERIAL.println(F("Update request received, updating"));
+//     g_display->prependAction(make_shared<Display::Action::RotatingText>("UPDATING... ", -1, 20));
+//     g_current_mode = MODE::UPDATE;
+//     Firmware::update(g_parameters["update_url"]);
+//     g_current_mode = MODE::TICKER;
+//     ESP.restart();
+//   });
 
-  g_data_source->setOnSound([&](const String& data) {
-    DEBUG_SERIAL.printf_P(PSTR("Sound received: '%s'"),data.c_str());
-    g_sound->playMusicRTTTL(data);
-  });
+//   g_data_source->setOnAnnouncement([&](const String& msg, bool static_msg, int display_time){
+//     if (g_announcement=="") {
+//       g_announcement_static = static_msg;
+//       g_announcement_time = display_time;
+//       g_announcement = msg;
+//     } // ignore otherwise
+//   });
 
-  g_data_source->setOnPriceATH([&](const String& price, int screen_idx){
-    if (screen_idx!=0)
-      return;
+//   g_data_source->setOnCountdown([&](const String& data) {
+//     DEBUG_SERIAL.printf_P(PSTR("Countdown received: '%s'"),data.c_str());
+//     int t = data.toInt();
+//     setCountDown(t, 5);
+//   });
 
-    g_price_action->setATHPrice(price);
-  });
+//   g_data_source->setOnSound([&](const String& data) {
+//     DEBUG_SERIAL.printf_P(PSTR("Sound received: '%s'"),data.c_str());
+//     g_sound->playMusicRTTTL(data);
+//   });
 
-  g_data_source->setOnPriceTimeoutSet([&](const String& timeout){
-    g_price_action->setPriceTimeout(timeout.toFloat());
-  });
+//   g_data_source->setOnPriceATH([&](const String& price, int screen_idx){
+//     if (screen_idx!=0)
+//       return;
 
-  g_data_source->setOnPriceChange([&](const String& price, int screen_idx){
-    if (screen_idx!=0)
-      return;
+//     g_price_action->setATHPrice(price);
+//   });
 
-    if (price=="") {
-      g_price_action->reset();
-      return;
-    }
+//   g_data_source->setOnPriceTimeoutSet([&](const String& timeout){
+//     g_price_action->setPriceTimeout(timeout.toFloat());
+//   });
 
-    auto currentPrice = Price(price);
-    currentPrice.debug_print();
+//   g_data_source->setOnPriceChange([&](const String& price, int screen_idx){
+//     if (screen_idx!=0)
+//       return;
 
-    if (g_reset_price_on_next_tick) {
-      g_price_action->reset();
-      g_reset_price_on_next_tick = false;
-    }
+//     if (price=="") {
+//       g_price_action->reset();
+//       return;
+//     }
 
-    g_price_action->updatePrice(price);
-    DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free heap: %i, fragmentation: %.2f%%\n"),ESP.getFreeHeap(), Utils::getMemoryFragmentation());
-  });
+//     auto currentPrice = Price(price);
+//     currentPrice.debug_print();
 
-  g_data_source->setOnNewSettings([&](){
-    g_reset_price_on_next_tick = true;
-//    g_price_action->reset();
-  });
+//     if (g_reset_price_on_next_tick) {
+//       g_price_action->reset();
+//       g_reset_price_on_next_tick = false;
+//     }
 
-  static const double otp_timeout = 180.0;
-  g_data_source->setOnOTP([](const String& otp){
-    auto multi = Display::Action::createRepeatedSlide({-1,0}, otp_timeout, 1.0,
-      make_shared<Display::Action::StaticText>("OTP:", 0.8),
-      make_shared<Display::Action::StaticText>(otp, 5.0),
-      []() { forceSetTickerMode(); }
-    );
-    g_display->prependAction(multi);
-    g_current_mode = MODE::OTP;
-  });
+//     g_price_action->updatePrice(price);
+//     DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free heap: %i, fragmentation: %.2f%%\n"),ESP.getFreeHeap(), Utils::getMemoryFragmentation());
+//   });
 
-  // on receiving OTP web confirmation
-  g_data_source->setOnOTPack([](){
-    if (g_current_mode == MODE::OTP)
-      forceSetTickerMode();
-  });
+//   g_data_source->setOnNewSettings([&](){
+//     g_reset_price_on_next_tick = true;
+// //    g_price_action->reset();
+//   });
+
+//   static const double otp_timeout = 180.0;
+//   g_data_source->setOnOTP([](const String& otp){
+//     auto multi = Display::Action::createRepeatedSlide({-1,0}, otp_timeout, 1.0,
+//       make_shared<Display::Action::StaticText>("OTP:", 0.8),
+//       make_shared<Display::Action::StaticText>(otp, 5.0),
+//       []() { forceSetTickerMode(); }
+//     );
+//     g_display->prependAction(multi);
+//     g_current_mode = MODE::OTP;
+//   });
+
+//   // on receiving OTP web confirmation
+//   g_data_source->setOnOTPack([](){
+//     if (g_current_mode == MODE::OTP)
+//       forceSetTickerMode();
+//   });
 
   g_data_source->connect();
+  g_data_source->setProtocol(g_protocol);
 }
 
 void setupLogo()
@@ -615,7 +623,7 @@ void forceSetTickerMode()
 
 void sendOTPRequest()
 {
-  bool result = g_data_source->sendOTPRequest();
+  bool result = g_protocol->sendOTPRequest();
   g_display->prependAction(
     make_shared<Display::Action::StaticText>((result ? "-OK-" : "Failed"),2.0)
   );

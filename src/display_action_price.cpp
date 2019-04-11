@@ -19,10 +19,10 @@
 
 #include "config_common.hpp"
 #include "display_action_price.hpp"
-#include "data_source.hpp"
+#include "protocol.hpp"
 #include <cmath>
 
-extern DataSource *g_data_source;
+extern Protocol *g_protocol;
 
 namespace Display {
 void PriceAction::tick(DisplayT *display, double elapsed_time)
@@ -38,7 +38,7 @@ void PriceAction::tick(DisplayT *display, double elapsed_time)
     (m_elapsed_time - m_price_last_updated_at) > (m_price_timeout * timeout_pre_warning))
   {
     if (!m_price_timeout_reported) {
-      g_data_source->queueText(";WARN Data timeout imminent");
+      g_protocol->queueText("{\"type\": \"warning\", \"text\": \"Warning, data timeout imminent\"}");
       m_price_timeout_reported = true;
     }
   }
@@ -200,7 +200,7 @@ void PriceAction::updatePrice(const String& n_price)
   new_price.setDisplayFloatPart(m_display_float_part); // once we receive price with floating point part, it's always enabled
 
   if (m_price_timeout_reported) { // recovering from price timeout
-    g_data_source->queueText(";DIAG data_timeout_recovered");
+    g_protocol->queueText("{\"type\": \"diag\", \"text\": \"data timeout recovered\"}");
   }
 
   m_price_last_updated_at = m_elapsed_time;

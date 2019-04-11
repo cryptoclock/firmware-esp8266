@@ -20,9 +20,9 @@
 #include "parameter_store.hpp"
 #include <EEPROM.h>
 #include "utils.hpp"
-#include "data_source.hpp"
+#include "protocol.hpp"
 
-extern DataSource *g_data_source;
+extern Protocol *g_protocol;
 
 void ParameterStore::addItem(ParameterItem item)
 {
@@ -146,6 +146,6 @@ void ParameterStore::setIfExistsAndTriggerCallback(const String& name, const Str
     if (parameter->on_change)
       parameter->on_change(*parameter, false, final_change);
     if (final_change)
-      g_data_source->sendParameter(parameter);
+      g_protocol->sendParameter(parameter);
   }
 }

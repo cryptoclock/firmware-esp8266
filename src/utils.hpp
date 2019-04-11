@@ -27,6 +27,20 @@
 #include <EEPROM.h>
 
 namespace Utils {
+// case-independent (ci) compare_less binary function for STL containers
+struct CaseInsensitiveCompare
+{
+  struct NocaseCompare
+  {
+    bool operator() (const unsigned char& c1, const unsigned char& c2) const {
+      return tolower (c1) < tolower (c2); 
+    }
+  };
+  bool operator() (const String& s1, const String& s2) const {
+    return s1.equalsIgnoreCase(s2);
+  }
+};
+
 void eeprom_BEGIN();
 void eeprom_END();
 void eeprom_WIPE();
