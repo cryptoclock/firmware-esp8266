@@ -455,6 +455,11 @@ void setupDataSource()
     if (screen_idx!=0)
       return;
 
+    if (price=="") {
+      g_price_action->reset();
+      return;
+    }
+
     auto currentPrice = Price(price);
     currentPrice.debug_print();
 

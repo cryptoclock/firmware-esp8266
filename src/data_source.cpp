@@ -223,6 +223,11 @@ void DataSource::JSONCallback(const JsonDocument& doc)
 
     JsonArrayConst array = data.as<JsonArrayConst>();
     m_layout.fromJSON(array);
+
+    // FIXME: reset all screens (or only those where layout changed)
+    if (m_on_price_change)
+        m_on_price_change("", 0);
+
   } else if (!strcmp(cmd,"parameter")) {
     // {"type": "parameter", "name": "timezone", "value": 3}
     const String name = doc["name"];
