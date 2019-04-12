@@ -25,15 +25,8 @@
 #include <Arduino.h>
 #include "ArduinoJson.h"
 #include "utils.hpp"
-//#include "stl_defs.hpp"
-//#include "esp_log.h"
 #include "parameter_store.hpp"
-//#include "json.hpp"
-//#include "timer.hpp"
-//#include "timeouts.hpp"
 
-//using json = nlohmann::json;
-//using std::map;
 using std::shared_ptr;
 using std::function;
 using std::queue;
@@ -43,7 +36,7 @@ class Protocol
 public:
   virtual void dataReceived(const char* data, const int data_size) = 0;
   virtual String readyToSend() = 0;
-  virtual bool poll() = 0; // return false to close connection
+  virtual void poll() = 0;
   virtual void connected() = 0;
   virtual void disconnected() = 0;
   virtual void queueText(const String& text) = 0;
@@ -60,7 +53,7 @@ class CC_Protocol : public Protocol
 public:
   CC_Protocol(const String& protocol_name, bool is_remote);
 
-  bool poll();
+  void poll();
 
   void setCommandCallback(const String& name, on_command_callback_t cb);
 
@@ -70,23 +63,22 @@ public:
   void queueText(const String& text) override;
   void queueJSON(const JsonDocument& doc) override;
 
-
   void dataReceived(const char* data, const int data_size) override;
   String readyToSend() override;
   void connected() override;
   void disconnected() override;
 
-//   void importCallbacks(shared_ptr<CC_Protocol> source);
+  void importCallbacks(CC_Protocol* source);
 private:
-   CC_Protocol();
-   void setDefaultCallbacks();
+  CC_Protocol();
+  void setDefaultCallbacks();
 
   void sendHello();
   void sendDiagnostics();
   void sendAllParameters();
-//   void sendAvailableFonts();
 
-//   void textCallback(const String& text);
+  void legacyCallback(const String& text);
+
   void commandCallback(const JsonDocument& j);
 
   bool m_connected;
@@ -97,8 +89,9 @@ private:
   static constexpr int c_no_data_reconnect_interval = 300 * 1000;
 
   queue<String> m_send_queue;
-  std::map<String, on_command_callback_t, Utils::CaseInsensitiveCompare> m_commands;
+  std::map<String, on_command_callback_t> m_commands;
 
   String m_protocol_name;
   bool m_is_remote; // remote (network) or local (serial) communication
+  long m_last_heartbeat_sent_at;
 };

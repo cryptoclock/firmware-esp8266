@@ -26,7 +26,6 @@ const int json_doc_max_out_size = 512;
 const int json_doc_max_in_size = 2048;
 
 extern ParameterStore g_parameters;
-// extern TimerPool g_Timers;
 // extern Fonts g_Fonts;
 
 #include "log.hpp"
@@ -76,49 +75,30 @@ void CC_Protocol::dataReceived(const char* data, const int data_size)
     if (isdigit(str.charAt(0)) ||
       (str.charAt(0)=='-' && isdigit(str.charAt(1)))
     ) {
-      // TODO: legacy callback
-      // if (m_on_price_change)
-      //   m_on_price_change(str, 0);
+      legacyCallback(str);
     } else {
       DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown text '%s'\n"),str.c_str());
     }
   }
 }
 
-// // legacy callback
-// void CC_Protocol::textCallback(const string& text)
-// {
-//   // set legacy layout (1 currency)
-//   json j;
-//   j["type"] = "layout";
-//   j["plaintext_data"] = 1;
-//   j["data"] = {
-//     {
-//       {"index", 0},
-//       {"id", "12345"},
-//       {"displayName", "USDBTC"},
-//       {"source", "bitfinex/btcusd"},
-//       {"template", {} }, 
-//     },
-//   };
+// legacy callback
+void CC_Protocol::legacyCallback(const String& text)
+{
+  DynamicJsonDocument j(json_doc_max_out_size);
 
-//   commandCallback(j);
+  j["type"] = "tick";
+  JsonArray data = j.createNestedArray("data");
+  data[0]["id"] = "12345";
+  data[0]["value"] = text;
 
-//   // generate tick
-//   j = json({});
-//   j["type"] = "tick";
-//   j["data"] = {  
-//     {
-//       {"id", "12345"},
-//       {"value", text} 
-//     },
-//   };
-//   commandCallback(j);
-// }
+  commandCallback(j);
+}
   
 void CC_Protocol::commandCallback(const JsonDocument& j)
 {
   const String command = j["type"];
+//  command.toLowerCase();
   auto it = m_commands.find(command);
 
   if (it==m_commands.end()) {
@@ -148,6 +128,7 @@ void CC_Protocol::connected()
 {
   m_connected = true;
   m_hello_sent = false;
+  m_last_heartbeat_sent_at = millis();
   CCLOGI("Connected");
 }
 
@@ -161,7 +142,7 @@ void CC_Protocol::disconnected()
 
 CC_Protocol::CC_Protocol(const String& protocol_name, bool is_remote) : 
   m_connected(false), m_should_send_hello(false), m_hello_sent(true),
-  m_protocol_name(protocol_name), m_is_remote(is_remote)
+  m_protocol_name(protocol_name), m_is_remote(is_remote), m_last_heartbeat_sent_at(0)
 {
   // fill allowed commands
   for (auto& command: {"welcome", "parameter", "heartbeat", "OTP", "OTP_ACK", "message", "staticMessage",
@@ -171,17 +152,6 @@ CC_Protocol::CC_Protocol(const String& protocol_name, bool is_remote) :
      m_commands[command] = nullptr;
 
   setDefaultCallbacks();
-
-  // FIXME: heartbeat
-
-  // if (m_is_remote) {
-  //   g_Timers.addPeriodicTimer("heartbeat",[&]() {
-  //     if (m_connected) {
-  //       json param = { {"type","heartbeat"} };
-  //       queueText(param.dump());// send
-  //     }
-  //   }, c_heartbeat_interval);
-  // }
 }
 
 void CC_Protocol::setDefaultCallbacks()
@@ -212,16 +182,12 @@ void CC_Protocol::setDefaultCallbacks()
       CCLOGI("Parameter '%s' updated to '%s'",name.c_str(), value.c_str());
     }
   });
-
-  setCommandCallback("newSettingsLoaded", [this](const JsonDocument& j) { 
-    CCLOGI("New settings loaded");
-  });
 }
 
-// void CC_Protocol::importCallbacks(shared_ptr<CC_Protocol> source)
-// {
-//   m_commands = source->m_commands;
-// }
+void CC_Protocol::importCallbacks(CC_Protocol* source)
+{
+  m_commands = source->m_commands;
+}
 
 void CC_Protocol::queueText(const String& text)
 {
@@ -256,15 +222,6 @@ void CC_Protocol::sendDiagnostics()
   queueJSON(doc);
 }
 
-// void CC_Protocol::sendAvailableFonts()
-// {
-//   json fonts = {
-//     {"type","fonts"},
-//     {"names", g_Fonts.getFontNames()}
-//   };
-//   queueText(fonts.dump());
-// }
-
 void CC_Protocol::sendAllParameters()
 {
   g_parameters.iterateAllParameters([this](const ParameterItem* item) { sendParameter(item); });
@@ -289,16 +246,13 @@ bool CC_Protocol::sendOTPRequest()
   return false;
 }
 
-bool CC_Protocol::poll() 
+void CC_Protocol::poll() 
 {
-  // if (m_connected) {
-  //   if (Utils::elapsedTime(m_last_data_received_at) >= c_no_data_reconnect_interval) {
-  //     ESP_LOGW(TAG,"No data received for '%.2f' secs, forcing reconnect", Utils::elapsedTime(m_last_data_received_at));
-  //     return false;
-  //   }
-  // }
-
-  return true;
+  if (m_is_remote && m_connected && millis() - m_last_heartbeat_sent_at > c_heartbeat_interval) {
+    queueText("{\"type\":\"heartbeat\"}");
+    m_last_heartbeat_sent_at = millis();
+  }
+  return;
 }
 
 Protocol::~Protocol() {}

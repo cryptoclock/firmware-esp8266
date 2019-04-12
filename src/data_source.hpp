@@ -18,30 +18,17 @@
 */
 
 /*
-  This defines datasource (websocket) and callbacks on protocol commands received from server
+  Interfaces between websocket and Protocol class
 */
 
 #pragma once
 #include "config_common.hpp"
 #include "parameter_store.hpp"
-#include "layout.hpp"
 #include "protocol.hpp"
 #include <WebSocketsClient.h>
 #include <queue>
 #include "ArduinoJson.h"
 #include "Ticker.h"
-
-
-// typedef std::function<void(const String&, int)> on_price_change_t;
-// typedef std::function<void(const String&, int)> on_price_ath_t;
-// typedef std::function<void(void)> on_update_request_t;
-// typedef std::function<void(const String&, const bool, const int)> on_announcement_t;
-// typedef std::function<void(const String&)> on_otp_t;
-// typedef std::function<void(const String&)> on_countdown_t;
-// typedef std::function<void(const String&)> on_sound_t;
-// typedef std::function<void(void)> on_otp_ack_t;
-// typedef std::function<void(const String&)> on_price_timeout_set_t;
-// typedef std::function<void(void)> on_new_settings_t;
 
 class DataSource
 {
@@ -61,18 +48,6 @@ public:
   void loop();
 
   void setProtocol(Protocol *protocol) {m_protocol = protocol;}
-
-  // void setOnPriceChange(on_price_change_t func) { m_on_price_change = func; }
-  // void setOnPriceATH(on_price_ath_t func) { m_on_price_ath = func; }
-  // void setOnUpdateRequest(on_update_request_t func) { m_on_update_request = func; }
-  // void setOnAnnouncement(on_announcement_t func) { m_on_announcement = func; }
-  // void setOnCountdown(on_countdown_t func) { m_on_countdown = func; }
-  // void setOnSound(on_sound_t func) { m_on_sound = func; }
-  // void setOnOTP(on_otp_t func) { m_on_otp = func; }
-  // void setOnOTPack(on_otp_ack_t func) { m_on_otp_ack = func; }
-  // void setOnPriceTimeoutSet(on_price_timeout_set_t func) { m_on_price_timeout_set = func; }
-  // void setOnNewSettings(on_new_settings_t func) { m_on_new_settings = func; }
-  // bool sendOTPRequest();
 
   static void s_callback(WStype_t type, uint8_t * payload, size_t length);
 private:
@@ -94,21 +69,10 @@ private:
   static const int c_no_data_reconnect_interval = 300 * 1000;
   static const int c_no_data_restart_interval = 600 * 1000;
 
-  // on_price_change_t m_on_price_change;
-  // on_price_ath_t m_on_price_ath;
-  // on_update_request_t m_on_update_request;
-  // on_announcement_t m_on_announcement;
-  // on_countdown_t m_on_countdown;
-  // on_sound_t m_on_sound;
-  // on_otp_t m_on_otp;
-  // on_otp_ack_t m_on_otp_ack;
-  // on_price_timeout_set_t m_on_price_timeout_set;
-  // on_new_settings_t m_on_new_settings;
   WebSocketsClient m_websocket;
   std::queue<String> m_send_queue;
   int m_num_connection_tries;
   Protocol *m_protocol;
-//  Layout m_layout;
 
   Ticker m_timeout_ticker;
 };

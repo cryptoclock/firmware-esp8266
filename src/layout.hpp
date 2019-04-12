@@ -20,7 +20,7 @@
 /*
     Screen layouts
 */
-
+#pragma once
 #include <Arduino.h>
 #include "ArduinoJson.h"
 
