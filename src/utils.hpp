@@ -25,6 +25,7 @@
 #include "config_common.hpp"
 #include <Arduino.h>
 #include <EEPROM.h>
+#include "wifi.hpp"
 
 namespace Utils {
 void eeprom_BEGIN();
@@ -39,4 +40,5 @@ String shortenText(const String& text, const int lead);
 String uint64ToString(uint64_t input); 
 float getMemoryFragmentation();
 String getDeviceInfo(const String& sep=" ");
+String getDisconnectReason(WiFiDisconnectReason reason);
 }

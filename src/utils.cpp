@@ -163,4 +163,40 @@ String getDeviceInfo(const String& sep)
   info += sep + "SDK: " + String(ESP.getSdkVersion());
   return info;
 }
+
+String getDisconnectReason(WiFiDisconnectReason reason)
+{
+  switch (reason) {
+    case WIFI_DISCONNECT_REASON_UNSPECIFIED:                return F("Unspecified");
+    case WIFI_DISCONNECT_REASON_AUTH_EXPIRE:                return F("Auth expire");
+    case WIFI_DISCONNECT_REASON_AUTH_LEAVE:                 return F("Auth leave");
+    case WIFI_DISCONNECT_REASON_ASSOC_EXPIRE:               return F("Assoc expire");
+    case WIFI_DISCONNECT_REASON_ASSOC_TOOMANY:              return F("Assoc toomany");
+    case WIFI_DISCONNECT_REASON_NOT_AUTHED:                 return F("Not authed");
+    case WIFI_DISCONNECT_REASON_NOT_ASSOCED:                return F("Not assoced");
+    case WIFI_DISCONNECT_REASON_ASSOC_LEAVE:                return F("Assoc leave");
+    case WIFI_DISCONNECT_REASON_ASSOC_NOT_AUTHED:           return F("Assoc not authed");
+    case WIFI_DISCONNECT_REASON_DISASSOC_PWRCAP_BAD:        return F("Disassoc pwrcap bad");
+    case WIFI_DISCONNECT_REASON_DISASSOC_SUPCHAN_BAD:       return F("Disassoc supchan bad");
+    case WIFI_DISCONNECT_REASON_IE_INVALID:                 return F("IE invalid");
+    case WIFI_DISCONNECT_REASON_MIC_FAILURE:                return F("Mic failure");
+    case WIFI_DISCONNECT_REASON_4WAY_HANDSHAKE_TIMEOUT:     return F("4way handshake timeout");
+    case WIFI_DISCONNECT_REASON_GROUP_KEY_UPDATE_TIMEOUT:   return F("Group key update timeout");
+    case WIFI_DISCONNECT_REASON_IE_IN_4WAY_DIFFERS:         return F("IE in 4way differs");
+    case WIFI_DISCONNECT_REASON_GROUP_CIPHER_INVALID:       return F("Group cipher invalid");
+    case WIFI_DISCONNECT_REASON_PAIRWISE_CIPHER_INVALID:    return F("Pairwise cipher invalid");
+    case WIFI_DISCONNECT_REASON_AKMP_INVALID:               return F("AKMP invalid");
+    case WIFI_DISCONNECT_REASON_UNSUPP_RSN_IE_VERSION:      return F("Unsupp RSN IE version");
+    case WIFI_DISCONNECT_REASON_INVALID_RSN_IE_CAP:         return F("Invalid RSN IE cap");
+    case WIFI_DISCONNECT_REASON_802_1X_AUTH_FAILED:         return F("802 1X auth failed");
+    case WIFI_DISCONNECT_REASON_CIPHER_SUITE_REJECTED:      return F("Cipher suite rejected");
+    case WIFI_DISCONNECT_REASON_BEACON_TIMEOUT:             return F("Beacon timeout");
+    case WIFI_DISCONNECT_REASON_NO_AP_FOUND:                return F("No AP found");
+    case WIFI_DISCONNECT_REASON_AUTH_FAIL:                  return F("Auth fail");
+    case WIFI_DISCONNECT_REASON_ASSOC_FAIL:                 return F("Assoc fail");
+    case WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT:          return F("Handshake timeout");
+  }
+  return F("Unknown");
+}
+
 }

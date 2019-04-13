@@ -123,7 +123,7 @@ void WiFiCore::onConnect(WiFiEventStationModeConnected event_info)
 void WiFiCore::onDisconnect(WiFiEventStationModeDisconnected event_info)
 {
   CCLOGW("Disconnected from SSID: %s", event_info.ssid.c_str());
-  CCLOGW("Reason: %d", event_info.reason);
+  CCLOGW("Reason: %s (%d)", Utils::getDisconnectReason(event_info.reason).c_str(), event_info.reason);
 }
 
 void WiFiCore::onGotIP(WiFiEventStationModeGotIP ipInfo)
