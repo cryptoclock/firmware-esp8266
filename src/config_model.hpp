@@ -107,7 +107,7 @@
   #define X_DISPLAY_DATA_PIN 5 // !! for neopixel just use 'X' instead of 'DX', eg. if it's connected to D5(GPIO14), just use 5
   #define X_DISPLAY_LIXIE 1
   #include "LED.hpp"
-  LED g_layout[] = { // for each led, which digit(0-width) and number(0-9) it lights up
+  LED g_LED_layout[] = { // for each led, which digit(0-width) and number(0-9) it lights up
     {0,0},{0,1},{0,2},{0,3},{0,4},{0,5},{0,6},{0,7},{0,8},{0,9},
     {1,0},{1,1},{1,2},{1,3},{1,4},{1,5},{1,6},{1,7},{1,8},{1,9},
     {2,0},{2,1},{2,2},{2,3},{2,4},{2,5},{2,6},{2,7},{2,8},{2,9},
@@ -125,7 +125,7 @@
   #define X_DISPLAY_DATA_PIN 5 // !! for neopixel just use 'X' instead of 'DX', eg. if it's connected to D5(GPIO14), just use 5
   #define X_DISPLAY_LIXIE 0
   #include "LED.hpp"
-  LED g_layout[] = { // for each led, which digit(0-width) and segment(A-G, DP) it lights up
+  LED g_LED_layout[] = { // for each led, which digit(0-width) and segment(A-G, DP) it lights up
     {0, SEG_A}, {0, SEG_B}, {0, SEG_C}, {0, SEG_D}, {0, SEG_E}, {0, SEG_F}, {0, SEG_G}, {0, SEG_DP},
     {1, SEG_A}, {1, SEG_B}, {1, SEG_C}, {1, SEG_D}, {1, SEG_E}, {1, SEG_F}, {1, SEG_G}, {1, SEG_DP},
     {2, SEG_A}, {2, SEG_B}, {2, SEG_C}, {2, SEG_D}, {2, SEG_E}, {2, SEG_F}, {2, SEG_G}, {2, SEG_DP},
