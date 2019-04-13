@@ -375,15 +375,18 @@ int WiFiManager::connectWifi(String ssid, String pass) {
           }
         }
       }
-      // connect to known AP
-      if (best < 0)
-        best = 0;
 
       fixHangingConnection();
 
-      DEBUG_WM ("Connecting to: ");
-      DEBUG_WM (_apList[best].ssid);
-      WiFi.begin(_apList[best].ssid.c_str(), _apList[best].pass.c_str());
+      if (best < 0) {
+        DEBUG_WM ("No known APs found");
+        delay(2000);
+      } else {
+        // connect to known AP
+        DEBUG_WM ("Connecting to: ");
+        DEBUG_WM (_apList[best].ssid);
+        WiFi.begin(_apList[best].ssid.c_str(), _apList[best].pass.c_str());
+      }
     }
     delay(1000);
   } // end loop
