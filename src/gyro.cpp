@@ -26,6 +26,10 @@
 #include "display.hpp"
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
+#include "log.hpp"
+
+static const char* LOGTAG = "Gyro";
+
 //#include "MPU6050.h" // not necessary if using MotionApps include file
 
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
@@ -53,19 +57,19 @@ void MPUsetup()
     Fastwire::setup(400, true);
   #endif
 
-  DEBUG_SERIAL.println(F("Initializing I2C devices..."));
+  CCLOGI("Initializing I2C devices...");
   g_mpu.initialize();
 
   // verify connection
-  DEBUG_SERIAL.println(F("Testing MPU6050 connection..."));
+  CCLOGI("Testing MPU6050 connection...");
   bool success = g_mpu.testConnection();
   if (!success) {
-    DEBUG_SERIAL.println(F("MPU6050 connection failed"));
+    CCLOGE("MPU6050 connection failed");
     return;
   }
   // TODO: reinit and try again
-  DEBUG_SERIAL.println(F("MPU6050 connection successfull"));
-  DEBUG_SERIAL.println(F("Initializing MPU6050 DMP..."));
+  CCLOGI("MPU6050 connection successfull");
+  CCLOGI("Initializing MPU6050 DMP...");
   uint8_t devStatus = g_mpu.dmpInitialize();
 
   // supply your own gyro offsets here, scaled for min sensitivity
@@ -78,11 +82,11 @@ void MPUsetup()
     // 1 = initial memory load failed
     // 2 = DMP configuration updates failed
     // (if it's going to break, usually the code will be 1)
-    DEBUG_SERIAL.printf_P(PSTR("MPU6050 DMP Initialization failed (code %i)\n"),devStatus);
+    CCLOGD("MPU6050 DMP Initialization failed (code %i)",devStatus);
     return;
   }
   // turn on the DMP, now that it's ready
-  DEBUG_SERIAL.println(F("Enabling MPU6050 DMP..."));
+  CCLOGI("Enabling MPU6050 DMP...");
   g_mpu.setDMPEnabled(true);
   g_mpu_packet_size = g_mpu.dmpGetFIFOPacketSize();
   g_mpu_available = true;
@@ -144,7 +148,7 @@ void MPUtick(void)
     // reset so we can continue cleanly
     g_mpu.resetFIFO();
     fifoCount = g_mpu.getFIFOCount();
-//    DEBUG_SERIAL.println(F("FIFO overflow"));
+//    CCLOGI("FIFO overflow");
   } else {
     // wait for correct available data length, should be a VERY short wait
     while (fifoCount < g_mpu_packet_size) 

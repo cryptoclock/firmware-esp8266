@@ -20,6 +20,9 @@
 #include "aplist.hpp"
 #include <EEPROM.h>
 #include "utils.hpp"
+#include "log.hpp"
+
+static const char* LOGTAG = "APs";
 
 const int AP_SSID_MAX_LENGTH = 32+1;
 const int AP_PASSWORD_MAX_LENGTH = 64+1;
@@ -34,7 +37,7 @@ struct AP {
 
 void AP_list::addAPsToWiFiManager(WiFiManager *manager)
 {
-  DEBUG_SERIAL.println(F("[APs] Adding APs to WiFiManager"));
+  CCLOGD("Adding APs to WiFiManager");
 
   int offset = AP_EEPROM_OFFSET;
 
@@ -42,7 +45,7 @@ void AP_list::addAPsToWiFiManager(WiFiManager *manager)
   EEPROM.get(offset,header);
   offset += sizeof(header);
   if (memcmp(header,"APs",sizeof(header))!=0) {
-    DEBUG_SERIAL.println(F("[APs] Invalid EEPROM header, ignoring content"));
+    CCLOGE("Invalid EEPROM header, ignoring content");
     return;
   }
 
@@ -52,14 +55,14 @@ void AP_list::addAPsToWiFiManager(WiFiManager *manager)
     offset += sizeof(ap);
     if(ap.ssid[0]=='\0')
       break;
-    DEBUG_SERIAL.printf_P(PSTR("[APs] SSID: %s Password: [redacted]\n"), ap.ssid, ap.password);
+    CCLOGD("SSID: %s Password: [redacted]", ap.ssid, ap.password);
     manager->addAP(strdup(ap.ssid), strdup(ap.password));
   }
 }
 
 void AP_list::saveAPsToEEPROM(WiFiManager *manager)
 {
-  DEBUG_SERIAL.println(F("[APs] Storing APs to EEPROM"));
+  CCLOGD("Storing APs to EEPROM");
 
   int offset = AP_EEPROM_OFFSET;
 
@@ -76,7 +79,7 @@ void AP_list::saveAPsToEEPROM(WiFiManager *manager)
     strncpy(ap.ssid, credentials->ssid.c_str(), AP_SSID_MAX_LENGTH-1);
     strncpy(ap.password, credentials->pass.c_str(), AP_PASSWORD_MAX_LENGTH-1);
 
-    DEBUG_SERIAL.printf_P(PSTR("[APs] Writing SSID: %s Password: [redacted]\n"), ap.ssid);
+    CCLOGD("Writing SSID: %s Password: [redacted]", ap.ssid);
     EEPROM.put(offset, ap);
     offset += sizeof(ap);
   }

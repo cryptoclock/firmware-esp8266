@@ -2,6 +2,9 @@
 #include <sys/time.h>
 #include <sntp.h>
 #include "ntp.hpp"
+#include "log.hpp"
+
+static const char* LOGTAG = "NTP";
 
 void NTP::init() 
 {
@@ -15,7 +18,7 @@ void NTP::init()
 
 void NTP::connectToServer()
 {
-  DEBUG_SERIAL.printf("Setting SNTP to (%s)\n", m_server.c_str());
+  CCLOGI("Setting SNTP to (%s)", m_server.c_str());
   sntp_setservername(0, (char *) m_server.c_str());
 }
 
@@ -29,7 +32,7 @@ void NTP::setServer(const String& server)
 void NTP::setTimezone(const int offset)
 {
   sntp_set_timezone(offset);
-  DEBUG_SERIAL.printf("Timezone set to '%i'\n",offset);
+  CCLOGI("Timezone set to '%i'",offset);
 }
 
 String NTP::getTime()

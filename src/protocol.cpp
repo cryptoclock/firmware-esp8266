@@ -64,20 +64,20 @@ void CC_Protocol::dataReceived(const char* data, const int data_size)
     DynamicJsonDocument doc(json_doc_max_in_size);
     DeserializationError err = deserializeJson(doc, str);
     if (err) {
-      DEBUG_SERIAL.printf_P(PSTR("[DS] Error parsing JSON message received: %s\n"),err.c_str());
+      CCLOGE("Error parsing JSON message received: %s",err.c_str());
       return;
     }
     commandCallback(doc);
     return;
   } else if (str.startsWith(";")){
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Ignoring comment '%s'\n"),str.c_str());
+    CCLOGI("Ignoring comment '%s'",str.c_str());
   } else {
     if (isdigit(str.charAt(0)) ||
       (str.charAt(0)=='-' && isdigit(str.charAt(1)))
     ) {
       legacyCallback(str);
     } else {
-      DEBUG_SERIAL.printf_P(PSTR("[WSc] Unknown text '%s'\n"),str.c_str());
+      CCLOGE("Unknown text '%s'",str.c_str());
     }
   }
 }

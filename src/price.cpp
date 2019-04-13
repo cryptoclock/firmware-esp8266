@@ -19,6 +19,9 @@
 
 #include "price.hpp"
 #include "utils.hpp"
+#include "log.hpp"
+
+static const char* LOGTAG = "Price";
 
 Price::Price(const String& price) :
   m_price(0.0), m_display_decimals(6), m_display_float_part(false)
@@ -48,7 +51,7 @@ void Price::fromString(const String& price)
 
 void Price::debug_print()
 {
-  DEBUG_SERIAL.printf("[Price] '%.6f', toS: '%s', incr: '%0.9f'\n", m_price, toString().c_str(), getIncrement());
+  CCLOGD("'%.6f', toS: '%s', incr: '%0.9f'", m_price, toString().c_str(), getIncrement());
 }
 
 bool operator< (const Price& lhs, const Price& rhs)

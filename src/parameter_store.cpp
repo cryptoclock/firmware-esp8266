@@ -21,6 +21,9 @@
 #include <EEPROM.h>
 #include "utils.hpp"
 #include "protocol.hpp"
+#include "log.hpp"
+
+static const char* LOGTAG = "Parameters";
 
 extern Protocol *g_protocol;
 
@@ -33,19 +36,19 @@ void ParameterStore::debug_print(void)
 {
   for (const auto& item_pair : m_items) {
     const auto item = item_pair.second;
-    DEBUG_SERIAL.printf_P(PSTR("[Parameters] name: '%s', value: '%s', description: '%s', field_length: '%i'\n"),
+    CCLOGI("name: '%s', value: '%s', description: '%s', field_length: '%i'",
       item.name.c_str(), item.value.c_str(), item.description.c_str(), item.field_length);
   }
 }
 
 void ParameterStore::loadFromEEPROMwithoutInit(void)
 {
-  DEBUG_SERIAL.println(F("[Parameters] Loading from EEPROM"));
+  CCLOGI("Loading from EEPROM");
 
   int offset = c_eeprom_offset;
   String header = Utils::eeprom_ReadString(offset);
   if (header != "PARAMS") {
-    DEBUG_SERIAL.println(F("[Parameters] Invalid EEPROM header, using defaults\n"));
+    CCLOGE("Invalid EEPROM header, using defaults");
     return;
   }
 
@@ -59,10 +62,10 @@ void ParameterStore::loadFromEEPROMwithoutInit(void)
     if (item==nullptr) {
       item = findByName("__LEGACY_"+name);
       if (item==nullptr) {
-        DEBUG_SERIAL.printf_P(PSTR("[Parameters] Unknown parameter '%s', ignoring\n"),name.c_str());
+        CCLOGW("Unknown parameter '%s', ignoring",name.c_str());
         continue;
       }
-      DEBUG_SERIAL.printf_P(PSTR("[Parameters] Legacy parameter '%s', value '%s'\n"),name.c_str(), value.c_str());
+      CCLOGW("Legacy parameter '%s', value '%s'",name.c_str(), value.c_str());
     }
 
     item->value = value;
@@ -75,7 +78,7 @@ void ParameterStore::loadFromEEPROMwithoutInit(void)
 
 void ParameterStore::storeToEEPROMwithoutInit(void)
 {
-  DEBUG_SERIAL.println(F("[Parameters] Storing to EEPROM"));
+  CCLOGI("Storing to EEPROM");
   debug_print();
   int offset = c_eeprom_offset;
   Utils::eeprom_WriteString(offset, "PARAMS");

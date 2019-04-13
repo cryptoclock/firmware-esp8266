@@ -20,6 +20,9 @@
 #include "parameter_store.hpp"
 #include "wifi.hpp"
 #include "utils.hpp"
+#include "log.hpp"
+
+static const char* LOGTAG = "WiFiCore";
 
 extern ParameterStore g_parameters;
 extern WiFiCore *g_wifi;
@@ -45,7 +48,7 @@ void WiFiCore::setAPCallback(void (*func)(WiFiManager*))
 void WiFiCore::connectToWiFiOrFallbackToAP(void)
 {
   if (!m_wifimanager.autoConnect()) {
-    DEBUG_SERIAL.println(F("[WiFiCore] Failed to connect and hit timeout"));
+    CCLOGW("Failed to connect and hit timeout");
     //reset and try again, or maybe put it to deep sleep
     ESP.reset();
     delay(1000);
@@ -70,7 +73,7 @@ void WiFiCore::startAP(const String& ssid_name, unsigned long timeout)
 {
   m_wifimanager.setTimeout(timeout);
   if (!m_wifimanager.startConfigPortal(ssid_name.c_str())) {
-    DEBUG_SERIAL.println(F("[WiFiCore] Failed to start AP and hit timeout"));
+    CCLOGW("Failed to start AP and hit timeout");
     delay(3000);
     ESP.reset();
     delay(5000);
@@ -97,7 +100,7 @@ void WiFiCore::updateParametersFromAP(WiFiManager *manager)
 
 void WiFiCore::saveCallback(void)
 {
-  DEBUG_SERIAL.println(F("[WiFiCore] Save callback called"));
+  CCLOGI("Save callback called");
 
   Utils::eeprom_BEGIN();
   // save APs
@@ -113,19 +116,19 @@ void WiFiCore::saveCallback(void)
 
 void WiFiCore::onConnect(WiFiEventStationModeConnected event_info)
 {
-  DEBUG_SERIAL.printf_P(PSTR("[WiFiCore] Connected to SSID: %s channel %i\n"),
+  CCLOGI("Connected to SSID: %s channel %i",
     event_info.ssid.c_str(), event_info.channel);
 }
 
 void WiFiCore::onDisconnect(WiFiEventStationModeDisconnected event_info)
 {
-  DEBUG_SERIAL.printf_P(PSTR("[WiFiCore] Disconnected from SSID: %s\n"), event_info.ssid.c_str());
-  DEBUG_SERIAL.printf_P(PSTR("[WiFiCore] Reason: %d\n"), event_info.reason);
+  CCLOGW("Disconnected from SSID: %s", event_info.ssid.c_str());
+  CCLOGW("Reason: %d", event_info.reason);
 }
 
 void WiFiCore::onGotIP(WiFiEventStationModeGotIP ipInfo)
 {
-  DEBUG_SERIAL.printf_P(PSTR("[WiFiCore] Got IP: %s Gateway: %s, Mask: %s\n"),
+  CCLOGI("Got IP: %s Gateway: %s, Mask: %s",
     ipInfo.ip.toString().c_str(), ipInfo.gw.toString().c_str(), ipInfo.mask.toString().c_str()
   );
 }

@@ -17,7 +17,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#define CCLOG(_fmt_, ...) DEBUG_SERIAL.printf_P(PSTR("[%s] " _fmt_ "\n"), LOGTAG, ##__VA_ARGS__)
+#define CCLOG(_fmt_, ...) Serial.printf_P(PSTR("[%s] " _fmt_ "\n"), LOGTAG, ##__VA_ARGS__)
 #define CCLOGI CCLOG
 #define CCLOGW CCLOG
 #define CCLOGE CCLOG

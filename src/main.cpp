@@ -129,7 +129,7 @@ void clock_callback()
     return;
 #endif
 
-  DEBUG_SERIAL.println(F("[NTP] Displaying clock"));
+  CCLOGI("[NTP] Displaying clock");
   g_display->prependAction(
     make_shared<Display::Action::SlideTransition>(g_clock_action, 1, g_price_action, 2, 0.5, Coords{0,+1})
   );
@@ -153,7 +153,7 @@ String parseAnnouncment(const String &message, /* out */ String& sound_message)
           int begin = i+1;
           int end = message.indexOf('$',begin);
           if (end==-1 || begin >= (int)message.length() || end >= (int)message.length()) {
-            DEBUG_SERIAL.printf("Malformed sound message: '%s'\n",message.c_str());
+            CCLOGI("Malformed sound message: '%s'",message.c_str());
             return filtered_msg;
           }
           sound_message = message.substring(begin,end);
@@ -237,10 +237,10 @@ void configModeCallback (WiFiManager *myWiFiManager)
   g_current_mode = MODE::AP;
   
   g_entered_ap_mode = true;
-  DEBUG_SERIAL.println(F("Entered config mode"));
-  DEBUG_SERIAL.println(WiFi.softAPIP());
+  CCLOGI("Entered config mode");
+  CCLOGI("%s",WiFi.softAPIP().toString().c_str());
   String ap_ssid = myWiFiManager->getConfigPortalSSID();
-  DEBUG_SERIAL.println(ap_ssid);
+  CCLOGI("%s",ap_ssid.c_str());
 
   g_display->prependAction(make_shared<Display::Action::RotatingText>(
     "PLEASE CONNECT TO AP " + ap_ssid + "  ", -1, 20, Coords{0,0}
@@ -249,13 +249,13 @@ void configModeCallback (WiFiManager *myWiFiManager)
 
 void setupSerial()
 {
-  DEBUG_SERIAL.begin(115200);
-  DEBUG_SERIAL.setDebugOutput(1);
-  DEBUG_SERIAL.setDebugOutput(0);
+  Serial.begin(115200);
+  Serial.setDebugOutput(1);
+  Serial.setDebugOutput(0);
 
-  DEBUG_SERIAL.printf_P(PSTR("Free memory: %i\n"),ESP.getFreeHeap());
-  DEBUG_SERIAL.printf_P(PSTR("Last reset reason: %s\n"),ESP.getResetReason().c_str());
-  DEBUG_SERIAL.printf_P(PSTR("Last reset info: %s\n"),ESP.getResetInfo().c_str());
+  CCLOGI("Free memory: %i",ESP.getFreeHeap());
+  CCLOGI("Last reset reason: %s",ESP.getResetReason().c_str());
+  CCLOGI("Last reset info: %s",ESP.getResetInfo().c_str());
 }
 
 void setupDisplay()
@@ -463,7 +463,7 @@ void setupCommunication()
       }
 
       g_price_action->updatePrice(price);
-      DEBUG_SERIAL.printf_P(PSTR("[SYSTEM] Free heap: %i, fragmentation: %.2f%%\n"),ESP.getFreeHeap(), Utils::getMemoryFragmentation());
+      CCLOGD("Free heap: %i, fragmentation: %.2f%%",ESP.getFreeHeap(), Utils::getMemoryFragmentation());
     }
   });
 
@@ -602,16 +602,16 @@ void connectToWiFi()
   g_wifi->setAPCallback(configModeCallback);
   g_wifi->connectToWiFiOrFallbackToAP();
 
-  DEBUG_SERIAL.println(F("[WiFi] connected to WiFi"));
+  CCLOGI("connected to WiFi");
   if (g_entered_ap_mode) {
-    DEBUG_SERIAL.println(F("[WiFi] AP mode ended, restarting"));
+    CCLOGI("AP mode ended, restarting");
     ESP.restart();
   }
 }
 
 void setupNTP()
 {
-  DEBUG_SERIAL.println(F("Starting NTP.."));
+  CCLOGI("Starting NTP..");
   int timezone = g_parameters["timezone"].toInt();
   g_NTP.setServer(NTP_SERVER);
   g_NTP.setTimezone(timezone);
@@ -624,7 +624,7 @@ void setupNTP()
 void factoryReset()
 {
   g_display->prependAction(make_shared<Display::Action::RotatingText>("RESET... ", -1, 20));
-  DEBUG_SERIAL.println(F("Reseting settings"));
+  CCLOGI("Reseting settings");
   g_wifi->resetSettings();
 
   Utils::eeprom_WIPE();
@@ -636,9 +636,9 @@ void factoryReset()
 
 void startOnDemandAP()
 {
-  DEBUG_SERIAL.println(F("ODA"));
+  CCLOGI("On-demand AP");
   g_data_source->disconnect();
-  DEBUG_SERIAL.println(F("Starting portal"));
+  CCLOGI("Starting portal");
   g_wifi->resetSettings();
   g_wifi->startAP("OnDemandAP_"+String(ESP.getChipId()), 120);
   g_wifi->resetSettings();
@@ -760,7 +760,7 @@ void setup() {
 
   setupLogo();
 
-  DEBUG_SERIAL.printf("[Firmware] %s\n",Utils::getDeviceInfo("\n[Firmware] ").c_str());
+  CCLOGI("<Firmware> %s",Utils::getDeviceInfo("\n<Firmware> ").c_str());
 
   /* WiFi */
   g_display->queueAction(make_shared<Display::Action::RotatingText>("--> WiFi ", -1, 20));

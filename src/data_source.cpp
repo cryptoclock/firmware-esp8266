@@ -20,7 +20,9 @@
 #include "data_source.hpp"
 #include "protocol.hpp"
 #include "utils.hpp"
+#include "log.hpp"
 
+static const char* LOGTAG="Websocket";
 
 extern DataSource *g_data_source;
 extern ParameterStore g_parameters;
@@ -34,7 +36,7 @@ void DataSource::connect()
   Utils::parseURL(ticker_url, host, port, path, protocol);
   path += "?uuid=" + g_parameters["__device_uuid"] + "&format=json";
 
-  DEBUG_SERIAL.printf_P(PSTR("[Wsc] Connecting to protocol '%s' host '%s' port '%i' url '%s'\n"),protocol.c_str(),host.c_str(), port, path.c_str());
+  CCLOGI("Connecting to protocol '%s' host '%s' port '%i' url '%s'",protocol.c_str(),host.c_str(), port, path.c_str());
   if (protocol=="ws")
     m_websocket.begin(host, port, path);
   else
@@ -58,16 +60,16 @@ void DataSource::loop()
 {
   // force reconnect
   if (!m_connected && (millis() - m_last_connected_at > c_force_reconnect_interval)) {
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Couldn't autoconnect for %i secs, forcing restart\n"), c_force_reconnect_interval / 1000);
+    CCLOGW("Couldn't autoconnect for %i secs, forcing restart", c_force_reconnect_interval / 1000);
     ESP.restart();
   }
 
   if (m_connected && (millis() - m_last_data_received_at > c_no_data_reconnect_interval)) {
     if (++m_num_connection_tries < 2) {
-      DEBUG_SERIAL.printf_P(PSTR("[WSc] No data received for %i secs, forcing reconnect\n"), c_no_data_reconnect_interval / 1000);
+      CCLOGE("No data received for %i secs, forcing reconnect", c_no_data_reconnect_interval / 1000);
       reconnect();
     } else {
-      DEBUG_SERIAL.println(F("[WSc] Max reconnection attempts, forcing restart"));
+      CCLOGE("Max reconnection attempts, forcing restart");
       ESP.restart();
     } 
   }
@@ -90,7 +92,7 @@ void DataSource::s_callback(WStype_t type, uint8_t * payload, size_t length)
 
 void DataSource::sendText(const String& text)
 {
-  DEBUG_SERIAL.printf_P(PSTR("[WSc] Sending text: '%s'\n"), text.c_str());
+  CCLOGI("Sending text: '%s'", text.c_str());
   m_websocket.sendTXT(text.c_str(), text.length());
 }
 
@@ -106,7 +108,7 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
         m_protocol->disconnected();
     }
 
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] Disconnected!\n"));
+    CCLOGI("Disconnected!");
     hexdump(payload, length);
     break;
   case WStype_CONNECTED:
@@ -115,9 +117,9 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
     m_last_data_received_at = millis();
     m_num_connection_tries = 0;
     if (payload==nullptr)
-      DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: <nullptr>\n"));
+      CCLOGI("Connected to url: <nullptr>");
     else
-      DEBUG_SERIAL.printf_P(PSTR("[WSc] Connected to url: %s\n"),payload);
+      CCLOGI("Connected to url: %s",payload);
     if (m_protocol)
       m_protocol->connected();
     break;
@@ -130,7 +132,7 @@ void DataSource::callback(WStype_t type, uint8_t * payload, size_t length)
     break;
   case WStype_BIN:
     m_last_data_received_at = millis();
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] got binary, length: %u\n"), length);
+    CCLOGI("got binary, length: %u", length);
     hexdump(payload, length);
     break;
   case WStype_ERROR:
@@ -151,7 +153,7 @@ void DataSource::s_timeoutCheckCallback()
 void DataSource::timeoutCheckCallback()
 {
   if (millis() - m_last_data_received_at > c_no_data_restart_interval) {
-    DEBUG_SERIAL.printf_P(PSTR("[WSc] No data received for %i secs, forcing reset\n"), c_no_data_restart_interval / 1000);
+    CCLOGE("No data received for %i secs, forcing reset", c_no_data_restart_interval / 1000);
     ESP.restart();
   }
 }
