@@ -572,7 +572,7 @@ void setupCommunication()
     if (melody=="null")
       return;
 
-    CCLOG("Sound received: '%s'",melody.c_str());
+    CCLOGI("Sound received: '%s'",melody.c_str());
     g_sound->playMusicRTTTL(melody);
   });
 

@@ -17,10 +17,24 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#define CCLOG(_fmt_, ...) Serial.printf_P(PSTR("[%s] " _fmt_ "\n"), LOGTAG, ##__VA_ARGS__)
-#define CCLOGI CCLOG
-#define CCLOGW CCLOG
-#define CCLOGE CCLOG
-#define CCLOGD CCLOG
+#undef CCLOG_COLORS
 
-// TODO: log levels, timestamps
+#ifdef CCLOG_COLORS
+#define CCLOG_D_FORMAT "\e[37mD"
+#define CCLOG_I_FORMAT "\e[32;1mI"
+#define CCLOG_W_FORMAT "\e[33;1mW"
+#define CCLOG_E_FORMAT "\e[31;1mE"
+#else
+#define CCLOG_D_FORMAT "D"
+#define CCLOG_I_FORMAT "I"
+#define CCLOG_W_FORMAT "W"
+#define CCLOG_E_FORMAT "E"
+#endif
+
+#define CCTIME (millis() / 1000.0)
+#define CCLOG(_level_, _fmt_, ...) Serial.printf_P(PSTR(_level_ " (%.3fs) %s: " _fmt_ "\n"), CCTIME, LOGTAG, ##__VA_ARGS__)
+
+#define CCLOGD(_fmt_, ...) CCLOG(CCLOG_D_FORMAT,_fmt_, ##__VA_ARGS__)
+#define CCLOGI(_fmt_, ...) CCLOG(CCLOG_I_FORMAT,_fmt_, ##__VA_ARGS__)
+#define CCLOGW(_fmt_, ...) CCLOG(CCLOG_W_FORMAT,_fmt_, ##__VA_ARGS__)
+#define CCLOGE(_fmt_, ...) CCLOG(CCLOG_E_FORMAT,_fmt_, ##__VA_ARGS__)
