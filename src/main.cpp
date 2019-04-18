@@ -58,6 +58,7 @@ using Display::Action::ActionPtr_t;
 #include "sound.hpp"
 #include "log.hpp"
 #include "layout.hpp"
+#include "serial.hpp"
 
 #include <EEPROM.h>
 
@@ -83,6 +84,7 @@ DataSource *g_data_source = nullptr;
 Protocol *g_protocol = nullptr;
 Layout g_layout;
 Sound *g_sound = nullptr;
+SerialComm *g_serial_comm = nullptr;
 
 shared_ptr<Button> g_flash_button;
 
@@ -572,13 +574,18 @@ void setupCommunication()
     if (melody=="null")
       return;
 
-    CCLOG("Sound received: '%s'",melody.c_str());
+    CCLOGI("Sound received: '%s'",melody.c_str());
     g_sound->playMusicRTTTL(melody);
   });
 
 
   g_protocol = protocol;
   g_data_source->setProtocol(g_protocol);
+
+  // serial
+  CC_Protocol* s_protocol = new CC_Protocol("serial", true);
+  s_protocol->importCallbacks(protocol);
+  g_serial_comm = new SerialComm(s_protocol);
 
   g_data_source->connect();
 }
@@ -804,6 +811,9 @@ void loop() {
   }
 
   g_data_source->loop();
+
+  g_serial_comm->loop();
+
 #ifdef HAS_SOUND
   g_sound->tick();
 #endif
