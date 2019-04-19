@@ -31,14 +31,29 @@ extern ParameterStore g_parameters;
 #include "log.hpp"
 static const char* LOGTAG = "Protocol";
 
+static const char *g_allowed_commands[] = {
+  "welcome", "parameter", "heartbeat", "OTP", "OTP_ACK", 
+  "message", "staticMessage", "triggerUpdate","triggerReset", "requestParameters", 
+  "countdown", "sound",  "setTimeout", "tick", "layout", 
+  "allTimeHigh", "newSettingsLoaded", "imageBegin", "imageChunk", "imageEnd", 
+  "setTemplate"};
+
+// remote commands 
+// addWiFi, setWiFi, removeWiFi, getInfo (include screen IDs and info), eraseEEPROM, 
+// getdiagnostic info (wifi signal strenght etc.)
+
+constexpr int c_n_commands = sizeof(g_allowed_commands)/sizeof(char *);
+
 void CC_Protocol::setCommandCallback(const String& name, on_command_callback_t cb)
 {
-  if (m_commands.find(name)==m_commands.end()) {
-    CCLOGE("Callback for command '%s' not allowed", name.c_str());
-    return;
+  for(int i=0;i<c_n_commands;++i) {
+    if (name==g_allowed_commands[i]) {
+      m_commands[i] = cb;
+      return;
+    }
   }
-
-  m_commands[name] = cb;
+  CCLOGE("Callback for command '%s' not allowed", name.c_str());
+  return;
 }
 
 void CC_Protocol::dataReceived(const char* data, const int data_size)
@@ -99,19 +114,20 @@ void CC_Protocol::commandCallback(const JsonDocument& j)
 {
   const String command = j["type"];
 //  command.toLowerCase();
-  auto it = m_commands.find(command);
-
-  if (it==m_commands.end()) {
-    CCLOGW("Unrecognized command '%s'",command.c_str());
-    return;
+  for (int i=0;i<c_n_commands;++i) {
+    if (command == g_allowed_commands[i]) {
+      auto func = m_commands[i];
+      if (func==nullptr) {
+        CCLOGW("Command '%s' has no defined callback function",command.c_str());
+      } else {
+        func(j);
+      }
+      return;
+    }
   }
 
-  auto func = it->second;
-  if (func==nullptr) {
-    CCLOGW("Command '%s' has no defined callback function",command.c_str());
-  } else {
-    func(j);
-  }
+  CCLOGW("Unrecognized command '%s'",command.c_str());
+  return;
 }
 
 String CC_Protocol::readyToSend()
@@ -144,12 +160,9 @@ CC_Protocol::CC_Protocol(const String& protocol_name, bool is_remote) :
   m_connected(false), m_should_send_hello(false), m_hello_sent(true),
   m_protocol_name(protocol_name), m_is_remote(is_remote), m_last_heartbeat_sent_at(0)
 {
-  // fill allowed commands
-  for (auto& command: {"welcome", "parameter", "heartbeat", "OTP", "OTP_ACK", "message", "staticMessage",
-    "triggerUpdate","triggerReset", "requestParameters", "countdown", "sound",  
-    "setTimeout", "tick", "layout", "allTimeHigh", "newSettingsLoaded",
-    "imageBegin", "imageChunk", "imageEnd", "setTemplate"} )
-     m_commands[command] = nullptr;
+  m_commands = new on_command_callback_t[c_n_commands];
+  for(int i=0;i<c_n_commands;++i)
+     m_commands[i] = nullptr;
 
   setDefaultCallbacks();
 }
@@ -186,7 +199,9 @@ void CC_Protocol::setDefaultCallbacks()
 
 void CC_Protocol::importCallbacks(CC_Protocol* source)
 {
-  m_commands = source->m_commands;
+  for (int i=0;i<c_n_commands;++i)
+    if (m_commands[i]==nullptr) // don't replace default callbacks
+      m_commands[i] = source->m_commands[i];
 }
 
 void CC_Protocol::queueText(const String& text)

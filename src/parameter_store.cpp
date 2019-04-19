@@ -29,13 +29,12 @@ extern Protocol *g_protocol;
 
 void ParameterStore::addItem(ParameterItem item)
 {
-  m_items.emplace(item.name, item);
+  m_items.emplace_back(item);
 }
 
 void ParameterStore::debug_print(void)
 {
-  for (const auto& item_pair : m_items) {
-    const auto item = item_pair.second;
+  for (const auto& item : m_items) {
     CCLOGI("name: '%s', value: '%s', description: '%s', field_length: '%i'",
       item.name.c_str(), item.value.c_str(), item.description.c_str(), item.field_length);
   }
@@ -82,8 +81,7 @@ void ParameterStore::storeToEEPROMwithoutInit(void)
   debug_print();
   int offset = c_eeprom_offset;
   Utils::eeprom_WriteString(offset, "PARAMS");
-  for (const auto& item_pair : m_items) {
-    const auto item = item_pair.second;
+  for (const auto item : m_items) {
     if (item.name.startsWith("__LEGACY_"))
       continue;
     Utils::eeprom_WriteString(offset, item.name);
@@ -99,18 +97,17 @@ void ParameterStore::storeToEEPROM(void)
   Utils::eeprom_END();
 }
 
-ParameterMap_t& ParameterStore::all_items(void)
+int ParameterStore::count(void)
 {
-  return m_items;
+  return m_items.size();
 }
 
 ParameterItem* ParameterStore::findByName(const String& name)
 {
-  auto item = m_items.find(name);
-  if (item==m_items.end()) // not found
-    return nullptr;
-
-  return &(*item).second;
+  for (int i=0; i<(int)m_items.size(); ++i)
+    if (m_items[i].name == name)
+      return &m_items[i];
+  return nullptr;
 }
 
 String& ParameterStore::operator[] (const char *name)
@@ -135,8 +132,7 @@ bool ParameterStore::setValue(const String& name, const String& value)
 
 void ParameterStore::iterateAllParameters(parameter_iterate_func_t func)
 {
-  for (auto& item_pair : m_items) {
-    auto &item = item_pair.second;
+  for (auto& item : m_items) {
     func(&item);
   }
 }

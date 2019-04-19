@@ -24,7 +24,6 @@
 #pragma once
 #include "config_common.hpp"
 #include <Arduino.h>
-#include <map>
 #include <functional>
 
 struct ParameterItem;
@@ -39,7 +38,7 @@ struct ParameterItem {
   parameter_onchange_t on_change;
 };
 
-typedef std::map<String, ParameterItem> ParameterMap_t;
+typedef std::vector<ParameterItem> ParameterMap_t;
 typedef std::function<void(const ParameterItem*)> parameter_iterate_func_t;
 
 class ParameterStore
@@ -55,7 +54,7 @@ public:
 
   void debug_print(void);
 
-  ParameterMap_t& all_items(void);
+  int count(void);
 
   bool setValue(const String& name, const String& value);
   String& operator[] (const char *name);

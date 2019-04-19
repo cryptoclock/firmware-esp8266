@@ -18,9 +18,30 @@
 */
 
 #include "serial.hpp"
+#include "log.hpp"
+
+static const char* LOGTAG = "Serial";
 
 void SerialComm::loop()
 {
-//    Serial.available();
+  String line = m_prot->readyToSend();
+  if (line.length()>0)
+    Serial.printf_P(PSTR("|SERIALCOMM|%s\n"),line.c_str());
+
+  while(Serial.available()>0) {
+    int ch = Serial.read();
+    if (ch == -1) // no data avilable / error
+      break;
+    if (ch == '\r')
+      continue;
+
+    if (ch == '\n') {
+      CCLOGD("data: '%s'", m_buffer.c_str());
+      m_prot->dataReceived(m_buffer.c_str(), m_buffer.length());
+      m_buffer = "";
+    } else {
+      m_buffer += (char) ch;
+    }
+  }
 }
 

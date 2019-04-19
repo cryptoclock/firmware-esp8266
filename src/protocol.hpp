@@ -18,7 +18,6 @@
 */
 
 #pragma once
-#include <map>
 #include <memory>
 #include <functional>
 #include <queue>
@@ -89,7 +88,8 @@ private:
   static constexpr int c_no_data_reconnect_interval = 300 * 1000;
 
   queue<String> m_send_queue;
-  std::map<String, on_command_callback_t> m_commands;
+
+  on_command_callback_t *m_commands;
 
   String m_protocol_name;
   bool m_is_remote; // remote (network) or local (serial) communication

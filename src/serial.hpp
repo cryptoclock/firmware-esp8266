@@ -23,18 +23,16 @@
 
 #pragma once
 
-#include "log.hpp"
 #include "protocol.hpp"
-
-static const char* LOGTAG = "Serial";
 
 class SerialComm
 {
 public:
-    SerialComm(CC_Protocol *prot): m_prot(prot) 
-    {}
+  SerialComm(CC_Protocol *prot): m_prot(prot), m_buffer("")
+  {}
  
-    void loop();
+  void loop();
 private:
-    CC_Protocol *m_prot;
+  CC_Protocol *m_prot;
+  String m_buffer;
 };

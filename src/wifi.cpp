@@ -58,7 +58,7 @@ void WiFiCore::connectToWiFiOrFallbackToAP(void)
 void WiFiCore::addParametersFromGlobal()
 {
   m_parameters.clear();
-  m_parameters.reserve(g_parameters.all_items().size());
+  m_parameters.reserve(g_parameters.count());
 
   g_parameters.iterateAllParameters([this](const ParameterItem* item) {
     if (!item->name.startsWith("__")) {// reserved parameter, don't display
