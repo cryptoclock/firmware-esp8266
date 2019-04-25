@@ -232,6 +232,35 @@ Notifies client to restart the device
 {"type": "triggerReset"}
 ```
 
+## Local-only commands
+These commands are only accepted over local (USB cable) connection.
+
+### addWiFiAP
+Adds WiFi Access-Point to APs stored on the device
+```json
+{"type": "addWiFiAP", "SSID": "mySSID", "password": "myPassword"}
+```
+
+### removeWiFiAP
+Removes stored WiFi Access-Point from the device 
+```json
+{"type": "removeWiFiAP", "SSID": "mySSID"}
+```
+
+### getWiFiAPs
+Returns list of WiFi APs stored on the device 
+```json
+{"type": "getWiFiAPs"}
+```
+
+server:
+```json
+{"type": "WiFiAPs", "data": [
+  {"SSID": "mySSID", "password": "myPassword"},
+  {"SSID": "mySSID2", "password": "myPassword2"}
+]}
+```
+
 ## Server commands
 
 ### heartbeat

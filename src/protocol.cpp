@@ -282,7 +282,7 @@ void CC_Protocol::sendAPlist()
   auto aps = g_wifi->getAPs();
   for (auto& ap : aps) {
     JsonObject obj = data.createNestedObject();
-    obj["ssid"] = ap.first;
+    obj["SSID"] = ap.first;
     obj["password"] = ap.second;
     
   }
