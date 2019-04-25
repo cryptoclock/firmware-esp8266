@@ -66,7 +66,7 @@ void AP_list::saveAPsToEEPROM()
 
   int offset = AP_EEPROM_OFFSET;
 
-  Utils::eeprom_Erase(offset, (AP_MAX_STORED_APS+1) * sizeof(AP));
+  Utils::eeprom_Erase(offset, AP_MAX_STORED_APS * sizeof(AP));
 
   EEPROM.put(offset, "APs");
   offset += 3;
