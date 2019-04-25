@@ -26,8 +26,18 @@
 #include "config_common.hpp"
 #include <WiFiManager.h>
 
+using std::vector;
+using std::pair;
+
 class AP_list {
 public:
-  static void addAPsToWiFiManager(WiFiManager *manager);
-  static void saveAPsToEEPROM(WiFiManager *manager);
+  AP_list(WiFiManager *manager) : m_manager(manager) {}
+  AP_list() = delete;
+  void addAPsToWiFiManager();
+  void saveAPsToEEPROM();
+  void addAP(const String& ssid, const String& password);
+  void removeAP(const String& ssid);
+  vector<pair<String,String>> getAPs();
+
+  WiFiManager *m_manager;
 };

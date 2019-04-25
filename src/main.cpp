@@ -583,8 +583,35 @@ void setupCommunication()
   g_data_source->setProtocol(g_protocol);
 
   // serial
-  CC_Protocol* s_protocol = new CC_Protocol("serial", true);
+  CC_Protocol* s_protocol = new CC_Protocol("serial", false);
   s_protocol->importCallbacks(protocol);
+
+  s_protocol->setCommandCallback("addWiFiAP",[](const JsonDocument& j) {
+    if (!j.containsKey("SSID"))
+      return;
+
+    const String ssid = j["SSID"];
+    const String password = j["password"];
+
+    if (ssid && password)
+      g_wifi->addAP(ssid, password);
+  });
+
+  s_protocol->setCommandCallback("removeWiFiAP",[](const JsonDocument& j) {
+    if (!j.containsKey("SSID"))
+      return;
+
+    const String ssid = j["SSID"];
+
+    if (ssid)
+      g_wifi->removeAP(ssid);
+  });
+
+  s_protocol->setCommandCallback("getWiFiAPs",[s_protocol](const JsonDocument& j) {
+    s_protocol->sendAPlist();
+  });
+
+
   g_serial_comm = new SerialComm(s_protocol);
 
   g_data_source->connect();

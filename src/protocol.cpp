@@ -22,10 +22,12 @@
 #include "utils.hpp"
 //#include "fonts.hpp"
 
-const int json_doc_max_out_size = 512;
+const int json_doc_max_out_size = 2048;
 const int json_doc_max_in_size = 2048;
 
 extern ParameterStore g_parameters;
+extern WiFiCore *g_wifi;
+
 // extern Fonts g_Fonts;
 
 #include "log.hpp"
@@ -36,13 +38,30 @@ static const char *g_allowed_commands[] = {
   "message", "staticMessage", "triggerUpdate","triggerReset", "requestParameters", 
   "countdown", "sound",  "setTimeout", "tick", "layout", 
   "allTimeHigh", "newSettingsLoaded", "imageBegin", "imageChunk", "imageEnd", 
-  "setTemplate"};
+  "setTemplate", 
+  "getDeviceInfo","addWiFiAP","removeWiFiAP","getWiFiAPs"};
 
-// remote commands 
-// addWiFi, setWiFi, removeWiFi, getInfo (include screen IDs and info), eraseEEPROM, 
+// subset of g_allowed_commands, local-only (eg. over serial) commands
+static const char *g_local_commands[] = {
+  "getDeviceInfo","addWiFiAP","removeWiFiAP","getWiFiAPs"
+};
+
+// local commands 
+// getDeviceInfo (include screen IDs and info), 
+// eraseEEPROM, 
 // getdiagnostic info (wifi signal strenght etc.)
 
 constexpr int c_n_commands = sizeof(g_allowed_commands)/sizeof(char *);
+constexpr int c_n_local_commands = sizeof(g_local_commands)/sizeof(char *);
+
+bool isLocalOnlyCommand(const String& command)
+{
+  for(int i=0;i<c_n_local_commands;++i)
+    if (command==g_local_commands[i])
+      return true;
+
+  return false;
+}
 
 void CC_Protocol::setCommandCallback(const String& name, on_command_callback_t cb)
 {
@@ -119,6 +138,8 @@ void CC_Protocol::commandCallback(const JsonDocument& j)
       auto func = m_commands[i];
       if (func==nullptr) {
         CCLOGW("Command '%s' has no defined callback function",command.c_str());
+      } else if(m_is_remote && isLocalOnlyCommand(command)) {
+        CCLOGE("Command '%s' is local only, can't be executed over remote connection",command.c_str());
       } else {
         func(j);
       }
@@ -249,6 +270,22 @@ void CC_Protocol::sendParameter(const ParameterItem *item)
   doc["type"] = "parameter";
   doc["name"] = item->name;
   doc["value"] = item->value;
+  queueJSON(doc);
+}
+
+void CC_Protocol::sendAPlist()
+{
+  DynamicJsonDocument doc(json_doc_max_out_size);
+
+  doc["type"] = "WiFiAPs";
+  JsonArray data = doc.createNestedArray("data");
+  auto aps = g_wifi->getAPs();
+  for (auto& ap : aps) {
+    JsonObject obj = data.createNestedObject();
+    obj["ssid"] = ap.first;
+    obj["password"] = ap.second;
+    
+  }
   queueJSON(doc);
 }
 

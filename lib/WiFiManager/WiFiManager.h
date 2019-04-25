@@ -81,11 +81,15 @@ class WiFiManager
     boolean       startConfigPortal(char const *apName, char const *apPassword = NULL);
 
     //add an AP to the list of known access points to be connected to
-    boolean       addAP(char const *ssid, char const *password = NULL);
+    boolean       addAP(const String& ssid, const String& password = "");
 	  //returns the SSID and password for a pre-configured access point
     //or NULL if no access point was found for the given index
     //the returned values are read-only!
-	  const WiFiManagerCredentials *getAP(uint8_t index) const;
+ 
+    //remove an AP from the list of known access points
+   	void          removeAP(const String& ssid);
+
+    const WiFiManagerCredentials *getAP(uint8_t index) const;
 	
     // get the AP name of the config portal, so it can be used in the callback
     String        getConfigPortalSSID();

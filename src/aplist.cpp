@@ -35,7 +35,7 @@ struct AP {
   char password[AP_PASSWORD_MAX_LENGTH];
 };
 
-void AP_list::addAPsToWiFiManager(WiFiManager *manager)
+void AP_list::addAPsToWiFiManager()
 {
   CCLOGD("Adding APs to WiFiManager");
 
@@ -56,11 +56,11 @@ void AP_list::addAPsToWiFiManager(WiFiManager *manager)
     if(ap.ssid[0]=='\0')
       break;
     CCLOGD("SSID: %s Password: [redacted]", ap.ssid, ap.password);
-    manager->addAP(strdup(ap.ssid), strdup(ap.password));
+    m_manager->addAP(ap.ssid, ap.password);
   }
 }
 
-void AP_list::saveAPsToEEPROM(WiFiManager *manager)
+void AP_list::saveAPsToEEPROM()
 {
   CCLOGD("Storing APs to EEPROM");
 
@@ -72,7 +72,7 @@ void AP_list::saveAPsToEEPROM(WiFiManager *manager)
   offset += 3;
 
   for (int i=0;i<AP_MAX_STORED_APS;++i) {
-    auto credentials = manager->getAP(i);
+    auto credentials = m_manager->getAP(i);
     if(credentials == NULL)
       break;
     AP ap = {0};
@@ -83,4 +83,35 @@ void AP_list::saveAPsToEEPROM(WiFiManager *manager)
     EEPROM.put(offset, ap);
     offset += sizeof(ap);
   }
+}
+
+void AP_list::addAP(const String& ssid, const String& password)
+{
+  CCLOGD("Adding AP SSID: %s Password: [redacted]", ssid.c_str());
+  m_manager->addAP(ssid, password);
+  Utils::eeprom_BEGIN();
+  saveAPsToEEPROM();
+  Utils::eeprom_END();
+}
+
+void AP_list::removeAP(const String& ssid)
+{
+  CCLOGD("Removing AP SSID: %s", ssid.c_str());
+  m_manager->removeAP(ssid);
+  Utils::eeprom_BEGIN();
+  saveAPsToEEPROM();
+  Utils::eeprom_END();
+}
+
+vector<pair<String,String>> AP_list::getAPs()
+{
+  vector<pair<String,String>> aps;
+  for (int i=0;i<AP_MAX_STORED_APS;++i) {
+    auto creds = m_manager->getAP(i);
+    if (creds == NULL)
+      return aps;
+
+    aps.push_back(std::make_pair(creds->ssid, creds->pass));
+  }
+  return aps;
 }

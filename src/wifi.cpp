@@ -28,11 +28,11 @@ extern ParameterStore g_parameters;
 extern WiFiCore *g_wifi;
 
 WiFiCore::WiFiCore(DisplayT *display) :
-  m_wifimanager(WiFiManager()), m_display(display)
+  m_wifimanager(WiFiManager()), m_display(display), m_ap_list(&m_wifimanager)
 {
   m_wifimanager.setSaveConfigCallback(&saveCallback);
 
-  AP_list::addAPsToWiFiManager(&m_wifimanager);
+  m_ap_list.addAPsToWiFiManager();
   addParametersFromGlobal();
 
   m_ev_conn = WiFi.onStationModeConnected(onConnect);
@@ -86,7 +86,7 @@ void WiFiCore::resetSettings()
   m_wifimanager.resetSettings();
 }
 
-void WiFiCore::updateParametersFromAP(WiFiManager *manager)
+void WiFiCore::updateParametersFromAP()
 {
   // save parameters
   for (auto *wifi_param : m_parameters) {
@@ -96,6 +96,9 @@ void WiFiCore::updateParametersFromAP(WiFiManager *manager)
     if (param)
       param->value = new_value;
   }
+
+  // save APs
+  m_ap_list.saveAPsToEEPROM();
 }
 
 void WiFiCore::saveCallback(void)
@@ -103,12 +106,8 @@ void WiFiCore::saveCallback(void)
   CCLOGI("Save callback called");
 
   Utils::eeprom_BEGIN();
-  // save APs
-  auto manager = g_wifi->getWiFiManager();
-  AP_list::saveAPsToEEPROM(manager);
 
-  // save parameters
-  g_wifi->updateParametersFromAP(manager);
+  g_wifi->updateParametersFromAP();
   g_parameters.storeToEEPROMwithoutInit();
 
   Utils::eeprom_END();

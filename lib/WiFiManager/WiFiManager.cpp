@@ -444,9 +444,9 @@ void WiFiManager::resetSettings() {
   //delay(200);
 }
 
-boolean WiFiManager::addAP(char const *ssid, char const *password) {
+boolean WiFiManager::addAP(const String& ssid, const String& password) {
   DEBUG_WM(F("Adding AP"));
-  DEBUG_WM(ssid);
+  DEBUG_WM(ssid.c_str());
 
   // just updating password?
   for (int i=0;i<_apList_size;++i) {
@@ -466,6 +466,21 @@ boolean WiFiManager::addAP(char const *ssid, char const *password) {
     return true;
   } else {
     return false;
+  }
+}
+
+void WiFiManager::removeAP(const String& ssid)
+{
+  for (int i = 0; i < _apList_size; i++) {
+    if ( ssid == _apList[i].ssid) {
+      // found, shift all following APs by one forward
+      _apList_size--;
+      for (; i < _apList_size; i++) {
+        _apList[i].ssid = _apList[i+1].ssid;
+        _apList[i].pass = _apList[i+1].pass;
+      }
+      return;
+    }
   }
 }
 
@@ -842,21 +857,8 @@ void WiFiManager::handleDelete() {
   DEBUG_WM(F("WiFi delete"));
 
   String ssid = server->arg("s");
-  
-  // search SSID
-  int j;
-  for (j = 0; j < _apList_size; j++) {
-    if ( ssid == _apList[j].ssid)
-		break;
-  }
-  if ( j < _apList_size ) {
-    // shift list
-    _apList_size--;
-    for (; j < _apList_size; j++) {
-      _apList[j].ssid = _apList[j+1].ssid;
-      _apList[j].pass = _apList[j+1].pass;
-    }
-  }
+
+  removeAP(ssid);  
 
   if ( _savecallback != NULL)
     _savecallback();

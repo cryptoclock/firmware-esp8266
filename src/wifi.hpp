@@ -46,13 +46,19 @@ public:
   static void onDisconnect(WiFiEventStationModeDisconnected event_info);
   static void onGotIP(WiFiEventStationModeGotIP ipInfo);
 
-  void updateParametersFromAP(WiFiManager *manager); // reads parameters from AP config page and updates g_parameters
+  void updateParametersFromAP(); // reads parameters from AP config page and updates g_parameters
+
+  // add and remove saved APs to connect to
+  void addAP(const String& ssid, const String& password) { m_ap_list.addAP(ssid,password); }
+  void removeAP(const String& ssid) { m_ap_list.removeAP(ssid); }
+  vector<pair<String,String>> getAPs() { return m_ap_list.getAPs(); }
 private:
   void addParametersFromGlobal();
 
   WiFiManager m_wifimanager;
   DisplayT *m_display;
   std::vector<WiFiManagerParameter*> m_parameters;
+  AP_list m_ap_list;
 
   WiFiEventHandler m_ev_conn, m_ev_disconn, m_ev_gotip;
 };

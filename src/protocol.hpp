@@ -42,6 +42,7 @@ public:
   virtual void queueJSON(const JsonDocument& doc) = 0;
   virtual bool sendOTPRequest() = 0;
   virtual void sendParameter(const ParameterItem *item) = 0;
+
   virtual ~Protocol();
 };
 
@@ -58,6 +59,7 @@ public:
 
   bool sendOTPRequest() override;
 
+  void sendAPlist();
   void sendParameter(const ParameterItem *item) override;
   void queueText(const String& text) override;
   void queueJSON(const JsonDocument& doc) override;
@@ -68,6 +70,7 @@ public:
   void disconnected() override;
 
   void importCallbacks(CC_Protocol* source);
+
 private:
   CC_Protocol();
   void setDefaultCallbacks();
