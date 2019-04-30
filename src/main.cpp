@@ -19,6 +19,9 @@
 
 #include "config_common.hpp"
 
+// Uncomment the following line the include GDB stub in the firmware
+//#include <internal/gdbstub.h>
+
 #include <Arduino.h>
 #include <Hash.h>
 #include <Wire.h>
