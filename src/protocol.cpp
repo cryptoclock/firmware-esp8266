@@ -216,6 +216,14 @@ void CC_Protocol::setDefaultCallbacks()
       CCLOGI("Parameter '%s' updated to '%s'",name.c_str(), value.c_str());
     }
   });
+
+  if (m_is_remote == false) {
+    setCommandCallback("getDeviceInfo", [this](const JsonDocument& j) {
+      sendHello();
+      sendDiagnostics();
+      sendAllParameters();
+    });
+  }
 }
 
 void CC_Protocol::importCallbacks(CC_Protocol* source)
