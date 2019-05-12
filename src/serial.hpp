@@ -31,8 +31,13 @@ public:
   SerialComm(CC_Protocol *prot): m_prot(prot), m_buffer("")
   {}
  
+  void setupTickCallback(Ticker::callback_t callback);
+  void detachTicker();
+
   void loop();
 private:
+  Ticker m_ticker; // for communicating via serial during setup()
   CC_Protocol *m_prot;
   String m_buffer;
+  const int c_milis_per_tick = 333;
 };

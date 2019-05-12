@@ -41,4 +41,5 @@ String uint64ToString(uint64_t input);
 float getMemoryFragmentation();
 String getDeviceInfo(const String& sep=" ");
 String getDisconnectReason(WiFiDisconnectReason reason);
+unsigned char calculateChecksum(const String& text);
 }

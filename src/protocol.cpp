@@ -46,7 +46,7 @@ static const char *g_local_commands[] = {
   "getDeviceInfo","addWiFiAP","removeWiFiAP","getWiFiAPs"
 };
 
-// local commands 
+// TODO: local commands 
 // getDeviceInfo (include screen IDs and info), 
 // eraseEEPROM, 
 // getdiagnostic info (wifi signal strenght etc.)
@@ -220,8 +220,8 @@ void CC_Protocol::setDefaultCallbacks()
   if (m_is_remote == false) {
     setCommandCallback("getDeviceInfo", [this](const JsonDocument& j) {
       sendHello();
-      sendDiagnostics();
-      sendAllParameters();
+//      sendDiagnostics();
+//      sendAllParameters();
     });
   }
 }

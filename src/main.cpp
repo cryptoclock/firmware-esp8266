@@ -616,8 +616,9 @@ void setupCommunication()
 
 
   g_serial_comm = new SerialComm(s_protocol);
-
-  g_data_source->connect();
+  g_serial_comm->setupTickCallback([] { // temporary timed callback before we enter the main loop
+    g_serial_comm->loop();
+  });
 }
 
 void setupLogo()
@@ -796,6 +797,7 @@ void setup() {
   setupMenu();
 
   setupLogo();
+  setupCommunication();
 
   CCLOGI("<Firmware> %s",Utils::getDeviceInfo("\n<Firmware> ").c_str());
 
@@ -817,7 +819,9 @@ void setup() {
   g_display->replaceAction(g_price_action);
 
   setupNTP();
-  setupCommunication();
+
+  g_data_source->connect();
+  g_serial_comm->detachTicker();
 }
 
 void loop() {

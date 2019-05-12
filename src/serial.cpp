@@ -20,13 +20,13 @@
 #include "serial.hpp"
 #include "log.hpp"
 
-static const char* LOGTAG = "Serial";
+//static const char* LOGTAG = "Serial";
 
 void SerialComm::loop()
 {
   String line = m_prot->readyToSend();
   if (line.length()>0)
-    Serial.printf_P(PSTR("|SERIALCOMM|%s\n"),line.c_str());
+    Serial.printf_P(PSTR("|SERIALCOMM|%s|%02X|\n"),line.c_str(), Utils::calculateChecksum(line.c_str()));
 
   while(Serial.available()>0) {
     int ch = Serial.read();
@@ -36,7 +36,7 @@ void SerialComm::loop()
       continue;
 
     if (ch == '\n') {
-      CCLOGD("data: '%s'", m_buffer.c_str());
+//      CCLOGD("data: '%s'", m_buffer.c_str());
       m_prot->dataReceived(m_buffer.c_str(), m_buffer.length());
       m_buffer = "";
     } else {
@@ -45,3 +45,12 @@ void SerialComm::loop()
   }
 }
 
+void SerialComm::setupTickCallback(Ticker::callback_t callback)
+{
+    m_ticker.attach(c_milis_per_tick / 1000.0,callback);
+}
+
+void SerialComm::detachTicker()
+{
+  m_ticker.detach();
+}

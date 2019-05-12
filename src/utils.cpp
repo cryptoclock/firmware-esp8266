@@ -199,4 +199,15 @@ String getDisconnectReason(WiFiDisconnectReason reason)
   return F("Unknown");
 }
 
+// simple xor checksum
+unsigned char calculateChecksum(const String& text)
+{
+  unsigned char c = 0;
+  const char*s = text.c_str();
+  while(*s) {
+    c ^= *s++;
+  }
+  return c;
+}
+
 }
