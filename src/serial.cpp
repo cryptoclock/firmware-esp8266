@@ -36,7 +36,6 @@ void SerialComm::loop()
       continue;
 
     if (ch == '\n') {
-//      CCLOGD("data: '%s'", m_buffer.c_str());
       m_prot->dataReceived(m_buffer.c_str(), m_buffer.length());
       m_buffer = "";
     } else {

@@ -220,8 +220,6 @@ void CC_Protocol::setDefaultCallbacks()
   if (m_is_remote == false) {
     setCommandCallback("getDeviceInfo", [this](const JsonDocument& j) {
       sendHello();
-//      sendDiagnostics();
-//      sendAllParameters();
     });
   }
 }
@@ -268,7 +266,14 @@ void CC_Protocol::sendDiagnostics()
 
 void CC_Protocol::sendAllParameters()
 {
+  StaticJsonDocument<json_doc_max_out_size> doc;
+  doc["type"] = "parametersStart";
+  queueJSON(doc);
+
   g_parameters.iterateAllParameters([this](const ParameterItem* item) { sendParameter(item); });
+
+  doc["type"] = "parametersEnd";
+  queueJSON(doc);
 }
 
 void CC_Protocol::sendParameter(const ParameterItem *item)
