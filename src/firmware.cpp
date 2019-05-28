@@ -36,7 +36,7 @@ void Firmware::update(const String &update_url)
   //t_httpUpdate_return ret = ESPhttpUpdate.update(url,"","AF B9 78 3B E6 1D 70 AE E7 97 0A 50 D8 7B 1C 89 83 90 32 30");
   CCLOGI("Update URL: '%s'",url.c_str());
 
-  ESPhttpUpdate.rebootOnUpdate(false);
+  ESPhttpUpdate.rebootOnUpdate(true);
 // For esp8266 platform 2.0.x+
 //  WiFiClient client;
 //  t_httpUpdate_return ret =  ESPhttpUpdate.update(client, url); 
