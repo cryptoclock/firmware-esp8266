@@ -233,7 +233,12 @@ Notifies client to restart the device
 ```
 
 ## Local-only commands
-These commands are only accepted over local (USB cable) connection.
+For local communication over serial/USB cable, messages FROM the device are prefixed with '|SERIALCOMM|'
+and suffixed with |XX| where XX is computed basic checksum (xor of all message bytes),
+e.g.
+"|SERIALCOMM|{...}|0F|\n"
+
+Local messages TO the device are just like normal websocket communication, with some additional commands available:
 
 ### addWiFiAP
 Adds WiFi Access-Point to APs stored on the device
@@ -259,6 +264,18 @@ server:
   {"SSID": "mySSID", "password": "myPassword"},
   {"SSID": "mySSID2", "password": "myPassword2"}
 ]}
+```
+
+### getDeviceInfo
+Returns the same info as if the device would handshake upon connecting to server:
+
+server:
+```json
+{"type": "getDeviceInfo"}
+```
+Device:
+```json
+{"type": "hello", "model": "DPB0200", "uuid": "0a115964-659f-d095-b4f8-c2d468447ed9", "version": "1.0.0", "firmwareChecksum": "1df795aed8236272eb6f2ad3c5a489499c4a88597727a602fd0a03408564ce34"}
 ```
 
 ## Server commands
