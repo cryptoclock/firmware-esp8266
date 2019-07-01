@@ -308,15 +308,16 @@ void setupParameters()
   g_parameters.addItem({"__LEGACY_currency_pair","","", 0, nullptr});
   g_parameters.addItem({"__device_uuid","","", 0, nullptr}); // new uuid will be generated on every device wipe
   g_parameters.addItem({"update_url","Update server","update.cryptoclock.net", 50, nullptr});
-  g_parameters.addItem({"ticker_url","Ticker server","wss://ticker.cryptoclock.net:443/", 100, [](ParameterItem& item, bool init, bool final_change)
+  g_parameters.addItem({"ticker_url","Ticker server","wss://ticker.cryptoclock.net:443/", 100, [](ParameterItem& item, bool init, bool final_change) -> bool
   {
     if (init==false) {
       g_data_source->reconnect();
       g_price_action->reset();
       g_announcement = " ";
     }
+    return true;
   }});
-  g_parameters.addItem({"brightness","Brightness (1-5)","3", 5, [](ParameterItem& item, bool init, bool final_change)
+  g_parameters.addItem({"brightness","Brightness (1-5)","3", 5, [](ParameterItem& item, bool init, bool final_change) -> bool
   {
     int brightness = std::min(std::max(item.value.toInt(),1L),5L); // sanitize
     item.value = String(brightness);
@@ -329,12 +330,14 @@ void setupParameters()
       case 5: default: actual_brightness = 128; break;
     }
     g_display->setDisplayBrightness(actual_brightness);
+    return true;
   }});
-  g_parameters.addItem({"font","Font (0-2)","0", 5, [](ParameterItem& item, bool init, bool final_change)
+  g_parameters.addItem({"font","Font (0-2)","0", 5, [](ParameterItem& item, bool init, bool final_change) -> bool
   {
     int font = std::min(std::max(item.value.toInt(),0L),2L);
     item.value = String(font);
     g_display->setFont(font);
+    return true;
   }});
 
   g_parameters.addItem({"rotate_display",
@@ -343,14 +346,15 @@ void setupParameters()
 #else
     "Rotate Display (0,1)",
 #endif
-  "0", 5, [](ParameterItem& item, bool init, bool final_change)
+  "0", 5, [](ParameterItem& item, bool init, bool final_change) -> bool
   {
     int rotate = std::min(std::max(item.value.toInt(),0L),2L);
     item.value = String(rotate);
     if (rotate==0 || rotate==1)
       g_display->setRotation(rotate);
+    return true;
   }});
-  g_parameters.addItem({"clock_mode","Show Clock (0-2)","1", 5, [](ParameterItem& item, bool init, bool final_change)
+  g_parameters.addItem({"clock_mode","Show Clock (0-2)","1", 5, [](ParameterItem& item, bool init, bool final_change) -> bool
   {
     int clock_mode = std::min(std::max(item.value.toInt(),0L),2L);
     item.value = String(clock_mode);
@@ -359,23 +363,29 @@ void setupParameters()
     else
       g_clock_action->setAlwaysOn(false);
 //    g_clock_mode
+    return true;
   }});
-  g_parameters.addItem({"clock_interval","Clock display interval (secs)","30", 5, [](ParameterItem& item, bool init, bool final_change)
+  g_parameters.addItem({"clock_interval","Clock display interval (secs)","30", 5, [](ParameterItem& item, bool init, bool final_change) -> bool
   {
     if (init || final_change) {
       int interval = std::max(item.value.toInt(),5L);
       item.value = String(interval);
       g_ticker_clock.attach(interval, clock_callback);
     }
+    return true;
   }});
-  g_parameters.addItem({"timezone","Timezone (-11..+13)","1", 5, [](ParameterItem& item, bool init, bool final_change)
+  g_parameters.addItem({"timezone","Timezone (-11..+13)","1", 5, [](ParameterItem& item, bool init, bool final_change) -> bool
   {
+    if (!Utils::isNumber(item.value))
+      return false;
+  
     if (final_change) {
       int timezone = std::min(std::max(item.value.toInt(),-11L),13L);
       item.value = String(timezone);
       g_NTP.setTimezone(timezone);
       g_NTP.init();
     }
+    return true;
   }});
 }
 

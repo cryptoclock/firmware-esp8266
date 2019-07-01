@@ -210,4 +210,12 @@ unsigned char calculateChecksum(const String& text)
   return c;
 }
 
+bool isNumber(const String& s)
+{
+  for (char c: s)
+    if (!(isdigit(c) || c == '+' || c == '-' || c == '.'))
+      return false;
+  return true;
+}
+
 }

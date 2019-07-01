@@ -141,9 +141,14 @@ void ParameterStore::setIfExistsAndTriggerCallback(const String& name, const Str
 {
   auto parameter = findByName(name);
   if (parameter) {
+    String lastValue = parameter->value;
     parameter->value = value;
-    if (parameter->on_change)
-      parameter->on_change(*parameter, false, final_change);
+    if (parameter->on_change) {
+      // if callback returns false, keep the old value
+      if (parameter->on_change(*parameter, false, final_change) == false) {
+        parameter->value = lastValue;
+      }
+    }
     if (final_change)
       g_protocol->sendParameter(parameter);
   }

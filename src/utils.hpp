@@ -42,4 +42,5 @@ float getMemoryFragmentation();
 String getDeviceInfo(const String& sep=" ");
 String getDisconnectReason(WiFiDisconnectReason reason);
 unsigned char calculateChecksum(const String& text);
+bool isNumber(const String& s);
 }

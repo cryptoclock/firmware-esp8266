@@ -28,7 +28,7 @@
 
 struct ParameterItem;
 
-typedef std::function<void(ParameterItem& item, bool init, bool final_change)> parameter_onchange_t;
+typedef std::function<bool(ParameterItem& item, bool init, bool final_change)> parameter_onchange_t;
 
 struct ParameterItem {
   String name;
