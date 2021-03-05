@@ -150,12 +150,16 @@ static uint8_t u8x8_d_max7219_generic(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int
       for( i = 0; i < 8; i++ )
       {
 	u8x8_cad_StartTransfer(u8x8);
-	for( j = 0; j < c; j++ )
-	{
-	  u8x8_cad_SendCmd(u8x8, i+1);
-	  u8x8_cad_SendArg(u8x8, *ptr );
-	  ptr++;
-	}
+    for( j = 0; j < c; j++ )
+	  {
+	   u8x8_cad_SendCmd(u8x8, i+1);
+#ifdef U8G2_MAX7219_INVERTED_MODULES
+	   u8x8_cad_SendArg(u8x8, *(ptr+(c-1-j)));
+#else
+	   u8x8_cad_SendArg(u8x8, *(ptr+j));
+#endif
+	  }
+    ptr += c;
 	u8x8_cad_EndTransfer(u8x8);
       }
       

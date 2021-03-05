@@ -117,7 +117,8 @@ Depending on the display attached, pins used and other hardware configuration, w
 one of the models listed in src/config_model.hpp, or create or customize your own.
 
 The default model when not specified is _3DA0100_, consisting of 32x8 LED matrix with MAX7219 driver, connected to pins D5-D7, and optional
-gyroscope module MPU6050 connected via I2C on pins D1/D2.
+gyroscope module MPU6050 connected via I2C on pins D1/D2. Note that some 32x8 matrices with MAX7219 may have the individual modules in different orientation or order; if the individual blocks appear reversed, add -DU8G2_MAX7219_INVERTED_MODULES to build_flags in _platformio.ini_.
+
 
 Extending the firmware
 -----------------------
