@@ -19,7 +19,7 @@
 
 #include "button.hpp"
 
-void Button::setupTickCallback(Ticker::callback_t callback)
+void Button::setupTickCallback(Ticker::callback_function_t callback)
 {
   m_ticker.attach(100.0 / 1000.0,callback);
 }

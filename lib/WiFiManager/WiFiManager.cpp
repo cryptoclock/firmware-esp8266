@@ -536,18 +536,18 @@ void WiFiManager::handleRoot() {
     return;
   }
 
-  String page = FPSTR(HTTP_HEAD);
+  String page = FPSTR(WM_HTTP_HEAD);
   page.replace("{v}", "Options");
-  page += FPSTR(HTTP_SCRIPT);
-  page += FPSTR(HTTP_STYLE);
+  page += FPSTR(WM_HTTP_SCRIPT);
+  page += FPSTR(WM_HTTP_STYLE);
   page += _customHeadElement;
-  page += FPSTR(HTTP_HEAD_END);
+  page += FPSTR(WM_HTTP_HEAD_END);
   page += F("<h1>Cryptoclock</h1>");
   page += "<h3>";
   page += _apName;
   page += "</h3>";
-  page += FPSTR(HTTP_PORTAL_OPTIONS);
-  page += FPSTR(HTTP_END);
+  page += FPSTR(WM_HTTP_PORTAL_OPTIONS);
+  page += FPSTR(WM_HTTP_END);
 
   server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);
@@ -557,12 +557,12 @@ void WiFiManager::handleRoot() {
 /** Wifi config page handler */
 void WiFiManager::handleWifi(boolean scan) {
 
-  String page = FPSTR(HTTP_HEAD);
+  String page = FPSTR(WM_HTTP_HEAD);
   page.replace("{v}", "Config ESP");
-  page += FPSTR(HTTP_SCRIPT);
-  page += FPSTR(HTTP_STYLE);
+  page += FPSTR(WM_HTTP_SCRIPT);
+  page += FPSTR(WM_HTTP_STYLE);
   page += _customHeadElement;
-  page += FPSTR(HTTP_HEAD_END);
+  page += FPSTR(WM_HTTP_HEAD_END);
 
   if (scan) {
     int n = WiFi.scanNetworks();
@@ -617,7 +617,7 @@ void WiFiManager::handleWifi(boolean scan) {
         int quality = getRSSIasQuality(WiFi.RSSI(indices[i]));
 
         if (_minimumQuality == -1 || _minimumQuality < quality) {
-          String item = FPSTR(HTTP_ITEM);
+          String item = FPSTR(WM_HTTP_ITEM);
           String rssiQ;
           rssiQ += quality;
           rssiQ += "%";
@@ -638,9 +638,9 @@ void WiFiManager::handleWifi(boolean scan) {
       }
 
       // show saved networks
-      page += FPSTR(HTTP_SAVED_APS);
+      page += FPSTR(WM_HTTP_SAVED_APS);
       for (int j = 0; j < _apList_size; j++) {
-        String item = FPSTR(HTTP_ITEM);
+        String item = FPSTR(WM_HTTP_ITEM);
         item.replace("{v}", _apList[j].ssid);
         item.replace("{r}", "<a href=\"/del?s="+_apList[j].ssid+"\">X</a>");
         if ( _apList[j].pass.length() ) {
@@ -656,7 +656,7 @@ void WiFiManager::handleWifi(boolean scan) {
     }
   }
 
-  page += FPSTR(HTTP_FORM_START);
+  page += FPSTR(WM_HTTP_FORM_START);
   char parLength[5];
   // add the extra parameters to the form
   for (int i = 0; i < _paramsCount; i++) {
@@ -664,7 +664,7 @@ void WiFiManager::handleWifi(boolean scan) {
       break;
     }
 
-    String pitem = FPSTR(HTTP_FORM_PARAM);
+    String pitem = FPSTR(WM_HTTP_FORM_PARAM);
     if (_params[i]->getID() != NULL) {
       pitem.replace("{i}", _params[i]->getID());
       pitem.replace("{n}", _params[i]->getID());
@@ -685,7 +685,7 @@ void WiFiManager::handleWifi(boolean scan) {
 
   if (_sta_static_ip) {
 
-    String item = FPSTR(HTTP_FORM_PARAM);
+    String item = FPSTR(WM_HTTP_FORM_PARAM);
     item.replace("{i}", "ip");
     item.replace("{n}", "ip");
     item.replace("{p}", "Static IP");
@@ -694,7 +694,7 @@ void WiFiManager::handleWifi(boolean scan) {
 
     page += item;
 
-    item = FPSTR(HTTP_FORM_PARAM);
+    item = FPSTR(WM_HTTP_FORM_PARAM);
     item.replace("{i}", "gw");
     item.replace("{n}", "gw");
     item.replace("{p}", "Static Gateway");
@@ -703,7 +703,7 @@ void WiFiManager::handleWifi(boolean scan) {
 
     page += item;
 
-    item = FPSTR(HTTP_FORM_PARAM);
+    item = FPSTR(WM_HTTP_FORM_PARAM);
     item.replace("{i}", "sn");
     item.replace("{n}", "sn");
     item.replace("{p}", "Subnet");
@@ -715,10 +715,10 @@ void WiFiManager::handleWifi(boolean scan) {
     page += "<br/>";
   }
 
-  page += FPSTR(HTTP_FORM_END);
-  page += FPSTR(HTTP_SCAN_LINK);
+  page += FPSTR(WM_HTTP_FORM_END);
+  page += FPSTR(WM_HTTP_SCAN_LINK);
 
-  page += FPSTR(HTTP_END);
+  page += FPSTR(WM_HTTP_END);
 
   server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);
@@ -769,14 +769,14 @@ void WiFiManager::handleWifiSave() {
     optionalIPFromString(&_sta_static_sn, sn.c_str());
   }
 
-  String page = FPSTR(HTTP_HEAD);
+  String page = FPSTR(WM_HTTP_HEAD);
   page.replace("{v}", "Credentials Saved");
-  page += FPSTR(HTTP_SCRIPT);
-  page += FPSTR(HTTP_STYLE);
+  page += FPSTR(WM_HTTP_SCRIPT);
+  page += FPSTR(WM_HTTP_STYLE);
   page += _customHeadElement;
-  page += FPSTR(HTTP_HEAD_END);
-  page += FPSTR(HTTP_SAVED);
-  page += FPSTR(HTTP_END);
+  page += FPSTR(WM_HTTP_HEAD_END);
+  page += FPSTR(WM_HTTP_SAVED);
+  page += FPSTR(WM_HTTP_END);
 
   server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);
@@ -790,12 +790,12 @@ void WiFiManager::handleWifiSave() {
 void WiFiManager::handleInfo() {
   DEBUG_WM(F("Info"));
 
-  String page = FPSTR(HTTP_HEAD);
+  String page = FPSTR(WM_HTTP_HEAD);
   page.replace("{v}", "Info");
-  page += FPSTR(HTTP_SCRIPT);
-  page += FPSTR(HTTP_STYLE);
+  page += FPSTR(WM_HTTP_SCRIPT);
+  page += FPSTR(WM_HTTP_STYLE);
   page += _customHeadElement;
-  page += FPSTR(HTTP_HEAD_END);
+  page += FPSTR(WM_HTTP_HEAD_END);
   page += F("<dl>");
   page += F("<dt>Firmware ID</dt><dd>");
   page += ESP.getSketchMD5();
@@ -822,7 +822,7 @@ void WiFiManager::handleInfo() {
   page += WiFi.macAddress();
   page += F("</dd>");
   page += F("</dl>");
-  page += FPSTR(HTTP_END);
+  page += FPSTR(WM_HTTP_END);
 
   server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);
@@ -834,14 +834,14 @@ void WiFiManager::handleInfo() {
 void WiFiManager::handleReset() {
   DEBUG_WM(F("Reset"));
 
-  String page = FPSTR(HTTP_HEAD);
+  String page = FPSTR(WM_HTTP_HEAD);
   page.replace("{v}", "Info");
-  page += FPSTR(HTTP_SCRIPT);
-  page += FPSTR(HTTP_STYLE);
+  page += FPSTR(WM_HTTP_SCRIPT);
+  page += FPSTR(WM_HTTP_STYLE);
   page += _customHeadElement;
-  page += FPSTR(HTTP_HEAD_END);
+  page += FPSTR(WM_HTTP_HEAD_END);
   page += F("Module will reset in a few seconds.");
-  page += FPSTR(HTTP_END);
+  page += FPSTR(WM_HTTP_END);
 
   server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);

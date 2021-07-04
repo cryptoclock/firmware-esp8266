@@ -44,7 +44,7 @@ void SerialComm::loop()
   }
 }
 
-void SerialComm::setupTickCallback(Ticker::callback_t callback)
+void SerialComm::setupTickCallback(Ticker::callback_function_t callback)
 {
     m_ticker.attach(c_milis_per_tick / 1000.0,callback);
 }

@@ -89,7 +89,7 @@ public:
   virtual void useFont() {};
   const uint8_t getFont();
 
-  void setupTickCallback(Ticker::callback_t callback);
+  void setupTickCallback(Ticker::callback_function_t callback);
   void tick(void);
   void queueAction(shared_ptr<ActionT> action);
   void prependAction(shared_ptr<ActionT> action);

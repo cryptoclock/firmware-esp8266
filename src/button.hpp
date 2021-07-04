@@ -23,8 +23,8 @@
 
 #pragma once
 #include "config_common.hpp"
-#include <Arduino.h>
 #include <Ticker.h>
+#include <Arduino.h>
 #include <functional>
 
 typedef std::function<void()> button_callback_t;
@@ -38,7 +38,7 @@ public:
     pinMode(m_pin, INPUT);
   }
 
-  void setupTickCallback(Ticker::callback_t callback);
+  void setupTickCallback(Ticker::callback_function_t callback);
 
   void onShortPress(button_callback_t func);
   void onLongPress(button_callback_t func);

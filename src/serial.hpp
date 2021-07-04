@@ -31,7 +31,7 @@ public:
   SerialComm(CC_Protocol *prot): m_prot(prot), m_buffer("")
   {}
  
-  void setupTickCallback(Ticker::callback_t callback);
+  void setupTickCallback(Ticker::callback_function_t callback);
   void detachTicker();
 
   void loop();
