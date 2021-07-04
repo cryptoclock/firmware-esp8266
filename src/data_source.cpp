@@ -33,7 +33,6 @@ void DataSource::connect()
   int port;
 
   String ticker_url = g_parameters["ticker_url"];
-//  String ticker_url = "wss://192.168.16.110:8989/";
   Utils::parseURL(ticker_url, host, port, path, protocol);
   path += "?uuid=" + g_parameters["__device_uuid"] + "&format=json";
 

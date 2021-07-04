@@ -17,6 +17,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
+#include <umm_malloc/umm_heap_select.h>
+
 #include "protocol.hpp"
 #include "parameter_store.hpp"
 #include "utils.hpp"
@@ -192,7 +194,7 @@ void CC_Protocol::setDefaultCallbacks()
 {
   setCommandCallback("heartbeat", [this](const JsonDocument& j) { CCLOGI("Received heartbeat"); });
   setCommandCallback("requestParameters", [this](const JsonDocument& j) { 
-    CCLOGI("ParaImeters requested, sending"); 
+    CCLOGI("Parameters requested, sending"); 
     sendAllParameters();
   });
 
@@ -266,20 +268,28 @@ void CC_Protocol::sendDiagnostics()
 
 void CC_Protocol::sendAllParameters()
 {
-  StaticJsonDocument<json_doc_max_out_size> doc;
-  doc["type"] = "parametersStart";
-  queueJSON(doc);
+  HeapSelectIram ephemeral;
+
+  {
+    DynamicJsonDocument doc(64);
+    doc["type"] = "parametersStart";
+    queueJSON(doc);
+  }
 
   g_parameters.iterateAllParameters([this](const ParameterItem* item) { sendParameter(item); });
 
-  doc["type"] = "parametersEnd";
-  queueJSON(doc);
+  {
+    DynamicJsonDocument doc(64);
+    doc["type"] = "parametersEnd";
+    queueJSON(doc);
+  }
 }
 
 void CC_Protocol::sendParameter(const ParameterItem *item)
 {
   if (item->name.startsWith("__")) return;
-  StaticJsonDocument<json_doc_max_out_size> doc;
+  DynamicJsonDocument doc(512);
+
   doc["type"] = "parameter";
   doc["name"] = item->name;
   doc["value"] = item->value;
