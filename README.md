@@ -3,7 +3,7 @@ Cryptoclock ESP8266
 
 ![GitHub release](https://img.shields.io/github/release/cryptoclock/firmware-esp8266.svg)
 ![GitHub prerelease](https://img.shields.io/github/tag-pre/cryptoclock/firmware-esp8266.svg)
-![Travis](https://img.shields.io/travis/com/cryptoclock/firmware-esp8266.svg)
+[![Build and Deploy](https://github.com/cryptoclock/firmware-esp8266/actions/workflows/ci.yml/badge.svg)](https://github.com/cryptoclock/firmware-esp8266/actions/workflows/ci.yml)
 
 Cryptoclock is a device based on ESP8266 chip, designed for displaying prices, messages, tickers, or any other arbitrary data on a compact display.
 
