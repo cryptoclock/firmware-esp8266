@@ -1,0 +1,90 @@
+name: Build and Deploy
+
+on:  
+  push:
+    branches:
+      - '**'
+    tags-ignore: 
+      - '**'
+  release:
+    types: [created]
+
+jobs:
+  setup_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -U platformio
+      - name: Save all models to file
+        run: pio project config --json-output | jq --raw-output '.[][0] | select(. | contains("env:")) | .[4:]' | jq -c --raw-input --slurp 'split("\n") | map(select(. != ""))' > MODELS.txt
+      - name: Send output for matrix with all models
+        id: set-matrix
+        run: echo "::set-output name=matrix::$(cat MODELS.txt)"
+
+  build:
+    runs-on: ubuntu-latest
+    needs: setup_matrix
+    strategy:
+      matrix:
+        models: ${{ fromJson(needs.setup_matrix.outputs.matrix) }}
+    steps:
+      - name: Set environment variable with GH Release ID
+        run: echo "RELEASE_ID=$(jq --raw-output '.release.id' $GITHUB_EVENT_PATH)" >> $GITHUB_ENV
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -U platformio
+      - name: Update PlatformIO
+        run: platformio update
+      - name: Update PlatformIO Libs
+        run: platformio lib update
+      - name: Build firmware
+        run: platformio run -e $MATRIX_BUILD_MODEL
+        env:
+          MATRIX_BUILD_MODEL: ${{ matrix.models }}
+          X_VERSION: ${{ env.RELEASE_ID }}
+      - name: Get firmware
+        run: |
+          mkdir artifact
+          find .pio -name "firmware.bin" | xargs -n1 dirname | xargs -n1 basename | xargs -n1 -I{} mv .pio/build/{}/firmware.bin ./artifact/{}.bin
+          find .pio -name "firmware.elf" | xargs -n1 dirname | xargs -n1 basename | xargs -n1 -I{} mv .pio/build/{}/firmware.elf ./artifact/{}.elf
+      - name: Save firmware
+        uses: actions/upload-artifact@v2
+        with:	
+          retention-days: 1
+          name: firmware-${{ matrix.models }}
+          path: ${{ github.workspace }}/artifact/*
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'release' }}
+    steps:
+      - name: Set environment variable with GH Release ID
+        run: echo "RELEASE_ID=$(jq --raw-output '.release.id' $GITHUB_EVENT_PATH)" >> $GITHUB_ENV
+      - name: Restore firmware
+        uses: actions/download-artifact@v2
+        with:
+          path: firmwares/
+      - uses: shogo82148/actions-upload-release-asset@v1
+        with:
+          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/${{ env.RELEASE_ID }}/assets{?name,label}
+          asset_path: firmwares/*/*
+
+
