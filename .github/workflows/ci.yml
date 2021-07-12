@@ -40,6 +40,8 @@ jobs:
     steps:
       - name: Set environment variable with GH Release ID
         run: echo "RELEASE_ID=$(jq --raw-output '.release.id' $GITHUB_EVENT_PATH)" >> $GITHUB_ENV
+      - name: Set environment variable with GH Release ID
+        run: echo "TAG_NAME=$(jq --raw-output '.release.tag_name' $GITHUB_EVENT_PATH)" >> $GITHUB_ENV
       - name: "Checkout code"
         uses: actions/checkout@v2
       - name: Set up Python 3.6
@@ -58,7 +60,7 @@ jobs:
         run: platformio run -e $MATRIX_BUILD_MODEL
         env:
           MATRIX_BUILD_MODEL: ${{ matrix.models }}
-          X_VERSION: ${{ env.RELEASE_ID }}
+          X_VERSION: ${{ env.TAG_NAME }}
       - name: Get firmware
         run: |
           mkdir artifact
